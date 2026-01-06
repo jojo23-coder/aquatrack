@@ -9,15 +9,15 @@ interface Props {
 const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    temperature: 23.0,
-    pH: 7.0,
-    ammonia: 0,
-    nitrite: 0,
-    nitrate: 0,
-    gh: 6.0,
-    kh: 3.0,
-    degassedPH: undefined as number | undefined,
-    bubbleRate: undefined as number | undefined,
+    temperature: '23.0',
+    pH: '7.0',
+    ammonia: '0',
+    nitrite: '0',
+    nitrate: '0',
+    gh: '6.0',
+    kh: '3.0',
+    degassedPH: '',
+    bubbleRate: '',
     notes: ''
   });
 
@@ -25,30 +25,71 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
     if (initialData) {
       setFormData({
         date: initialData.date,
-        temperature: initialData.temperature,
-        pH: initialData.pH,
-        ammonia: initialData.ammonia,
-        nitrite: initialData.nitrite,
-        nitrate: initialData.nitrate,
-        gh: initialData.gh || 6.0,
-        kh: initialData.kh || 3.0,
-        degassedPH: initialData.degassedPH,
-        bubbleRate: initialData.bubbleRate,
+        temperature: String(initialData.temperature ?? ''),
+        pH: String(initialData.pH ?? ''),
+        ammonia: String(initialData.ammonia ?? ''),
+        nitrite: String(initialData.nitrite ?? ''),
+        nitrate: String(initialData.nitrate ?? ''),
+        gh: String(initialData.gh ?? 6.0),
+        kh: String(initialData.kh ?? 3.0),
+        degassedPH: initialData.degassedPH === undefined ? '' : String(initialData.degassedPH),
+        bubbleRate: initialData.bubbleRate === undefined ? '' : String(initialData.bubbleRate),
         notes: initialData.notes || ''
       });
     }
   }, [initialData]);
 
+  const sanitizeDecimalInput = (value: string) => {
+    const normalized = value.replace(/,/g, '.').replace(/\s+/g, '');
+    let cleaned = '';
+    let hasDot = false;
+    for (const char of normalized) {
+      if (char >= '0' && char <= '9') {
+        cleaned += char;
+        continue;
+      }
+      if (char === '.' && !hasDot) {
+        cleaned += char;
+        hasDot = true;
+      }
+    }
+    return cleaned;
+  };
+
+  const toNumber = (value: string, fallback = 0) => {
+    if (!value) return fallback;
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? fallback : parsed;
+  };
+
+  const toOptionalNumber = (value: string) => {
+    if (!value) return undefined;
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd(formData);
+    onAdd({
+      date: formData.date,
+      temperature: toNumber(formData.temperature, 0),
+      pH: toNumber(formData.pH, 0),
+      ammonia: toNumber(formData.ammonia, 0),
+      nitrite: toNumber(formData.nitrite, 0),
+      nitrate: toNumber(formData.nitrate, 0),
+      gh: toNumber(formData.gh, 0),
+      kh: toNumber(formData.kh, 0),
+      degassedPH: toOptionalNumber(formData.degassedPH),
+      bubbleRate: toOptionalNumber(formData.bubbleRate),
+      notes: formData.notes
+    });
     if (!initialData) {
       setFormData({
         ...formData,
         date: new Date().toISOString().split('T')[0],
         notes: '',
-        degassedPH: undefined,
-        bubbleRate: undefined
+        degassedPH: '',
+        bubbleRate: ''
       });
     }
   };
@@ -56,7 +97,14 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
   const labelClasses = "text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1 block";
   const inputClasses = "w-full p-3.5 bg-slate-800 border border-slate-700 rounded-2xl text-base text-slate-100 placeholder-slate-600 focus:ring-2 focus:ring-slate-400 outline-none transition-all appearance-none";
 
-  const phDrop = formData.degassedPH && formData.pH ? (formData.degassedPH - formData.pH).toFixed(2) : null;
+  const phDrop = (() => {
+    const degassed = parseFloat(formData.degassedPH);
+    const current = parseFloat(formData.pH);
+    if (Number.isNaN(degassed) || Number.isNaN(current)) {
+      return null;
+    }
+    return (degassed - current).toFixed(2);
+  })();
 
   return (
     <form onSubmit={handleSubmit} className={`bg-slate-900/50 p-6 rounded-3xl border space-y-4 transition-all ${initialData ? 'border-slate-300 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'border-slate-800'}`}>
@@ -73,9 +121,10 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
         <div>
           <label className={labelClasses}>Temp (°C)</label>
           <input 
-            type="number" step="0.1"
+            type="text"
+            inputMode="decimal"
             value={formData.temperature}
-            onChange={e => setFormData({...formData, temperature: parseFloat(e.target.value) || 0})}
+            onChange={e => setFormData({...formData, temperature: sanitizeDecimalInput(e.target.value)})}
             className={inputClasses}
           />
         </div>
@@ -85,27 +134,30 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
         <div>
           <label className={`${labelClasses} text-slate-400`}>Ammonia NH₃</label>
           <input 
-            type="number" step="0.01"
+            type="text"
+            inputMode="decimal"
             value={formData.ammonia}
-            onChange={e => setFormData({...formData, ammonia: parseFloat(e.target.value) || 0})}
+            onChange={e => setFormData({...formData, ammonia: sanitizeDecimalInput(e.target.value)})}
             className={inputClasses}
           />
         </div>
         <div>
           <label className={`${labelClasses} text-slate-400`}>Nitrite NO₂</label>
           <input 
-            type="number" step="0.01"
+            type="text"
+            inputMode="decimal"
             value={formData.nitrite}
-            onChange={e => setFormData({...formData, nitrite: parseFloat(e.target.value) || 0})}
+            onChange={e => setFormData({...formData, nitrite: sanitizeDecimalInput(e.target.value)})}
             className={inputClasses}
           />
         </div>
         <div>
           <label className={`${labelClasses} text-slate-400`}>Nitrate NO₃</label>
           <input 
-            type="number" step="0.01"
+            type="text"
+            inputMode="decimal"
             value={formData.nitrate}
-            onChange={e => setFormData({...formData, nitrate: parseFloat(e.target.value) || 0})}
+            onChange={e => setFormData({...formData, nitrate: sanitizeDecimalInput(e.target.value)})}
             className={inputClasses}
           />
         </div>
@@ -115,27 +167,30 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
         <div>
           <label className={labelClasses}>pH (CO2 On)</label>
           <input 
-            type="number" step="0.1"
+            type="text"
+            inputMode="decimal"
             value={formData.pH}
-            onChange={e => setFormData({...formData, pH: parseFloat(e.target.value) || 0})}
+            onChange={e => setFormData({...formData, pH: sanitizeDecimalInput(e.target.value)})}
             className={inputClasses}
           />
         </div>
         <div>
           <label className={labelClasses}>GH</label>
           <input 
-            type="number" step="0.1"
+            type="text"
+            inputMode="decimal"
             value={formData.gh}
-            onChange={e => setFormData({...formData, gh: parseFloat(e.target.value) || 0})}
+            onChange={e => setFormData({...formData, gh: sanitizeDecimalInput(e.target.value)})}
             className={inputClasses}
           />
         </div>
         <div>
           <label className={labelClasses}>KH</label>
           <input 
-            type="number" step="0.1"
+            type="text"
+            inputMode="decimal"
             value={formData.kh}
-            onChange={e => setFormData({...formData, kh: parseFloat(e.target.value) || 0})}
+            onChange={e => setFormData({...formData, kh: sanitizeDecimalInput(e.target.value)})}
             className={inputClasses}
           />
         </div>
@@ -145,24 +200,26 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
         <h4 className="text-[9px] font-bold text-slate-600 uppercase mb-3 ml-1">CO2 Trimming Data</h4>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelClasses}>Degassed pH</label>
-            <input 
-              type="number" step="0.1"
-              value={formData.degassedPH || ''}
-              onChange={e => setFormData({...formData, degassedPH: parseFloat(e.target.value) || undefined})}
-              className={inputClasses}
-              placeholder="Cup + 24h air"
-            />
-          </div>
-          <div>
-            <label className={labelClasses}>Bubble Rate (bps)</label>
-            <input 
-              type="number" step="0.5"
-              value={formData.bubbleRate || ''}
-              onChange={e => setFormData({...formData, bubbleRate: parseFloat(e.target.value) || undefined})}
-              className={inputClasses}
-              placeholder="0.0"
-            />
+          <label className={labelClasses}>Degassed pH</label>
+          <input 
+            type="text"
+            inputMode="decimal"
+            value={formData.degassedPH}
+            onChange={e => setFormData({...formData, degassedPH: sanitizeDecimalInput(e.target.value)})}
+            className={inputClasses}
+            placeholder="Cup + 24h air"
+          />
+        </div>
+        <div>
+          <label className={labelClasses}>Bubble Rate (bps)</label>
+          <input 
+            type="text"
+            inputMode="decimal"
+            value={formData.bubbleRate}
+            onChange={e => setFormData({...formData, bubbleRate: sanitizeDecimalInput(e.target.value)})}
+            className={inputClasses}
+            placeholder="0.0"
+          />
           </div>
         </div>
         {phDrop && (

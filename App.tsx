@@ -490,18 +490,18 @@ const App: React.FC = () => {
                     onChange={e => setAquarium(prev => ({...prev, tankName: e.target.value}))}
                     className="w-full bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500"
                   />
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     <input 
                       type="number"
                       placeholder="Volume (L)"
                       value={aquarium.tankSize}
                       onChange={e => setAquarium(prev => ({...prev, tankSize: parseInt(e.target.value) || 0}))}
-                      className="flex-1 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500"
+                      className="w-full min-w-0 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500"
                     />
                     <select 
                       value={aquarium.tankType}
                       onChange={e => setAquarium(prev => ({...prev, tankType: e.target.value as TankType}))}
-                      className="flex-1 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500 appearance-none"
+                      className="w-full min-w-0 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500 appearance-none"
                     >
                       <option value={TankType.PLANTED}>Planted</option>
                       <option value={TankType.FRESHWATER}>Freshwater</option>
