@@ -1,20 +1,34 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# AquaTrack
 
-# Run and deploy your AI Studio app
+Smart aquarium startup hub built with React + Vite. Track water parameters, log maintenance, and keep a simple routine in one place.
 
-This contains everything you need to run your app locally.
+## Features
+- Water parameter dashboard with targets
+- Maintenance checklist and reminders
+- Logbook for routine tasks
+- Gemini-powered guidance (optional)
 
-View your app in AI Studio: https://ai.studio/apps/drive/1DTibsGFoYp94ZMW27HO1-pcPRK1m3DD5
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+## Local Development
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Set your Gemini key (optional):
+   Create `.env.local` and add `GEMINI_API_KEY=your_key`
+3. Start the dev server:
    `npm run dev`
+
+## Build
+```
+npm run build
+```
+
+## Deploy to GitHub Pages
+1. Set the Vite base to your repo path in `vite.config.ts`:
+   `base: '/<repo>/'`
+2. Add the GitHub Actions workflow from the setup guide.
+3. Push to `main` and enable Pages (Settings → Pages → GitHub Actions).
+
+## Notes
+- `.env.local` is gitignored and should not be committed.
+
