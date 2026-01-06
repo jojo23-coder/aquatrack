@@ -24,11 +24,9 @@ npm run build
 ```
 
 ## Deploy to GitHub Pages
-1. Set the Vite base to your repo path in `vite.config.ts`:
-   `base: '/<repo>/'`
-2. Add the GitHub Actions workflow from the setup guide.
+1. Vite base is set to `'/aquatrack/'` in `vite.config.ts`.
+2. GitHub Actions deploy workflow lives at `.github/workflows/deploy.yml`.
 3. Push to `main` and enable Pages (Settings → Pages → GitHub Actions).
 
 ## Notes
 - `.env.local` is gitignored and should not be committed.
-
