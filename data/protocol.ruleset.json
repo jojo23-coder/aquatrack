@@ -1,0 +1,373 @@
+{
+  "version": "0.1",
+  "phases": [
+    {
+      "id": "startup",
+      "label": "Startup",
+      "order": 10,
+      "when": { "cycling_mode_in": ["fishless_ammonia", "fish_in", "plant_assisted"] },
+      "objective_ids": ["setup", "stability"]
+    },
+    {
+      "id": "dark_start",
+      "label": "Dark Start",
+      "order": 20,
+      "when": {
+        "all": [
+          { "dark_start_enabled": true },
+          { "any": [
+            { "dark_start_preference_in": ["true"] },
+            { "all": [
+              { "dark_start_preference_in": ["auto"] },
+              { "recommended_dark_start": true }
+            ]}
+          ]}
+        ]
+      },
+      "objective_ids": ["algae_control"]
+    },
+    {
+      "id": "establish",
+      "label": "Establish",
+      "order": 30,
+      "when": { "cycling_mode_in": ["fishless_ammonia", "fish_in", "plant_assisted"] },
+      "objective_ids": ["monitoring", "cycle_start"]
+    },
+    {
+      "id": "cycle",
+      "label": "Cycle",
+      "order": 40,
+      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted"] },
+      "objective_ids": ["cycle_progress"],
+      "exit_checks": [
+        "Ammonia returns to 0 within 24h after dosing",
+        "Nitrite returns to 0 within 24h after dosing",
+        "Nitrate is present and rising"
+      ]
+    },
+    {
+      "id": "stabilize",
+      "label": "Stabilize",
+      "order": 50,
+      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted"] },
+      "objective_ids": ["cycle_complete"]
+    },
+    {
+      "id": "stock",
+      "label": "Stock",
+      "order": 60,
+      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted", "fish_in"] },
+      "objective_ids": ["stocking", "stability"]
+    },
+    {
+      "id": "maintenance",
+      "label": "Maintenance",
+      "order": 70,
+      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted", "fish_in"] },
+      "objective_ids": ["maintenance", "stability"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "r_day0_fill_start",
+      "phase_ids": ["startup"],
+      "instructions": [
+        { "text": "Fill tank to {net_volume_l} L, start filter, heater, and circulation." }
+      ],
+      "tasks": [
+        { "cadence": "one_time", "text": "Start filter, heater, and circulation." }
+      ],
+      "expected": [
+        "Initial cloudiness is normal.",
+        "Minor temperature swings are normal in the first day."
+      ],
+      "objectives": ["setup"]
+    },
+    {
+      "id": "r_day0_dechlorinate",
+      "phase_ids": ["startup"],
+      "when": { "disinfectant_in": ["chlorine", "chloramine", "unknown"] },
+      "requires_roles": ["detoxifier_conditioner"],
+      "instructions": [
+        { "text": "Add \"{conditioner_name}\" {conditioner_full_dose} to neutralize tap disinfectants." }
+      ],
+      "tasks": [
+        { "cadence": "one_time", "text": "Add \"{conditioner_name}\" {conditioner_full_dose}." }
+      ],
+      "objectives": ["setup"]
+    },
+    {
+      "id": "r_day0_dark_start",
+      "phase_ids": ["dark_start"],
+      "instructions": [
+        { "text": "Keep lights off for the first 5–7 days (dark start)." }
+      ],
+      "expected": [
+        "Reduced algae risk during the first week."
+      ],
+      "objectives": ["stability"]
+    },
+    {
+      "id": "r_day0_photoperiod",
+      "phase_ids": ["startup"],
+      "when": { "dark_start_enabled": false },
+      "instructions": [
+        { "text": "Set photoperiod to {photoperiod_hours_initial} hours." }
+      ],
+      "objectives": ["setup"]
+    },
+    {
+      "id": "r_dark_start_override_warning",
+      "phase_ids": ["startup"],
+      "when": { "dark_start_enabled": false, "recommended_dark_start": true },
+      "instructions": [
+        { "text": "Dark start was disabled; expect higher early algae risk." }
+      ],
+      "objectives": ["stability"]
+    },
+    {
+      "id": "r_day0_gh_dose",
+      "phase_ids": ["startup"],
+      "requires_roles": ["gh_remineralizer"],
+      "instructions": [
+        { "text": "Add \"{gh_remineralizer_name}\" {gh_full_fill_g_target} g to reach {target_gh_dgh} dGH." }
+      ],
+      "tasks": [
+        { "cadence": "one_time", "text": "Add \"{gh_remineralizer_name}\" {gh_full_fill_g_target} g." }
+      ],
+      "objectives": ["water_parameters"]
+    },
+    {
+      "id": "r_day0_kh_dose",
+      "phase_ids": ["startup"],
+      "requires_roles": ["kh_buffer"],
+      "instructions": [
+        { "text": "Add \"{kh_buffer_name}\" {kh_full_fill_g} g to reach {target_kh_dkh} dKH." }
+      ],
+      "tasks": [
+        { "cadence": "one_time", "text": "Add \"{kh_buffer_name}\" {kh_full_fill_g} g." }
+      ],
+      "objectives": ["water_parameters"]
+    },
+    {
+      "id": "r_day0_bacteria",
+      "phase_ids": ["startup"],
+      "requires_roles": ["bacteria_starter"],
+      "instructions": [
+        { "text": "Add \"{bacteria_starter_name}\" {bacteria_full_dose}." }
+      ],
+      "tasks": [
+        { "cadence": "one_time", "text": "Add \"{bacteria_starter_name}\" {bacteria_full_dose}." }
+      ],
+      "objectives": ["cycle_start"]
+    },
+    {
+      "id": "r_week1_testing",
+      "phase_ids": ["establish"],
+      "tasks": [
+        { "cadence": "daily", "text": "Test ammonia, nitrite, and pH.", "until_phase_id": "stabilize" }
+      ],
+      "instructions": [
+        { "text": "Track ammonia and nitrite trends to confirm cycling has started." },
+        { "text": "Avoid large water changes unless readings are unsafe." }
+      ],
+      "expected": [
+        "Ammonia or nitrite spikes are normal during early cycling."
+      ],
+      "objectives": ["monitoring"]
+    },
+    {
+      "id": "r_week1_bacteria_daily",
+      "phase_ids": ["establish"],
+      "requires_roles": ["bacteria_starter"],
+      "tasks": [
+        { "cadence": "daily", "text": "Add \"{bacteria_starter_name}\" {bacteria_full_dose}.", "until_phase_id": "cycle" }
+      ],
+      "instructions": [
+        { "text": "Daily bacteria dosing helps establish the biofilter faster." }
+      ],
+      "objectives": ["cycle_start"]
+    },
+    {
+      "id": "r_week1_fish_in_feed",
+      "phase_ids": ["establish"],
+      "when": { "cycling_mode_in": ["fish_in"] },
+      "instructions": [
+        { "text": "Feed lightly and remove uneaten food within 5 minutes." }
+      ],
+      "tasks": [
+        { "cadence": "daily", "text": "Feed lightly and remove uneaten food." , "until_phase_id": "stock" }
+      ],
+      "objectives": ["stability"]
+    },
+    {
+      "id": "r_week1_fishless_ammonia",
+      "phase_ids": ["establish"],
+      "when": { "cycling_mode_in": ["fishless_ammonia"] },
+      "requires_roles": ["ammonia_source"],
+      "tasks": [
+        { "cadence": "daily", "text": "Add \"{ammonia_source_name}\" to reach {cycle_ammonia_target_range} ppm. Use {ammonia_ml_range} mL with {ammonia_solution_percent}% solution." }
+      ],
+      "objectives": ["cycle_start"]
+    },
+    {
+      "id": "r_week1_water_change_note",
+      "phase_ids": ["establish"],
+      "when": { "cycling_mode_in": ["fishless_ammonia"] },
+      "instructions": [
+        { "text": "If cycle stall risk: ammonia > {cycle_safe_ammonia_ppm} ppm, nitrite > {cycle_safe_nitrite_ppm} ppm for more than 3 days, or pH < {cycle_safe_ph_min}, perform a 50% water change." }
+      ],
+      "objectives": ["maintenance"]
+    },
+    {
+      "id": "r_week1_water_change_note_standard",
+      "phase_ids": ["establish"],
+      "when": { "cycling_mode_in": ["fish_in", "plant_assisted"] },
+      "instructions": [
+        { "text": "Perform a small water change only if ammonia exceeds {safe_ammonia_ppm} ppm or nitrite exceeds {safe_nitrite_ppm} ppm." }
+      ],
+      "objectives": ["maintenance"]
+    },
+    {
+      "id": "r_week2_4_ammonia",
+      "phase_ids": ["cycle"],
+      "when": { "cycling_mode_in": ["fishless_ammonia"] },
+      "requires_roles": ["ammonia_source"],
+      "tasks": [
+        { "cadence": "daily", "text": "Add \"{ammonia_source_name}\" to maintain {cycle_ammonia_target_range} ppm.", "until_phase_id": "stabilize" }
+      ],
+      "instructions": [
+        { "text": "If ammonia or nitrite stays high for several days, pause dosing and retest." }
+      ],
+      "expected": [
+        "Nitrite should rise then begin to fall.",
+        "Nitrate should rise as the cycle progresses."
+      ],
+      "objectives": ["cycle_progress"]
+    },
+    {
+      "id": "r_week2_4_bacteria",
+      "phase_ids": ["cycle"],
+      "requires_roles": ["bacteria_starter"],
+      "tasks": [
+        { "cadence": "weekly", "text": "Re-dose \"{bacteria_starter_name}\" {bacteria_weekly_dose}.", "until_phase_id": "stabilize" }
+      ],
+      "instructions": [
+        { "text": "Re-dose \"{bacteria_starter_name}\" {bacteria_weekly_dose}." }
+      ],
+      "objectives": ["cycle_progress"]
+    },
+    {
+      "id": "r_stabilize_confirm",
+      "phase_ids": ["stabilize"],
+      "instructions": [
+        { "text": "Continue testing until ammonia and nitrite remain at 0 for several days." },
+        { "text": "Perform a moderate water change to reduce nitrates before stocking." }
+      ],
+      "tasks": [
+        { "cadence": "daily", "text": "Test ammonia and nitrite.", "until_phase_id": "stock" }
+      ],
+      "objectives": ["cycle_complete"]
+    },
+    {
+      "id": "r_cycle_complete_verify",
+      "phase_ids": ["stabilize"],
+      "tasks": [
+        { "cadence": "one_time", "text": "Confirm ammonia and nitrite reach 0 within 24 hours; nitrate should be rising." }
+      ],
+      "objectives": ["cycle_complete"]
+    },
+    {
+      "id": "r_livestock_intro",
+      "phase_ids": ["stock"],
+      "instructions": [
+        { "text": "Introduce livestock gradually and acclimate slowly." }
+      ],
+      "expected": [
+        "Light cloudiness or mild biofilm can appear during stocking."
+      ],
+      "objectives": ["stocking"]
+    },
+    {
+      "id": "r_livestock_intro_shrimp",
+      "phase_ids": ["stock"],
+      "when": { "shrimp_planned": true },
+      "instructions": [
+        { "text": "Use drip acclimation for shrimp and avoid rapid parameter changes." }
+      ],
+      "objectives": ["stocking"]
+    },
+    {
+      "id": "r_maintenance_wc",
+      "phase_ids": ["maintenance"],
+      "tasks": [
+        { "cadence": "weekly", "text": "Change {weekly_wc_percent_range}% water (~{weekly_wc_volume_l_range} L). Vacuum debris if needed." }
+      ],
+      "instructions": [
+        { "text": "Keep nitrate stable by adjusting water change volume if needed." }
+      ],
+      "objectives": ["maintenance"]
+    },
+    {
+      "id": "r_maintenance_testing",
+      "phase_ids": ["maintenance"],
+      "tasks": [
+        { "cadence": "weekly", "text": "Test nitrate, pH, GH, and KH." }
+      ],
+      "objectives": ["maintenance"]
+    },
+    {
+      "id": "r_maintenance_gh",
+      "phase_ids": ["maintenance"],
+      "requires_roles": ["gh_remineralizer"],
+      "tasks": [
+        { "cadence": "weekly", "text": "Add \"{gh_remineralizer_name}\" {gh_wc_g_target} g after water change." }
+      ],
+      "objectives": ["water_parameters"]
+    },
+    {
+      "id": "r_maintenance_kh",
+      "phase_ids": ["maintenance"],
+      "requires_roles": ["kh_buffer"],
+      "tasks": [
+        { "cadence": "weekly", "text": "Add \"{kh_buffer_name}\" {kh_wc_g_target} g after water change." }
+      ],
+      "objectives": ["water_parameters"]
+    },
+    {
+      "id": "r_maintenance_fertilizer",
+      "phase_ids": ["maintenance"],
+      "when": { "plants_present": true },
+      "requires_roles": ["fertilizer_micros"],
+      "tasks": [
+        { "cadence": "weekly", "text": "Add \"{fertilizer_micros_name}\" {fertilizer_maint_ml_week_range} mL/week." }
+      ],
+      "objectives": ["plant_care"]
+    },
+    {
+      "id": "r_maintenance_co2",
+      "phase_ids": ["maintenance"],
+      "when": { "co2_enabled": true },
+      "instructions": [
+        { "text": "{co2_schedule}" }
+      ],
+      "objectives": ["plant_care"]
+    },
+    {
+      "id": "r_maintenance_photoperiod",
+      "phase_ids": ["maintenance"],
+      "instructions": [
+        { "text": "Maintain photoperiod at {photoperiod_hours_post_cycle} hours." }
+      ],
+      "objectives": ["maintenance"]
+    },
+    {
+      "id": "r_maintenance_filter",
+      "phase_ids": ["maintenance"],
+      "tasks": [
+        { "cadence": "monthly", "text": "Rinse filter media in tank water (do not use tap water)." }
+      ],
+      "objectives": ["maintenance"]
+    }
+  ]
+}

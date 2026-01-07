@@ -7,9 +7,10 @@ interface Props {
   tasks: Task[];
   activePhase: PhaseId;
   onToggle: (id: string) => void;
+  phaseOrder?: PhaseId[];
 }
 
-const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle }) => {
+const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder }) => {
   // Helper to determine if a task is available in the current phase
   const isTaskAvailable = (task: Task) => {
     if (task.frequency === 'one-time') {
@@ -18,9 +19,18 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle }) => {
     
     if (!task.startPhaseId) return true;
     
-    const phaseOrder = PHASES.map(p => p.id);
-    const activeIndex = phaseOrder.indexOf(activePhase);
-    const startIndex = phaseOrder.indexOf(task.startPhaseId);
+    const orderedPhases = phaseOrder && phaseOrder.length ? phaseOrder : PHASES.map(p => p.id);
+    const activeIndex = orderedPhases.indexOf(activePhase);
+    const startIndex = orderedPhases.indexOf(task.startPhaseId);
+    const endIndex = task.endPhaseId ? orderedPhases.indexOf(task.endPhaseId) : -1;
+    
+    if (activeIndex === -1 || startIndex === -1) {
+      return task.startPhaseId === activePhase;
+    }
+
+    if (endIndex !== -1 && activeIndex > endIndex) {
+      return false;
+    }
     
     return activeIndex >= startIndex;
   };

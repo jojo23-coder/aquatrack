@@ -1,0 +1,531 @@
+{
+  "meta": {
+    "package_name": "aquatrack-engine",
+    "package_version": "0.1.0",
+    "purpose": "Deterministic plan generator: setup -> recommendations -> calculators -> rendered plan (phases/checklists/limits).",
+    "principles": [
+      "No brand-specific logic; only generic product roles and effect models.",
+      "Deterministic outputs (no LLM generation inside app).",
+      "User can override recommendations with explicit risk acknowledgement."
+    ]
+  },
+
+  "schemas": {
+    "setup.schema.json": {
+      "version": "0.1",
+      "fields": {
+        "user_preferences": {
+          "cycling_mode_preference": { "type": "string", "enum": ["auto", "fishless_ammonia", "fish_in", "plant_assisted"], "default": "auto" },
+          "dark_start": { "type": "boolean", "default": false },
+          "risk_tolerance": { "type": "string", "enum": ["low", "medium", "high"], "default": "low" },
+          "goal_profile": { "type": "string", "enum": ["stability_first", "growth_first", "balanced"], "default": "stability_first" },
+          "photoperiod_hours_initial": { "type": "number", "default": 6 },
+          "photoperiod_hours_post_cycle": { "type": "number", "default": 8 },
+          "units": { "type": "string", "enum": ["metric"], "default": "metric" }
+        },
+        "tank_profile": {
+          "tank_volume_l_gross": { "type": "number", "required": true },
+          "net_volume_method": { "type": "string", "enum": ["explicit", "estimate_multiplier"], "default": "estimate_multiplier" },
+          "estimated_net_multiplier": { "type": "number", "default": 0.85 },
+          "net_water_volume_l": { "type": "number", "required_if": { "tank_profile.net_volume_method": "explicit" } },
+          "substrate": {
+            "type": "object",
+            "fields": {
+              "type": { "type": "string", "enum": ["inert", "aquasoil"], "required": true },
+              "sand_cap_cm": { "type": "number", "default": 2.0 }
+            }
+          },
+          "filtration": {
+            "type": "object",
+            "fields": {
+              "filter_model": { "type": "string" },
+              "rated_flow_lph": { "type": "number" },
+              "flow_class": { "type": "string", "enum": ["low", "medium", "high"], "default": "medium" }
+            }
+          },
+          "co2": {
+            "type": "object",
+            "fields": {
+              "enabled": { "type": "boolean", "default": true },
+              "injection_type": { "type": "string", "enum": ["inline", "diffuser", "reactor"], "required": true },
+              "target_ph_drop": { "type": "number", "default": 1.0 },
+              "surface_agitation": { "type": "string", "enum": ["flat", "gentle_ripple", "turbulent"], "default": "gentle_ripple" }
+            }
+          },
+          "temperature_target_c": { "type": "array", "items": "number", "default": [22, 24] }
+        },
+        "water_source_profile": {
+          "tap_ph": { "type": "number", "required": true },
+          "tap_gh_dgh": { "type": "number", "required": true },
+          "tap_kh_dkh": { "type": "number_or_null", "default": null },
+          "disinfectant": { "type": "string", "enum": ["none", "chlorine", "chloramine", "unknown"], "default": "unknown" },
+          "weekly_water_change_percent_target": { "type": "array", "items": "number", "default": [25, 30] }
+        },
+        "biology_profile": {
+          "plants": {
+            "type": "object",
+            "fields": {
+              "categories": { "type": "array", "items": { "type": "string", "enum": ["moss", "epiphytes", "stems", "floaters", "root_feeders"] }, "required": true },
+              "demand_class": { "type": "string", "enum": ["low", "medium", "high", "auto"], "default": "auto" }
+            }
+          },
+          "livestock_plan": {
+            "type": "object",
+            "fields": {
+              "fish": { "type": "array", "default": [] },
+              "shrimp": { "type": "array", "default": [] },
+              "cleanup_crew": { "type": "array", "default": [] }
+            }
+          }
+        },
+        "product_stack": {
+          "ammonia_source": {
+            "type": "object",
+            "fields": {
+              "type": { "type": "string", "enum": ["pure_ammonia", "fish_food", "none"], "default": "pure_ammonia" },
+              "solution_percent": { "type": "number_or_null", "default": 10 }
+            }
+          },
+          "selected_product_ids": {
+            "type": "array",
+            "items": "string",
+            "required": true,
+            "notes": "References into product.catalog.instance.json"
+          }
+        }
+      }
+    },
+
+    "product.catalog.schema.json": {
+      "version": "0.1",
+      "product_definition": {
+        "product_id": "string",
+        "display_name": "string",
+        "category": {
+          "type": "string",
+          "enum": [
+            "detoxifier_conditioner",
+            "bacteria_starter",
+            "remineralizer_gh",
+            "buffer_kh",
+            "ammonia_source",
+            "fertilizer_micros",
+            "fertilizer_macros",
+            "water_clarifier",
+            "water_quality_support"
+          ]
+        },
+        "dose_model": {
+          "dose_basis": { "type": "string", "enum": ["per_volume", "per_event", "conditional", "none"] },
+          "amount": "number_or_null",
+          "unit": { "type": "string", "enum": ["mL", "g", "drops", "none"] },
+          "per_volume_l": "number_or_null",
+          "frequency_default": { "type": "string", "enum": ["daily", "weekly", "per_water_change", "as_needed", "one_time", "none"] },
+          "scaling_rule": { "type": "string", "enum": ["linear_by_volume", "fixed", "none"] },
+          "notes": "string_or_null"
+        },
+        "effect_model": {
+          "effect_type": {
+            "type": "string",
+            "enum": [
+              "delta_GH_dGH",
+              "delta_KH_dKH",
+              "target_TAN_ppm",
+              "trace_micro_support",
+              "bioaugmentation_support",
+              "detox_support",
+              "clarify_support",
+              "none"
+            ]
+          },
+          "strength": "number_or_null",
+          "strength_units": "string_or_null",
+          "calculation_method": "string_or_null",
+          "notes": "string_or_null"
+        },
+        "constraints": {
+          "allowed_phases": "array_or_null",
+          "requires_trigger": { "type": "boolean", "default": false },
+          "warnings": "array"
+        }
+      }
+    },
+
+    "plan.output.schema.json": {
+      "version": "0.1",
+      "fields": {
+        "meta": { "setup_version": "string", "plan_version": "string", "generated_at_iso": "string" },
+        "selection": {
+          "recommended_cycling_mode": "string",
+          "user_selected_cycling_mode": "string",
+          "recommended_dark_start": "boolean",
+          "user_selected_dark_start": "boolean",
+          "risk_score_1_to_5": "number",
+          "reason_codes": "array",
+          "override_acknowledged": "boolean"
+        },
+        "derived": {
+          "net_water_volume_l": "number",
+          "weekly_water_change_percent_range": "array",
+          "weekly_water_change_volume_l_range": "array",
+          "photoperiod_hours_initial": "number",
+          "photoperiod_hours_post_cycle": "number"
+        },
+        "global_reference": { "targets": "object", "parameter_limits": "object", "dosing_reference": "object" },
+        "phases": "array",
+        "phase_checklists": "array",
+        "worksheets": "array",
+        "notes": "array"
+      }
+    }
+  },
+
+  "decision_tables": {
+    "cycling_mode.decision_table.json": {
+      "version": "0.1",
+      "derived_fields_logic": {
+        "shrimp_planned": "true if livestock_plan.shrimp total count > 0",
+        "tap_kh_status": "unknown_or_low if tap_kh_dkh is null OR tap_kh_dkh < 2 else ok",
+        "ammonia_available": "true if ammonia_source.type != 'none'"
+      },
+      "rules": [
+        {
+          "id": "R_default_safe",
+          "if": { "cycling_mode_preference": "auto" },
+          "then": {
+            "recommended_cycling_mode": "fishless_ammonia",
+            "risk_score_1_to_5": 2,
+            "requires_override_acknowledgement": false,
+            "reason_codes": ["DEFAULT_SAFE"]
+          }
+        },
+        {
+          "id": "R_shrimp_low_risk",
+          "if": { "cycling_mode_preference": "auto", "shrimp_planned": true, "risk_tolerance": "low" },
+          "then": {
+            "recommended_cycling_mode": "fishless_ammonia",
+            "risk_score_1_to_5": 1,
+            "requires_override_acknowledgement": false,
+            "reason_codes": ["SHRIMP_PLANNED", "LOW_RISK_TOLERANCE"]
+          }
+        },
+        {
+          "id": "R_kh_unknown_or_low",
+          "if": { "cycling_mode_preference": "auto", "tap_kh_status": "unknown_or_low" },
+          "then": {
+            "recommended_cycling_mode": "fishless_ammonia",
+            "risk_score_1_to_5": 2,
+            "requires_override_acknowledgement": false,
+            "reason_codes": ["KH_UNKNOWN_OR_LOW", "PREDICTABILITY_PRIORITY"]
+          }
+        },
+        {
+          "id": "R_allow_fish_in_if_user_selects",
+          "if": { "cycling_mode_preference": "fish_in" },
+          "then": {
+            "recommended_cycling_mode": "fish_in",
+            "risk_score_1_to_5": 4,
+            "requires_override_acknowledgement": true,
+            "reason_codes": ["USER_SELECTED_HIGHER_RISK"]
+          }
+        },
+        {
+          "id": "R_auto_fish_in_if_no_ammonia_and_high_risk",
+          "if": { "cycling_mode_preference": "auto", "ammonia_available": false, "risk_tolerance": "high" },
+          "then": {
+            "recommended_cycling_mode": "fish_in",
+            "risk_score_1_to_5": 4,
+            "requires_override_acknowledgement": true,
+            "reason_codes": ["NO_AMMONIA_SOURCE", "USER_ACCEPTS_RISK"]
+          }
+        }
+      ]
+    },
+
+    "dark_start.decision_table.json": {
+      "version": "0.1",
+      "derived_fields_logic": {
+        "high_light": "true if photoperiod_hours_initial >= 8",
+        "aquasoil": "true if substrate.type == 'aquasoil'"
+      },
+      "rules": [
+        { "id": "D_user_on", "if": { "dark_start": true }, "then": { "recommended_dark_start": true, "reason_codes": ["USER_SELECTED"] } },
+        { "id": "D_aquasoil", "if": { "aquasoil": true }, "then": { "recommended_dark_start": true, "reason_codes": ["AQUASOIL_ALGAE_RISK"] } },
+        { "id": "D_high_light_growth_first", "if": { "goal_profile": "growth_first", "high_light": true }, "then": { "recommended_dark_start": true, "reason_codes": ["HIGH_LIGHT_RISK"] } },
+        { "id": "D_default_off", "if": {}, "then": { "recommended_dark_start": false, "reason_codes": ["DEFAULT"] } }
+      ]
+    },
+
+    "override.policy.json": {
+      "version": "0.1",
+      "requires_acknowledgement_when": [
+        "user_selected_cycling_mode == 'fish_in' AND recommended_cycling_mode == 'fishless_ammonia'",
+        "risk_score_1_to_5 >= 4 AND user_selected_cycling_mode != recommended_cycling_mode"
+      ],
+      "acknowledgement_text": "I understand this cycling option increases livestock risk and requires frequent testing, conservative stocking, and readiness to do large water changes."
+    }
+  },
+
+  "calculators": {
+    "calculator.framework.json": {
+      "version": "0.2",
+      "defaults": {
+        "cycle_ammonia_target_ppm_range": [1.5, 2.0],
+        "cycle_ammonia_max_ppm": 3.0,
+        "co2_on_lead_hours": 1,
+        "co2_off_lead_hours": 1,
+        "fertilizer_start_factor": 0.5,
+        "fertilizer_maint_factor_range": [0.5, 1.0]
+      },
+      "constants": {
+        "gh_remineralizer": {
+          "g_per_l_per_1_dgh": 0.0666666667,
+          "notes": "Used when the selected GH remineralizer has a label-derived GH effect model."
+        },
+        "kh_buffer_rule_of_thumb": {
+          "g_per_10l_per_1_dkh": 0.6
+        },
+        "ammonia_calibration": {
+          "reference_solution_percent": 10,
+          "reference_dose_ml": 0.6,
+          "reference_volume_l": 60,
+          "reference_result_ppm": 2.0
+        },
+        "fertilizer_micros_label": {
+          "ml_per_250l_per_week": 5.0
+        }
+      },
+      "functions": [
+        {
+          "id": "derive_net_volume_l",
+          "inputs": ["tank_profile.net_volume_method", "tank_profile.net_water_volume_l", "tank_profile.tank_volume_l_gross", "tank_profile.estimated_net_multiplier"],
+          "outputs": ["derived.net_water_volume_l"],
+          "formula_plaintext": "explicit -> net_water_volume_l; else gross * multiplier"
+        },
+        {
+          "id": "derive_weekly_wc_volume_range_l",
+          "inputs": ["derived.net_water_volume_l", "water_source_profile.weekly_water_change_percent_target"],
+          "outputs": ["derived.weekly_wc_volume_l_range"],
+          "formula_plaintext": "[net*pct_low/100, net*pct_high/100]"
+        },
+        {
+          "id": "calc_gh_remineralizer_g_for_volume",
+          "inputs": ["tap_gh_dgh", "target_gh_range", "volume_l"],
+          "outputs": ["gh_remineralizer_g_range"],
+          "formula_plaintext": "((target_low-tap)*vol*0.0666667, (target_high-tap)*vol*0.0666667)"
+        },
+        {
+          "id": "calc_kh_buffer_g_for_volume",
+          "inputs": ["tap_kh_dkh", "target_kh_dkh", "volume_l"],
+          "outputs": ["kh_buffer_g"],
+          "formula_plaintext": "max(0,target_kh-tap_kh)*(vol/10)*0.6"
+        },
+        {
+          "id": "calc_ammonia_ml_for_target_ppm",
+          "inputs": ["net_volume_l", "target_ppm", "solution_percent"],
+          "outputs": ["ammonia_ml"],
+          "formula_plaintext": "if solution_percent==10: ml=0.6*(net/60)*(target/2). else: require calibration."
+        },
+        {
+          "id": "calc_fertilizer_micros_ml_per_week",
+          "inputs": ["net_volume_l", "dose_factor"],
+          "outputs": ["fertilizer_micros_ml_week"],
+          "formula_plaintext": "base=5*(net/250); base*dose_factor"
+        }
+      ]
+    }
+  },
+
+  "templates": {
+    "template.pack.inert_fishless_v1.json": {
+      "version": "0.1",
+      "pack_id": "inert_fishless_v1",
+      "phases": [
+        {
+          "phase_id": "phase_1_initial_start_day_0",
+          "phase_name": "Initial Start (Day 0)",
+          "objective_ids": ["setup_physical", "set_baseline", "start_systems"],
+          "instruction_atoms": [
+            { "id": "p1_a", "cadence": "one_time", "text_template": "Assemble hardscape/substrate; attach epiphytes (do not bury rhizomes)." },
+            { "id": "p1_b", "cadence": "one_time", "text_template": "Fill tank. Dose GH remineralizer {gh_full_fill_g_range} g to reach GH {target_gh_range} dGH. Dose KH buffer {kh_full_fill_g} g to reach KH {target_kh_dkh} dKH." },
+            { "id": "p1_c", "cadence": "one_time", "text_template": "Set lights to {photoperiod_hours_initial} h/day. Run filter 24/7. Keep CO2 OFF." }
+          ],
+          "expected_behavior_atoms": [
+            "Slight cloudiness is normal.",
+            "Some plant melt is normal."
+          ],
+          "measurement_hooks": [
+            { "name": "GH", "units": "dGH", "frequency": "once" },
+            { "name": "KH", "units": "dKH", "frequency": "once" },
+            { "name": "Temperature", "units": "°C", "frequency": "once" }
+          ]
+        },
+        {
+          "phase_id": "phase_2_first_week_days_1_7",
+          "phase_name": "First Week (Days 1–7)",
+          "objective_ids": ["seed_bacteria", "begin_ammonia"],
+          "instruction_atoms": [
+            { "id": "p2_a", "cadence": "one_time", "text_template": "Dose ammonia to {cycle_ammonia_target_range} ppm: {ammonia_ml_range} mL (solution {ammonia_solution_percent}% in {net_volume_l} L)." },
+            { "id": "p2_b", "cadence": "daily", "text_template": "Dose bacteria starter daily (per label)." },
+            { "id": "p2_c", "cadence": "daily", "text_template": "Keep lights {photoperiod_hours_initial} h/day. No fertilizer yet. CO2 OFF or very low (optional)." }
+          ],
+          "expected_behavior_atoms": [
+            "Bacterial haze and diatoms may appear.",
+            "Ammonia may not drop for several days."
+          ],
+          "measurement_hooks": [
+            { "name": "Ammonia", "units": "ppm", "frequency": "every 2–3 days" },
+            { "name": "pH (CO2 off)", "units": "pH", "frequency": "every 2–3 days" }
+          ]
+        },
+        {
+          "phase_id": "phase_3_active_cycling_weeks_2_4",
+          "phase_name": "Active Cycling (Weeks 2–4)",
+          "objective_ids": ["complete_nitrification", "stabilize_hardness", "ramp_co2_optional"],
+          "instruction_atoms": [
+            { "id": "p3_a", "cadence": "as_needed", "text_template": "Maintain ammonia {cycle_ammonia_target_range} ppm. Redose only when ammonia=0. Never exceed {cycle_ammonia_max} ppm." },
+            { "id": "p3_b", "cadence": "weekly", "text_template": "Weekly water change {weekly_wc_percent_range}%. In replacement water ({weekly_wc_volume_l_range} L): dose GH remineralizer {gh_wc_g_range} g and KH buffer {kh_wc_g_range} g; mix fully before adding." },
+            { "id": "p3_c", "cadence": "weekly", "text_template": "Dose bacteria starter weekly (per label)." }
+          ],
+          "expected_behavior_atoms": [
+            "Nitrite spike is expected.",
+            "Some algae/dirt phases are normal."
+          ],
+          "measurement_hooks": [
+            { "name": "Ammonia", "units": "ppm", "frequency": "2–3×/week" },
+            { "name": "Nitrite", "units": "ppm", "frequency": "2–3×/week" },
+            { "name": "Nitrate", "units": "ppm", "frequency": "weekly" },
+            { "name": "GH", "units": "dGH", "frequency": "weekly" },
+            { "name": "KH", "units": "dKH", "frequency": "weekly" }
+          ]
+        },
+        {
+          "phase_id": "phase_4_cycle_complete",
+          "phase_name": "Cycle Complete",
+          "objective_ids": ["verify_capacity", "transition_to_fertilizer"],
+          "instruction_atoms": [
+            { "id": "p4_a", "cadence": "one_time", "text_template": "Completion test: dose ammonia to {cycle_ammonia_target_range} ppm and confirm ammonia=0 and nitrite=0 within 24h." },
+            { "id": "p4_b", "cadence": "one_time", "text_template": "Do a 50% water change. Stop ammonia dosing." },
+            { "id": "p4_c", "cadence": "weekly", "text_template": "Start fertilizer micros at {fertilizer_start_ml_week} mL/week (start factor {fertilizer_start_factor})." },
+            { "id": "p4_d", "cadence": "one_time", "text_template": "Keep photoperiod at {photoperiod_hours_initial} h for 1 week, then ramp toward {photoperiod_hours_post_cycle} h by +0.5–1 h/week if algae remains controlled." }
+          ],
+          "expected_behavior_atoms": [
+            "Stability improves; plant growth may begin."
+          ],
+          "measurement_hooks": [
+            { "name": "Ammonia", "units": "ppm", "frequency": "daily for 2–3 days" },
+            { "name": "Nitrite", "units": "ppm", "frequency": "daily for 2–3 days" }
+          ]
+        },
+        {
+          "phase_id": "phase_5_stocking",
+          "phase_name": "Stocking",
+          "objective_ids": ["stock_gradually", "avoid_shock"],
+          "instruction_atoms": [
+            { "id": "p5_a", "cadence": "one_time", "text_template": "Add cleanup crew first, then shrimp (drip ≥1h), then fish in 2 batches 1–2 weeks apart." },
+            { "id": "p5_b", "cadence": "daily", "text_template": "Feed lightly for 10–14 days after each addition. Avoid changing CO2 settings for 7 days after each addition." }
+          ],
+          "expected_behavior_atoms": [
+            "Shrimp may hide; fish may be shy initially."
+          ],
+          "measurement_hooks": [
+            { "name": "Ammonia", "units": "ppm", "frequency": "24–48h after each batch" },
+            { "name": "Nitrite", "units": "ppm", "frequency": "24–48h after each batch" }
+          ]
+        },
+        {
+          "phase_id": "phase_6_maintenance",
+          "phase_name": "Steady Maintenance",
+          "objective_ids": ["weekly_stability", "long_term_health"],
+          "instruction_atoms": [
+            { "id": "p6_a", "cadence": "weekly", "text_template": "Weekly water change {weekly_wc_percent_range}%. Dose GH remineralizer {gh_wc_g_range} g and KH buffer {kh_wc_g_range} g into replacement water; mix fully." },
+            { "id": "p6_b", "cadence": "weekly", "text_template": "Dose fertilizer micros {fertilizer_maint_ml_week_range} mL/week (adjust based on plant response and algae control)." },
+            { "id": "p6_c", "cadence": "monthly", "text_template": "Monthly: rinse filter sponges/media in removed tank water; never rinse biomedia in tap." }
+          ],
+          "expected_behavior_atoms": [
+            "Slow steady growth and stable livestock behavior."
+          ],
+          "measurement_hooks": [
+            { "name": "GH", "units": "dGH", "frequency": "weekly to biweekly" },
+            { "name": "KH", "units": "dKH", "frequency": "weekly to biweekly" },
+            { "name": "Nitrate", "units": "ppm", "frequency": "weekly to biweekly" }
+          ]
+        }
+      ]
+    },
+
+    "template.pack.fish_in_v1.json": {
+      "version": "0.1",
+      "pack_id": "fish_in_v1",
+      "notes": "High-risk mode. Use only with override acknowledgement.",
+      "phases": [
+        {
+          "phase_id": "phase_fish_in_week_1",
+          "phase_name": "Fish-in Cycling (Week 1)",
+          "objective_ids": ["minimize_harm", "seed_bacteria"],
+          "instruction_atoms": [
+            { "id": "fi_1", "cadence": "one_time", "text_template": "Stock very lightly. Feed minimal amounts." },
+            { "id": "fi_2", "cadence": "daily", "text_template": "Test ammonia and nitrite daily; if detectable, do 30–50% water change immediately." },
+            { "id": "fi_3", "cadence": "as_needed", "text_template": "If needed, use detoxifier/conditioner per label as emergency support (not a substitute for water changes)." },
+            { "id": "fi_4", "cadence": "daily", "text_template": "Dose bacteria starter daily for 7 days (per label)." }
+          ],
+          "expected_behavior_atoms": [
+            "Frequent interventions may be required."
+          ],
+          "measurement_hooks": [
+            { "name": "Ammonia", "units": "ppm", "frequency": "daily" },
+            { "name": "Nitrite", "units": "ppm", "frequency": "daily" }
+          ]
+        }
+      ]
+    }
+  },
+
+  "parameter_limits": {
+    "parameter_limits.generic.json": {
+      "temperature_c": { "min": 22.0, "max": 24.0 },
+      "gh_dgh": { "min": 5.0, "max": 7.0, "target_range": [5.5, 6.0] },
+      "kh_dkh": { "min": 2.0, "max": 4.0, "target": 3.0 },
+      "ph_co2_on": { "min": 6.4, "max": 7.0, "target_range": [6.5, 6.8] },
+      "ph_degassed": { "min": 7.2, "max": 7.8 },
+      "ph_day_night_swing": { "max": 1.0 },
+      "ammonia_ppm": { "min": 0.0, "max": 0.0, "cycling_target_range": [1.5, 2.0], "cycling_absolute_max": 3.0 },
+      "nitrite_ppm": { "min": 0.0, "max": 0.0 },
+      "nitrate_ppm": { "min": 5.0, "max": 30.0, "target_range": [5.0, 20.0] },
+      "co2_ph_drop": { "min": 0.8, "max": 1.2, "target": 1.0 }
+    }
+  },
+
+  "worksheets": {
+    "worksheets.generic.json": [
+      {
+        "worksheet_id": "co2_tuning",
+        "title": "CO2 Tuning",
+        "fields": [
+          { "key": "degassed_ph", "type": "number" },
+          { "key": "co2_on_ph", "type": "number" },
+          { "key": "ph_drop", "type": "number" },
+          { "key": "bubble_rate_bps", "type": "number" },
+          { "key": "surface_ripple", "type": "string" },
+          { "key": "behavior_notes", "type": "string" }
+        ]
+      },
+      {
+        "worksheet_id": "weekly_log",
+        "title": "Weekly Log",
+        "fields": [
+          { "key": "week_number", "type": "number" },
+          { "key": "water_change_percent", "type": "number" },
+          { "key": "gh_remineralizer_g", "type": "number" },
+          { "key": "kh_buffer_g", "type": "number" },
+          { "key": "fertilizer_micros_ml", "type": "number" },
+          { "key": "gh_dgh", "type": "number" },
+          { "key": "kh_dkh", "type": "number" },
+          { "key": "ph_co2_on", "type": "number" },
+          { "key": "nitrate_ppm", "type": "number" },
+          { "key": "notes", "type": "string" }
+        ]
+      }
+    ]
+  }
+}

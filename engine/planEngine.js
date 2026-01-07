@@ -26,6 +26,9 @@ const formatNumber = (value, decimals = 2) => {
     return 'N/A';
   }
   const fixed = Number(value).toFixed(decimals);
+  if (!fixed.includes('.')) {
+    return fixed;
+  }
   return fixed.replace(/\.?0+$/, '');
 };
 
@@ -37,6 +40,16 @@ const formatRange = (range, decimals = 2) => {
     return 'N/A';
   }
   return `${formatNumber(range[0], decimals)}-${formatNumber(range[1], decimals)}`;
+};
+
+const averageRange = (range) => {
+  if (!Array.isArray(range) || range.length !== 2) {
+    return null;
+  }
+  if (range.some((value) => value === null || value === undefined || Number.isNaN(value))) {
+    return null;
+  }
+  return (range[0] + range[1]) / 2;
 };
 
 const roundTo = (value, decimals = 2) => {
@@ -178,8 +191,44 @@ const buildPlaceholderMap = (data) => {
     dosingReference,
     targets,
     calculatorDefaults,
-    ammoniaSolutionPercent
+    ammoniaSolutionPercent,
+    roleMap,
+    cyclingMode
   } = data;
+  const getRoleDose = (role, volume) => {
+    const product = roleMap?.[role];
+    const doseModel = product?.dose_model;
+    if (!doseModel || doseModel.dose_basis !== 'per_volume') return null;
+    if (!doseModel.amount || !doseModel.per_volume_l) return null;
+    const total = (volume / doseModel.per_volume_l) * doseModel.amount;
+    return {
+      amount: total,
+      unit: doseModel.unit || ''
+    };
+  };
+  const doseToString = (dose) => {
+    if (!dose) return 'per label';
+    return `${formatNumber(dose.amount, 1)} ${dose.unit}`.trim();
+  };
+  const getRoleName = (role) => {
+    const product = roleMap?.[role];
+    return product?.display_name || role.replace(/_/g, ' ');
+  };
+  const ghFullFillTarget = averageRange(dosingReference.gh_full_fill_g_range);
+  const ghWcTarget = averageRange(dosingReference.gh_wc_g_range);
+  const khWcTarget = averageRange(dosingReference.kh_wc_g_range);
+  const targetGh = targets.gh_dgh?.target ?? averageRange(targets.gh_dgh?.target_range);
+  const targetKh = targets.kh_dkh?.target ?? averageRange(targets.kh_dkh?.target_range);
+  const conditionerFull = getRoleDose('detoxifier_conditioner', derived.net_water_volume_l);
+  const bacteriaFull = getRoleDose('bacteria_starter', derived.net_water_volume_l);
+  const bacteriaWeekly = getRoleDose('bacteria_starter', derived.net_water_volume_l);
+
+  const cycleSafe = cyclingMode === 'fishless_ammonia'
+    ? { ammonia: 6, nitrite: 5 }
+    : {
+      ammonia: targets.ammonia_ppm?.target ?? 0,
+      nitrite: targets.nitrite_ppm?.target ?? 0
+    };
 
   return {
     net_volume_l: formatNumber(derived.net_water_volume_l, 1),
@@ -192,14 +241,33 @@ const buildPlaceholderMap = (data) => {
     weekly_wc_percent_range: formatRange(derived.weekly_water_change_percent_range, 0),
     weekly_wc_volume_l_range: formatRange(derived.weekly_water_change_volume_l_range, 1),
     gh_full_fill_g_range: formatRange(dosingReference.gh_full_fill_g_range, 2),
+    gh_full_fill_g_target: formatNumber(ghFullFillTarget, 1),
     gh_wc_g_range: formatRange(dosingReference.gh_wc_g_range, 2),
+    gh_wc_g_target: formatNumber(ghWcTarget, 1),
     kh_full_fill_g: formatNumber(dosingReference.kh_full_fill_g, 2),
     kh_wc_g_range: formatRange(dosingReference.kh_wc_g_range, 2),
-    target_gh_range: formatRange(targets.gh_dgh.target_range, 1),
-    target_kh_dkh: formatNumber(targets.kh_dkh.target, 1),
+    kh_wc_g_target: formatNumber(khWcTarget, 1),
+    target_gh_range: formatRange(targets.gh_dgh?.target_range, 1),
+    target_gh_dgh: formatNumber(targetGh, 1),
+    target_kh_dkh: formatNumber(targetKh, 1),
+    safe_ammonia_ppm: formatNumber(targets.ammonia_ppm?.target, 1),
+    safe_nitrite_ppm: formatNumber(targets.nitrite_ppm?.target, 1),
+    cycle_safe_ammonia_ppm: formatNumber(cycleSafe.ammonia, 1),
+    cycle_safe_nitrite_ppm: formatNumber(cycleSafe.nitrite, 1),
+    cycle_safe_ph_min: formatNumber(6.4, 1),
     fertilizer_start_ml_week: formatNumber(dosingReference.fertilizer_start_ml_week, 2),
     fertilizer_start_factor: formatNumber(calculatorDefaults.fertilizer_start_factor, 2),
-    fertilizer_maint_ml_week_range: formatRange(dosingReference.fertilizer_maint_ml_week_range, 2)
+    fertilizer_maint_ml_week_range: formatRange(dosingReference.fertilizer_maint_ml_week_range, 2),
+    gh_remineralizer_name: getRoleName('gh_remineralizer'),
+    kh_buffer_name: getRoleName('kh_buffer'),
+    bacteria_starter_name: getRoleName('bacteria_starter'),
+    conditioner_name: getRoleName('detoxifier_conditioner'),
+    ammonia_source_name: getRoleName('ammonia_source'),
+    fertilizer_micros_name: getRoleName('fertilizer_micros'),
+    conditioner_full_dose: doseToString(conditionerFull),
+    bacteria_full_dose: doseToString(bacteriaFull),
+    bacteria_weekly_dose: doseToString(bacteriaWeekly),
+    co2_schedule: dosingReference.co2_schedule || 'CO2 schedule unavailable'
   };
 };
 
@@ -222,14 +290,90 @@ const shouldSkipTriggerInstruction = (text, roleMap) => {
   return false;
 };
 
+const buildCatalogFromUserProducts = (userProducts = []) => {
+  const effectMap = {
+    gh_remineralizer: { effect_type: 'delta_GH_dGH', unit: 'dGH' },
+    kh_buffer: { effect_type: 'delta_KH_dKH', unit: 'dKH' },
+    fertilizer_micros: { effect_type: 'none', unit: 'support' },
+    ammonia_source: { effect_type: 'target_TAN_ppm', unit: 'ppm' },
+    bacteria_starter: { effect_type: 'bioaugmentation_support', unit: 'support' },
+    detoxifier_conditioner: { effect_type: 'detox_support', unit: 'support' },
+    water_clarifier: { effect_type: 'clarify_support', unit: 'support' },
+    water_quality_support: { effect_type: 'none', unit: 'support' }
+  };
+
+  const bicarbonateDeltaKh = (doseAmount, perVolumeL) => {
+    if (!doseAmount || !perVolumeL) return 0;
+    const meqPerL = (doseAmount * 1000) / 84 / perVolumeL;
+    return meqPerL / 0.357;
+  };
+
+  const ammoniaDeltaPpm = (doseAmount, perVolumeL, solutionPercent) => {
+    if (!doseAmount || !perVolumeL) return 0;
+    const percent = solutionPercent || 10;
+    const ppmPerMlPerL = 200 * (percent / 10);
+    const mlPerL = doseAmount / perVolumeL;
+    return ppmPerMlPerL * mlPerL;
+  };
+
+  const products = userProducts.map((product) => {
+    const category = ROLE_CATEGORIES[product.role];
+    const effect = effectMap[product.role] || { effect_type: 'none', unit: 'support' };
+    let strength = product.effect_value;
+    if (product.role === 'fertilizer_micros') {
+      strength = null;
+    }
+    if (product.role === 'kh_buffer' && product.bicarbonate) {
+      strength = bicarbonateDeltaKh(product.dose_amount, product.per_volume_l);
+    }
+    if (product.role === 'ammonia_source' && product.pure_ammonia) {
+      strength = ammoniaDeltaPpm(product.dose_amount, product.per_volume_l, product.ammonia_solution_percent);
+    }
+    return {
+      product_id: product.role,
+      display_name: product.name || product.role,
+      category,
+      dose_model: {
+        dose_basis: 'per_volume',
+        amount: product.dose_amount,
+        unit: product.dose_unit,
+        per_volume_l: product.per_volume_l,
+        frequency_default: 'as_needed',
+        scaling_rule: 'linear_by_volume',
+        notes: null
+      },
+      effect_model: {
+        effect_type: effect.effect_type,
+        strength,
+        strength_units: effect.unit,
+        calculation_method: null,
+        notes: null
+      },
+      constraints: {
+        allowed_phases: null,
+        requires_trigger: ['detoxifier_conditioner', 'water_clarifier', 'water_quality_support'].includes(product.role),
+        warnings: []
+      }
+    };
+  });
+
+  return {
+    version: 'user_products',
+    catalog_id: 'user_products',
+    products
+  };
+};
+
 const generateChecklists = (phases) => {
   return phases.map((phase) => {
     const cadenceBuckets = Object.fromEntries(CADENCE_ORDER.map((cadence) => [cadence, []]));
-    for (const instruction of phase.instruction_atoms) {
-      if (!cadenceBuckets[instruction.cadence]) {
-        cadenceBuckets[instruction.cadence] = [];
+    const taskAtoms = Array.isArray(phase.task_atoms) ? phase.task_atoms : [];
+    for (const task of taskAtoms) {
+      if (!task?.cadence) continue;
+      if (!cadenceBuckets[task.cadence]) {
+        cadenceBuckets[task.cadence] = [];
       }
-      cadenceBuckets[instruction.cadence].push(instruction.text);
+      cadenceBuckets[task.cadence].push(task.text);
     }
     return {
       phase_id: phase.phase_id,
@@ -240,11 +384,152 @@ const generateChecklists = (phases) => {
   });
 };
 
+const matchesCondition = (when, context) => {
+  if (!when) return true;
+  if (when.any) {
+    return when.any.some((entry) => matchesCondition(entry, context));
+  }
+  if (when.all) {
+    return when.all.every((entry) => matchesCondition(entry, context));
+  }
+  if (when.not) {
+    return !matchesCondition(when.not, context);
+  }
+
+  const matchValue = (actual, expected) => {
+    if (Array.isArray(expected)) {
+      return expected.includes(actual);
+    }
+    return actual === expected;
+  };
+
+  if (when.cycling_mode_in && !matchValue(context.cycling_mode, when.cycling_mode_in)) {
+    return false;
+  }
+  if (when.substrate_in && !matchValue(context.substrate_type, when.substrate_in)) {
+    return false;
+  }
+  if (when.dark_start_enabled !== undefined && context.dark_start_enabled !== when.dark_start_enabled) {
+    return false;
+  }
+  if (when.recommended_dark_start !== undefined && context.recommended_dark_start !== when.recommended_dark_start) {
+    return false;
+  }
+  if (when.user_dark_start_override !== undefined && context.user_dark_start_override !== when.user_dark_start_override) {
+    return false;
+  }
+  if (when.dark_start_preference_in && !matchValue(context.dark_start_preference, when.dark_start_preference_in)) {
+    return false;
+  }
+  if (when.co2_enabled !== undefined && context.co2_enabled !== when.co2_enabled) {
+    return false;
+  }
+  if (when.plants_present !== undefined && context.plants_present !== when.plants_present) {
+    return false;
+  }
+  if (when.shrimp_planned !== undefined && context.shrimp_planned !== when.shrimp_planned) {
+    return false;
+  }
+  if (when.risk_tolerance_in && !matchValue(context.risk_tolerance, when.risk_tolerance_in)) {
+    return false;
+  }
+  if (when.tap_kh_status_in && !matchValue(context.tap_kh_status, when.tap_kh_status_in)) {
+    return false;
+  }
+  if (when.disinfectant_in && !matchValue(context.disinfectant, when.disinfectant_in)) {
+    return false;
+  }
+  if (when.ammonia_available !== undefined && context.ammonia_available !== when.ammonia_available) {
+    return false;
+  }
+
+  return true;
+};
+
+const buildPhasesFromRuleset = ({ ruleset, context, replacements }) => {
+  if (!ruleset?.phases?.length) return [];
+  const phases = [];
+  const phaseOrder = [...ruleset.phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  for (const phase of phaseOrder) {
+    if (!matchesCondition(phase.when, context)) {
+      continue;
+    }
+
+    const instruction_atoms = [];
+    const task_atoms = [];
+    const expected_behavior_atoms = [];
+    const objective_ids = new Set(phase.objective_ids || []);
+    const exit_checks = Array.isArray(phase.exit_checks) ? [...phase.exit_checks] : [];
+    const addedInstructions = new Set();
+    const addedTasks = new Set();
+
+    const phaseRules = (ruleset.rules || []).filter((rule) => {
+      if (rule.phase_ids && !rule.phase_ids.includes(phase.id)) return false;
+      if (!matchesCondition(rule.when, context)) return false;
+      if (Array.isArray(rule.requires_roles)) {
+        const hasAll = rule.requires_roles.every((role) => context.roles_enabled.has(role));
+        if (!hasAll) return false;
+      }
+      return true;
+    });
+
+    for (const rule of phaseRules) {
+      if (Array.isArray(rule.objectives)) {
+        for (const obj of rule.objectives) objective_ids.add(obj);
+      }
+      if (Array.isArray(rule.expected)) {
+        for (const exp of rule.expected) expected_behavior_atoms.push(exp);
+      }
+      if (Array.isArray(rule.instructions)) {
+        for (const instruction of rule.instructions) {
+          const rendered = renderTemplateText(instruction.text, replacements);
+          const key = rendered;
+          if (addedInstructions.has(key)) continue;
+          addedInstructions.add(key);
+          instruction_atoms.push({
+            id: `${rule.id}_i_${instruction_atoms.length}`,
+            cadence: instruction.cadence || 'one_time',
+            text: rendered
+          });
+        }
+      }
+      if (Array.isArray(rule.tasks)) {
+        for (const task of rule.tasks) {
+          const rendered = renderTemplateText(task.text, replacements);
+          const key = `${task.cadence}:${rendered}`;
+          if (addedTasks.has(key)) continue;
+          addedTasks.add(key);
+          task_atoms.push({
+            id: `${rule.id}_t_${task_atoms.length}`,
+            cadence: task.cadence,
+            text: rendered,
+            until_phase_id: task.until_phase_id || null
+          });
+        }
+      }
+    }
+
+    phases.push({
+      phase_id: phase.id,
+      phase_name: phase.label,
+      objective_ids: Array.from(objective_ids),
+      instruction_atoms,
+      task_atoms,
+      expected_behavior_atoms,
+      measurement_hooks: phase.measurement_hooks || [],
+      exit_checks
+    });
+  }
+
+  return phases;
+};
+
 const normalizeSetup = (setup, notes) => {
   const normalized = {
     user_preferences: {
       cycling_mode_preference: setup?.user_preferences?.cycling_mode_preference ?? 'auto',
-      dark_start: setup?.user_preferences?.dark_start ?? false,
+      dark_start: setup?.user_preferences?.dark_start ?? 'auto',
       risk_tolerance: setup?.user_preferences?.risk_tolerance ?? 'low',
       goal_profile: setup?.user_preferences?.goal_profile ?? 'stability_first',
       photoperiod_hours_initial: setup?.user_preferences?.photoperiod_hours_initial ?? 6,
@@ -296,7 +581,8 @@ const normalizeSetup = (setup, notes) => {
         type: setup?.product_stack?.ammonia_source?.type ?? 'pure_ammonia',
         solution_percent: setup?.product_stack?.ammonia_source?.solution_percent ?? 10
       },
-      selected_product_ids: setup?.product_stack?.selected_product_ids ?? []
+      selected_product_ids: setup?.product_stack?.selected_product_ids ?? [],
+      user_products: setup?.product_stack?.user_products ?? []
     }
   };
 
@@ -321,11 +607,19 @@ export const generatePlan = ({
   setup,
   productCatalog,
   enginePackage,
+  protocolRuleset,
+  userTargets,
   overrideAcknowledged = false,
   generatedAtIso = DEFAULT_GENERATED_AT_ISO
 }) => {
   const notes = [];
   const normalizedSetup = normalizeSetup(setup, notes);
+  const userProducts = normalizedSetup.product_stack.user_products || [];
+  const enabledUserProducts = userProducts.filter((product) => product.enabled);
+  const effectiveCatalog = enabledUserProducts.length ? buildCatalogFromUserProducts(enabledUserProducts) : productCatalog;
+  const effectiveSelectedIds = enabledUserProducts.length
+    ? enabledUserProducts.map((product) => product.role)
+    : normalizedSetup.product_stack.selected_product_ids;
   const parameterLimits = enginePackage?.parameter_limits?.['parameter_limits.generic.json'] || {};
   const calculatorDefaults = enginePackage?.calculators?.['calculator.framework.json']?.defaults || {};
   const calculatorConstants = enginePackage?.calculators?.['calculator.framework.json']?.constants || {};
@@ -337,7 +631,8 @@ export const generatePlan = ({
   const shrimpPlanned = (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0;
   const tapKh = normalizedSetup.water_source_profile.tap_kh_dkh;
   const tapKhStatus = tapKh === null || tapKh < 2 ? 'unknown_or_low' : 'ok';
-  const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none';
+  const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none'
+    || enabledUserProducts.some((product) => product.role === 'ammonia_source');
 
   const cyclingDecisionContext = {
     cycling_mode_preference: normalizedSetup.user_preferences.cycling_mode_preference,
@@ -352,8 +647,10 @@ export const generatePlan = ({
     cyclingDecisionContext
   );
 
+    const darkStartPreference = normalizedSetup.user_preferences.dark_start;
+    const darkStartRequested = darkStartPreference === true;
   const darkDecisionContext = {
-    dark_start: normalizedSetup.user_preferences.dark_start,
+    dark_start: darkStartRequested,
     goal_profile: normalizedSetup.user_preferences.goal_profile,
     high_light: normalizedSetup.user_preferences.photoperiod_hours_initial >= 8,
     aquasoil: normalizedSetup.tank_profile.substrate.type === 'aquasoil'
@@ -366,6 +663,10 @@ export const generatePlan = ({
 
   const recommendedCyclingMode = cyclingDecision.recommended_cycling_mode || 'fishless_ammonia';
   const recommendedDarkStart = !!darkDecision.recommended_dark_start;
+  const userSelectedDarkStart =
+    darkStartPreference === 'auto' || darkStartPreference === undefined
+      ? recommendedDarkStart
+      : !!darkStartPreference;
   const userSelectedCyclingMode =
     normalizedSetup.user_preferences.cycling_mode_preference !== 'auto'
       ? normalizedSetup.user_preferences.cycling_mode_preference
@@ -388,11 +689,35 @@ export const generatePlan = ({
     });
   }
 
-  const targetGhRange = parameterLimits.gh_dgh?.target_range
+  const mapUserTargets = (targets) => {
+    if (!targets) return null;
+    return {
+      temperature_c: { target_range: [targets.temperature.min, targets.temperature.max] },
+      ph_co2_on: { target_range: [targets.pH.min, targets.pH.max] },
+      gh_dgh: { target_range: [targets.gh.min, targets.gh.max], target: (targets.gh.min + targets.gh.max) / 2 },
+      kh_dkh: { target_range: [targets.kh.min, targets.kh.max], target: (targets.kh.min + targets.kh.max) / 2 },
+      ammonia_ppm: { target: targets.ammonia },
+      nitrite_ppm: { target: targets.nitrite },
+      nitrate_ppm: { target_range: [targets.nitrate.min, targets.nitrate.max] }
+    };
+  };
+  const effectiveTargets = mapUserTargets(userTargets) || parameterLimits;
+  const targetGhRange = effectiveTargets.gh_dgh?.target_range
     || [parameterLimits.gh_dgh?.min ?? 0, parameterLimits.gh_dgh?.max ?? 0];
-  const targetKh = parameterLimits.kh_dkh?.target ?? parameterLimits.kh_dkh?.max ?? 0;
+  const targetKh = effectiveTargets.kh_dkh?.target
+    ?? effectiveTargets.kh_dkh?.max
+    ?? parameterLimits.kh_dkh?.max
+    ?? 0;
 
-  const ammoniaSolutionPercent = normalizedSetup.product_stack.ammonia_source.solution_percent;
+  const ammoniaSolutionPercent = (() => {
+    const userAmmonia = enabledUserProducts.find(
+      (product) => product.role === 'ammonia_source'
+    );
+    if (userAmmonia?.ammonia_solution_percent) {
+      return userAmmonia.ammonia_solution_percent;
+    }
+    return normalizedSetup.product_stack.ammonia_source.solution_percent;
+  })();
   const ammoniaTargetRange = calculatorDefaults.cycle_ammonia_target_ppm_range || [1.5, 2.0];
   const ammoniaMlRange = ammoniaTargetRange.map((target) =>
     calcAmmoniaMl(
@@ -477,21 +802,13 @@ export const generatePlan = ({
   };
 
   const targets = {
-    temperature_c: parameterLimits.temperature_c,
-    gh_dgh: parameterLimits.gh_dgh,
-    kh_dkh: parameterLimits.kh_dkh,
-    ph_co2_on: parameterLimits.ph_co2_on,
-    ph_degassed: parameterLimits.ph_degassed,
-    ph_day_night_swing: parameterLimits.ph_day_night_swing,
-    ammonia_ppm: parameterLimits.ammonia_ppm,
-    nitrite_ppm: parameterLimits.nitrite_ppm,
-    nitrate_ppm: parameterLimits.nitrate_ppm,
-    co2_ph_drop: parameterLimits.co2_ph_drop
+    ...parameterLimits,
+    ...effectiveTargets
   };
 
   const roleMap = selectProductsByRole(
-    productCatalog,
-    normalizedSetup.product_stack.selected_product_ids,
+    effectiveCatalog,
+    effectiveSelectedIds,
     notes
   );
 
@@ -510,12 +827,6 @@ export const generatePlan = ({
     }
   });
 
-  const templatePackId = userSelectedCyclingMode === 'fish_in'
-    ? 'template.pack.fish_in_v1.json'
-    : 'template.pack.inert_fishless_v1.json';
-
-  const templatePack = enginePackage.templates[templatePackId];
-
   const replacements = buildPlaceholderMap({
     derived: {
       net_water_volume_l: derivedNetVolume,
@@ -527,31 +838,64 @@ export const generatePlan = ({
     dosingReference,
     targets,
     calculatorDefaults,
-    ammoniaSolutionPercent
+    ammoniaSolutionPercent,
+    roleMap,
+    cyclingMode: userSelectedCyclingMode
   });
 
-  const phases = (templatePack?.phases || []).map((phase) => {
-    const instruction_atoms = [];
-    for (const atom of phase.instruction_atoms) {
-      const rendered = renderTemplateText(atom.text_template, replacements);
-      if (shouldSkipTriggerInstruction(rendered, roleMap)) {
-        continue;
-      }
-      instruction_atoms.push({
-        id: atom.id,
-        cadence: atom.cadence,
-        text: rendered
-      });
-    }
-    return {
-      phase_id: phase.phase_id,
-      phase_name: phase.phase_name,
-      objective_ids: phase.objective_ids,
-      instruction_atoms,
-      expected_behavior_atoms: phase.expected_behavior_atoms,
-      measurement_hooks: phase.measurement_hooks
-    };
+  const ruleset = protocolRuleset || enginePackage.protocol_ruleset;
+  const rulesContext = {
+    cycling_mode: userSelectedCyclingMode,
+    dark_start_enabled: userSelectedDarkStart,
+    recommended_dark_start: recommendedDarkStart,
+    user_dark_start_override: userSelectedDarkStart !== recommendedDarkStart,
+    dark_start_preference: darkStartPreference ?? 'auto',
+    substrate_type: normalizedSetup.tank_profile.substrate.type,
+    co2_enabled: normalizedSetup.tank_profile.co2.enabled,
+    plants_present: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
+    shrimp_planned: shrimpPlanned,
+    risk_tolerance: normalizedSetup.user_preferences.risk_tolerance,
+    tap_kh_status: tapKhStatus,
+    disinfectant: normalizedSetup.water_source_profile.disinfectant,
+    ammonia_available: ammoniaAvailable,
+    roles_enabled: new Set(Object.entries(roleMap).filter(([, product]) => !!product).map(([role]) => role))
+  };
+
+  let phases = buildPhasesFromRuleset({
+    ruleset,
+    context: rulesContext,
+    replacements
   });
+
+  if (!phases.length) {
+    const templatePackId = userSelectedCyclingMode === 'fish_in'
+      ? 'template.pack.fish_in_v1.json'
+      : 'template.pack.inert_fishless_v1.json';
+
+    const templatePack = enginePackage.templates?.[templatePackId];
+    phases = (templatePack?.phases || []).map((phase) => {
+      const instruction_atoms = [];
+      for (const atom of phase.instruction_atoms) {
+        const rendered = renderTemplateText(atom.text_template, replacements);
+        if (shouldSkipTriggerInstruction(rendered, roleMap)) {
+          continue;
+        }
+        instruction_atoms.push({
+          id: atom.id,
+          cadence: atom.cadence,
+          text: rendered
+        });
+      }
+      return {
+        phase_id: phase.phase_id,
+        phase_name: phase.phase_name,
+        objective_ids: phase.objective_ids,
+        instruction_atoms,
+        expected_behavior_atoms: phase.expected_behavior_atoms,
+        measurement_hooks: phase.measurement_hooks
+      };
+    });
+  }
 
   const phase_checklists = generateChecklists(phases);
 
@@ -565,7 +909,7 @@ export const generatePlan = ({
       recommended_cycling_mode: recommendedCyclingMode,
       user_selected_cycling_mode: userSelectedCyclingMode,
       recommended_dark_start: recommendedDarkStart,
-      user_selected_dark_start: normalizedSetup.user_preferences.dark_start,
+      user_selected_dark_start: userSelectedDarkStart,
       risk_score_1_to_5: cyclingDecision.risk_score_1_to_5 ?? 2,
       reason_codes: cyclingDecision.reason_codes || [],
       requires_override_acknowledgement: requiresOverrideAcknowledgement,

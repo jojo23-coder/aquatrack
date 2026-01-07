@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { AquariumState, TankType, WaterLog, PhaseId, ParameterRange, ReminderSettings, EngineSetup } from './types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AquariumState, TankType, WaterLog, PhaseId, ParameterRange, ReminderSettings, EngineSetup, Task } from './types';
 import { INITIAL_TASKS, MOCK_LOGS, PHASES } from './constants';
 import WaterParameterChart from './components/WaterParameterChart';
 import Checklist from './components/Checklist';
 import LogForm from './components/LogForm';
 import { LayoutDashboard, ClipboardList, PlusCircle, Settings, Droplets, Info, ChevronRight, CheckCircle2, Trash2, Edit2, History, AlertCircle, Target, X, Wind, Layers, Bell, Clock, Calendar, BellRing, RefreshCw } from 'lucide-react';
 import biologyCatalog from './data/biologyCatalog';
+import enginePackage from './data/aquatrack_engine.package.json';
+import productCatalog from './data/product.catalog.instance.json';
+import protocolRuleset from './data/protocol.ruleset.json';
+import { generatePlan } from './engine/planEngine';
 
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
 
@@ -95,7 +99,9 @@ const App: React.FC = () => {
   const [showBiologyAdvanced, setShowBiologyAdvanced] = useState(false);
   const [showPreferencesAdvanced, setShowPreferencesAdvanced] = useState(false);
   const [showProductsAdvanced, setShowProductsAdvanced] = useState(false);
-  const [activeSetupSection, setActiveSetupSection] = useState<'tank' | 'water' | 'biology' | 'preferences' | 'products' | 'alerts' | 'data'>('tank');
+  const [showTankSwitcher, setShowTankSwitcher] = useState(false);
+  const [showDeleteTankModal, setShowDeleteTankModal] = useState(false);
+  const [activeSetupSection, setActiveSetupSection] = useState<'tank' | 'water' | 'biology' | 'preferences' | 'products' | 'protocol' | 'alerts' | 'data'>('tank');
   const [selectedFishToAdd, setSelectedFishToAdd] = useState(fishOptions[0] || '');
   const [selectedShrimpToAdd, setSelectedShrimpToAdd] = useState(shrimpOptions[0] || '');
   const [selectedPlantToAdd, setSelectedPlantToAdd] = useState(plantOptions[0] || '');
@@ -103,12 +109,25 @@ const App: React.FC = () => {
   const defaultEngineSetup: EngineSetup = {
     user_preferences: {
       cycling_mode_preference: 'auto',
-      dark_start: false,
+      dark_start: 'auto',
       risk_tolerance: 'low',
       goal_profile: 'stability_first',
       photoperiod_hours_initial: 6,
       photoperiod_hours_post_cycle: 8,
       units: 'metric'
+    },
+    protocol_preferences: {
+      cycling: true,
+      maintenance: true,
+      stocking: true,
+      plant_care: true,
+      alerts: true,
+      emergency: true
+    },
+    protocol_overrides: {
+      cycling: false,
+      dark_start: false,
+      maintenance: false
     },
     tank_profile: {
       tank_volume_l_gross: 60,
@@ -134,10 +153,10 @@ const App: React.FC = () => {
     },
     water_source_profile: {
       tap_ph: 7.2,
-      tap_gh_dgh: 2.0,
-      tap_kh_dkh: null,
+      tap_gh_dgh: 5.0,
+      tap_kh_dkh: 2.0,
       disinfectant: 'unknown',
-      weekly_water_change_percent_target: [25, 30]
+      weekly_water_change_percent_target: [30, 30]
     },
     biology_profile: {
       plants: {
@@ -156,13 +175,93 @@ const App: React.FC = () => {
         type: 'pure_ammonia',
         solution_percent: 10
       },
-      selected_product_ids: []
+      selected_product_ids: [],
+      user_products: [
+        {
+          role: 'gh_remineralizer',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'g',
+          per_volume_l: 0,
+          effect_value: 0
+        },
+        {
+          role: 'kh_buffer',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'g',
+          per_volume_l: 0,
+          effect_value: 0,
+          bicarbonate: false
+        },
+        {
+          role: 'bacteria_starter',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'mL',
+          per_volume_l: 0,
+          effect_value: 0
+        },
+        {
+          role: 'fertilizer_micros',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'mL',
+          per_volume_l: 0,
+          effect_value: 0
+        },
+        {
+          role: 'ammonia_source',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'mL',
+          per_volume_l: 0,
+          effect_value: 0,
+          ammonia_solution_percent: 10,
+          pure_ammonia: false
+        },
+        {
+          role: 'detoxifier_conditioner',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'mL',
+          per_volume_l: 0,
+          effect_value: 0
+        },
+        {
+          role: 'water_clarifier',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'mL',
+          per_volume_l: 0,
+          effect_value: 0
+        },
+        {
+          role: 'water_quality_support',
+          enabled: false,
+          name: '',
+          dose_amount: 0,
+          dose_unit: 'mL',
+          per_volume_l: 0,
+          effect_value: 0
+        }
+      ]
     }
   };
 
-  const defaultState: AquariumState = {
-    tankName: "Lava Rock 60L",
-    tankSize: 60,
+  const createTankId = () => `tank_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+  const createSeedTank = (): AquariumState => ({
+    id: createTankId(),
+    tankName: "Lava Rock 6L",
+    tankSize: 6,
     tankType: TankType.PLANTED,
     startDate: new Date().toISOString().split('T')[0],
     logs: MOCK_LOGS,
@@ -174,7 +273,13 @@ const App: React.FC = () => {
       weeklyDay: 1, // Monday
       monthlyDay: 1
     },
-    engineSetup: defaultEngineSetup,
+    engineSetup: {
+      ...defaultEngineSetup,
+      tank_profile: {
+        ...defaultEngineSetup.tank_profile,
+        tank_volume_l_gross: 6
+      }
+    },
     targets: {
       temperature: { min: 22.0, max: 24.0 },
       pH: { min: 6.4, max: 7.8 },
@@ -184,82 +289,204 @@ const App: React.FC = () => {
       gh: { min: 5.0, max: 7.0 },
       kh: { min: 2.0, max: 4.0 }
     }
+  });
+
+  const createEmptyTank = (): AquariumState => ({
+    id: createTankId(),
+    tankName: "New Tank",
+    tankSize: 6,
+    tankType: TankType.PLANTED,
+    startDate: new Date().toISOString().split('T')[0],
+    logs: [],
+    tasks: [],
+    currentPhase: 'phase_1_initial_start_day_0',
+    reminderSettings: {
+      enabled: false,
+      dailyTime: "09:00",
+      weeklyDay: 1, // Monday
+      monthlyDay: 1
+    },
+    engineSetup: {
+      ...defaultEngineSetup,
+      protocol_preferences: {
+        cycling: false,
+        maintenance: false,
+        stocking: false,
+        plant_care: false,
+        alerts: false,
+        emergency: false
+      },
+      protocol_overrides: {
+        cycling: false,
+        dark_start: false,
+        maintenance: false
+      },
+      tank_profile: {
+        ...defaultEngineSetup.tank_profile,
+        tank_volume_l_gross: 6
+      }
+    },
+    targets: {
+      temperature: { min: 22.0, max: 24.0 },
+      pH: { min: 6.4, max: 7.8 },
+      ammonia: 0.0,
+      nitrite: 0.0,
+      nitrate: { min: 5.0, max: 30.0 },
+      gh: { min: 5.0, max: 7.0 },
+      kh: { min: 2.0, max: 4.0 }
+    }
+  });
+
+  const hydrateTank = (raw: Partial<AquariumState> = {}): AquariumState => {
+    const base = createSeedTank();
+    return {
+      ...base,
+      ...raw,
+      id: raw.id || base.id,
+      reminderSettings: { ...base.reminderSettings, ...raw.reminderSettings },
+      engineSetup: {
+        ...defaultEngineSetup,
+        ...raw.engineSetup,
+        user_preferences: {
+          ...defaultEngineSetup.user_preferences,
+          ...raw.engineSetup?.user_preferences
+        },
+        protocol_preferences: {
+          ...defaultEngineSetup.protocol_preferences,
+          ...raw.engineSetup?.protocol_preferences
+        },
+        protocol_overrides: {
+          ...defaultEngineSetup.protocol_overrides,
+          ...raw.engineSetup?.protocol_overrides
+        },
+        tank_profile: {
+          ...defaultEngineSetup.tank_profile,
+          ...raw.engineSetup?.tank_profile,
+          substrate: {
+            ...defaultEngineSetup.tank_profile.substrate,
+            ...raw.engineSetup?.tank_profile?.substrate
+          },
+          filtration: {
+            ...defaultEngineSetup.tank_profile.filtration,
+            ...raw.engineSetup?.tank_profile?.filtration
+          },
+          co2: {
+            ...defaultEngineSetup.tank_profile.co2,
+            ...raw.engineSetup?.tank_profile?.co2
+          }
+        },
+        water_source_profile: {
+          ...defaultEngineSetup.water_source_profile,
+          ...raw.engineSetup?.water_source_profile
+        },
+        biology_profile: {
+          ...defaultEngineSetup.biology_profile,
+          ...raw.engineSetup?.biology_profile,
+          plants: {
+            ...defaultEngineSetup.biology_profile.plants,
+            ...raw.engineSetup?.biology_profile?.plants
+          },
+          livestock_plan: {
+            ...defaultEngineSetup.biology_profile.livestock_plan,
+            ...raw.engineSetup?.biology_profile?.livestock_plan
+          }
+        },
+        product_stack: {
+          ...defaultEngineSetup.product_stack,
+          ...raw.engineSetup?.product_stack,
+          ammonia_source: {
+            ...defaultEngineSetup.product_stack.ammonia_source,
+            ...raw.engineSetup?.product_stack?.ammonia_source
+          },
+          user_products: (() => {
+            const stored = raw.engineSetup?.product_stack?.user_products;
+            if (!Array.isArray(stored)) return defaultEngineSetup.product_stack.user_products;
+            return defaultEngineSetup.product_stack.user_products.map(defaultProduct => {
+              const match = stored.find(item => item.role === defaultProduct.role);
+              return match ? { ...defaultProduct, ...match } : defaultProduct;
+            });
+          })()
+        }
+      }
+    };
   };
-  
-  // Initialize state from localStorage or defaults
-  const [aquarium, setAquarium] = useState<AquariumState>(() => {
+
+  const [tankStore, setTankStore] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Basic validation: ensure we have the minimum required structure
-        if (parsed.tankName && Array.isArray(parsed.logs)) {
-          return {
-            ...defaultState,
-            ...parsed,
-            reminderSettings: { ...defaultState.reminderSettings, ...parsed.reminderSettings },
-            engineSetup: {
-              ...defaultEngineSetup,
-              ...parsed.engineSetup,
-              user_preferences: {
-                ...defaultEngineSetup.user_preferences,
-                ...parsed.engineSetup?.user_preferences
-              },
-              tank_profile: {
-                ...defaultEngineSetup.tank_profile,
-                ...parsed.engineSetup?.tank_profile,
-                substrate: {
-                  ...defaultEngineSetup.tank_profile.substrate,
-                  ...parsed.engineSetup?.tank_profile?.substrate
-                },
-                filtration: {
-                  ...defaultEngineSetup.tank_profile.filtration,
-                  ...parsed.engineSetup?.tank_profile?.filtration
-                },
-                co2: {
-                  ...defaultEngineSetup.tank_profile.co2,
-                  ...parsed.engineSetup?.tank_profile?.co2
-                }
-              },
-              water_source_profile: {
-                ...defaultEngineSetup.water_source_profile,
-                ...parsed.engineSetup?.water_source_profile
-              },
-              biology_profile: {
-                ...defaultEngineSetup.biology_profile,
-                ...parsed.engineSetup?.biology_profile,
-                plants: {
-                  ...defaultEngineSetup.biology_profile.plants,
-                  ...parsed.engineSetup?.biology_profile?.plants
-                },
-                livestock_plan: {
-                  ...defaultEngineSetup.biology_profile.livestock_plan,
-                  ...parsed.engineSetup?.biology_profile?.livestock_plan
-                }
-              },
-              product_stack: {
-                ...defaultEngineSetup.product_stack,
-                ...parsed.engineSetup?.product_stack,
-                ammonia_source: {
-                  ...defaultEngineSetup.product_stack.ammonia_source,
-                  ...parsed.engineSetup?.product_stack?.ammonia_source
-                }
-              }
-            }
-          };
+        if (Array.isArray(parsed?.tanks)) {
+          const tanks = parsed.tanks.map((tank) => hydrateTank(tank));
+          if (!tanks.length) {
+            const tank = createSeedTank();
+            return { tanks: [tank], activeTankId: tank.id };
+          }
+          const activeTankId = tanks.some(tank => tank.id === parsed.activeTankId)
+            ? parsed.activeTankId
+            : tanks[0]?.id;
+          return { tanks, activeTankId };
+        }
+        if (parsed?.tankName && Array.isArray(parsed?.logs)) {
+          const tank = hydrateTank(parsed);
+          return { tanks: [tank], activeTankId: tank.id };
         }
       } catch (e) {
         console.error("Failed to load saved aquarium data", e);
       }
     }
-    
-    return defaultState;
+
+    const tank = createSeedTank();
+    return { tanks: [tank], activeTankId: tank.id };
   });
+
+  const tanks = tankStore.tanks;
+  const activeTankId = tankStore.activeTankId;
+  const aquarium = (tanks.find(tank => tank.id === activeTankId) ?? tanks[0])!;
+
+  const setAquarium = (updater: ((prev: AquariumState) => AquariumState) | AquariumState) => {
+    setTankStore(prev => ({
+      ...prev,
+      tanks: prev.tanks.map(tank => {
+        if (tank.id !== prev.activeTankId) return tank;
+        return typeof updater === 'function' ? updater(tank) : { ...tank, ...updater };
+      })
+    }));
+  };
+
+  const setActiveTankId = (id: string) => {
+    setTankStore(prev => ({ ...prev, activeTankId: id }));
+  };
+
+  const addTank = () => {
+    const newTank = createEmptyTank();
+    setTankStore(prev => ({
+      tanks: [...prev.tanks, newTank],
+      activeTankId: newTank.id
+    }));
+    setActiveTab('settings');
+    setActiveSetupSection('tank');
+  };
+
+  const getTankLabel = (tank: AquariumState, index: number) =>
+    tank.tankName?.trim() ? tank.tankName : `Tank ${index + 1}`;
+
+  const deleteActiveTank = () => {
+    setTankStore(prev => {
+      const remaining = prev.tanks.filter(tank => tank.id !== prev.activeTankId);
+      if (!remaining.length) {
+        const tank = createEmptyTank();
+        return { tanks: [tank], activeTankId: tank.id };
+      }
+      return { tanks: remaining, activeTankId: remaining[0].id };
+    });
+    setShowDeleteTankModal(false);
+  };
 
   // Persist state to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(aquarium));
-  }, [aquarium]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tankStore));
+  }, [tankStore]);
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -267,7 +494,36 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const activePhaseData = PHASES.find(p => p.id === aquarium.currentPhase)!;
+  const protocolPlan = useMemo(() => {
+    try {
+      return generatePlan({
+        setup: aquarium.engineSetup,
+        productCatalog,
+        enginePackage,
+        protocolRuleset,
+        userTargets: aquarium.targets,
+        overrideAcknowledged: true
+      });
+    } catch (error) {
+      console.error('Failed to generate protocol plan', error);
+      return null;
+    }
+  }, [aquarium.engineSetup]);
+
+  const manualPhases = useMemo(() => {
+    if (protocolPlan?.phases?.length) {
+      return protocolPlan.phases.map(phase => ({
+        id: phase.phase_id,
+        name: phase.phase_name,
+        instructions: phase.instruction_atoms.map(atom => atom.text),
+        expected: phase.expected_behavior_atoms || [],
+        exitChecks: phase.exit_checks || [],
+        objectives: (phase.objective_ids || []).map(formatDisplayValue),
+        icon: '🫧'
+      }));
+    }
+    return PHASES;
+  }, [protocolPlan]);
 
   const handleToggleTask = (id: string) => {
     setAquarium(prev => ({
@@ -516,6 +772,208 @@ const App: React.FC = () => {
     return { lightOptions, co2Options, growthRate };
   })();
 
+  const activePhaseData = useMemo(() => {
+    const fromManual = manualPhases.find(p => p.id === aquarium.currentPhase);
+    if (fromManual) return fromManual;
+    return PHASES.find(p => p.id === aquarium.currentPhase) || PHASES[0];
+  }, [aquarium.currentPhase, manualPhases]);
+
+  const protocolDiscrepancies = useMemo(() => {
+    const issues: Array<{ title: string; detail: string }> = [];
+    const fmt = (value: number) => Number.isFinite(value) ? value.toFixed(1) : '--';
+    const tapKh = aquarium.engineSetup.water_source_profile.tap_kh_dkh;
+    const tapGh = aquarium.engineSetup.water_source_profile.tap_gh_dgh;
+    const tapPh = aquarium.engineSetup.water_source_profile.tap_ph;
+    const targetKh = (aquarium.targets.kh.min + aquarium.targets.kh.max) / 2;
+    const targetGh = (aquarium.targets.gh.min + aquarium.targets.gh.max) / 2;
+    const targetPh = (aquarium.targets.pH.min + aquarium.targets.pH.max) / 2;
+    const targetTemp = (aquarium.targets.temperature.min + aquarium.targets.temperature.max) / 2;
+    const khBufferEnabled = aquarium.engineSetup.product_stack.user_products.some(
+      (product) => product.role === 'kh_buffer' && product.enabled
+    );
+    const ghRemineralizerEnabled = aquarium.engineSetup.product_stack.user_products.some(
+      (product) => product.role === 'gh_remineralizer' && product.enabled
+    );
+    const co2Enabled = aquarium.engineSetup.tank_profile.co2.enabled;
+    const photoperiodInitial = aquarium.engineSetup.user_preferences.photoperiod_hours_initial;
+    const waterChangePercent = aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0];
+
+    if (tapKh === null || tapKh === undefined) {
+      issues.push({
+        title: 'Tap KH missing',
+        detail: 'Test tap KH before finalizing KH targets and dosing.'
+      });
+    } else if (targetKh > tapKh + 0.5 && !khBufferEnabled) {
+      issues.push({
+        title: 'KH gap detected',
+        detail: `Tap KH is ${fmt(tapKh)} dKH but target KH is ${fmt(targetKh)} dKH. Add a KH buffer or lower the target.`
+      });
+    }
+
+    if (targetGh > tapGh + 0.5 && !ghRemineralizerEnabled) {
+      issues.push({
+        title: 'GH gap detected',
+        detail: `Tap GH is ${fmt(tapGh)} dGH but target GH is ${fmt(targetGh)} dGH. Add a GH remineralizer or lower the target.`
+      });
+    }
+
+    const effectiveCyclingMode =
+      aquarium.engineSetup.user_preferences.cycling_mode_preference === 'auto'
+        ? protocolPlan?.selection?.recommended_cycling_mode
+        : aquarium.engineSetup.user_preferences.cycling_mode_preference;
+    if (effectiveCyclingMode === 'fishless_ammonia') {
+      const ammoniaEnabled = aquarium.engineSetup.product_stack.user_products.some(
+        (product) => product.role === 'ammonia_source' && product.enabled
+      );
+      if (!ammoniaEnabled) {
+        issues.push({
+          title: 'Ammonia source missing',
+          detail: 'Fishless cycling needs an ammonia source. Enable one or switch cycling mode.'
+        });
+      }
+    }
+
+    const bacteriaEnabled = aquarium.engineSetup.product_stack.user_products.some(
+      (product) => product.role === 'bacteria_starter' && product.enabled
+    );
+    if (!bacteriaEnabled) {
+      if (effectiveCyclingMode === 'fishless_ammonia') {
+        issues.push({
+          title: 'Bacteria starter recommended',
+          detail: 'Fishless cycling is much faster with a bacteria starter. Without it, cycling can take significantly longer.'
+        });
+      } else if (effectiveCyclingMode === 'fish_in') {
+        issues.push({
+          title: 'Bacteria starter strongly recommended',
+          detail: 'Fish-in cycling is safer with a bacteria starter to reduce ammonia spikes.'
+        });
+      } else if (effectiveCyclingMode === 'plant_assisted') {
+        issues.push({
+          title: 'Bacteria starter recommended',
+          detail: 'Plant-assisted cycling can still benefit from bacteria starter to stabilize the biofilter.'
+        });
+      }
+    }
+
+    if (recommendedWaterTargets?.temperature?.range) {
+      const [min, max] = recommendedWaterTargets.temperature.range;
+      if (targetTemp < min || targetTemp > max) {
+        issues.push({
+          title: 'Temperature target mismatch',
+          detail: `Selected target ${fmt(targetTemp)} C is outside the species range (${fmt(min)}–${fmt(max)} C).`
+        });
+      }
+    }
+
+    if (recommendedWaterTargets?.pH?.range) {
+      const [min, max] = recommendedWaterTargets.pH.range;
+      if (targetPh < min || targetPh > max) {
+        issues.push({
+          title: 'pH target mismatch',
+          detail: `Selected target ${fmt(targetPh)} is outside the species range (${fmt(min)}–${fmt(max)}).`
+        });
+      }
+    }
+
+    if (recommendedWaterTargets?.gh?.range) {
+      const [min, max] = recommendedWaterTargets.gh.range;
+      if (targetGh < min || targetGh > max) {
+        issues.push({
+          title: 'GH target mismatch',
+          detail: `Selected target ${fmt(targetGh)} dGH is outside the species range (${fmt(min)}–${fmt(max)} dGH).`
+        });
+      }
+    }
+
+    if (recommendedWaterTargets?.kh?.range) {
+      const [min, max] = recommendedWaterTargets.kh.range;
+      if (targetKh < min || targetKh > max) {
+        issues.push({
+          title: 'KH target mismatch',
+          detail: `Selected target ${fmt(targetKh)} dKH is outside the species range (${fmt(min)}–${fmt(max)} dKH).`
+        });
+      }
+    }
+
+    if (!co2Enabled && targetPh < tapPh - 0.4) {
+      issues.push({
+        title: 'pH drop without CO2',
+        detail: `Target pH ${fmt(targetPh)} is much lower than tap pH ${fmt(tapPh)}. Consider CO2 or raise the target.`
+      });
+    }
+
+    if (Math.abs(targetPh - tapPh) >= 0.5) {
+      issues.push({
+        title: 'pH gap detected',
+        detail: `Target pH ${fmt(targetPh)} differs from tap pH ${fmt(tapPh)} by ${fmt(Math.abs(targetPh - tapPh))}. Plan for buffering, RO mixing, or CO2 to avoid swings.`
+      });
+    }
+
+    if (co2Enabled && aquarium.engineSetup.tank_profile.co2.target_ph_drop < 0.6) {
+      issues.push({
+        title: 'CO2 drop is low',
+        detail: 'Target pH drop is under 0.6. CO2 may be too low for demanding plants.'
+      });
+    }
+
+    if (recommendedPlantGuidance?.co2Options?.includes('required') && !co2Enabled) {
+      issues.push({
+        title: 'CO2 recommended for plants',
+        detail: 'Selected plants benefit from CO2. Enable CO2 or adjust plant selection.'
+      });
+    }
+
+    if (aquarium.engineSetup.biology_profile.plants.demand_class === 'high' && photoperiodInitial < 6) {
+      issues.push({
+        title: 'Low photoperiod for high demand plants',
+        detail: 'High demand plants typically need a longer photoperiod. Consider 7–8 hours or adjust plant demand.'
+      });
+    }
+
+    if (aquarium.engineSetup.biology_profile.plants.demand_class === 'low' && photoperiodInitial > 9) {
+      issues.push({
+        title: 'High photoperiod for low demand plants',
+        detail: 'Long photoperiods can increase algae risk with low demand plants.'
+      });
+    }
+
+    if (waterChangePercent < 10) {
+      issues.push({
+        title: 'Low water change volume',
+        detail: 'Weekly water change under 10% may be insufficient for stability.'
+      });
+    }
+
+    if (waterChangePercent > 60) {
+      issues.push({
+        title: 'High water change volume',
+        detail: 'Weekly water change over 60% can cause parameter swings.'
+      });
+    }
+
+    if (typeof protocolPlan?.selection?.recommended_dark_start === 'boolean'
+      && aquarium.engineSetup.user_preferences.dark_start !== 'auto'
+      && aquarium.engineSetup.user_preferences.dark_start !== protocolPlan.selection.recommended_dark_start) {
+      issues.push({
+        title: 'Dark start override',
+        detail: protocolPlan.selection.recommended_dark_start
+          ? 'Dark start is recommended to reduce early algae risk. Turning it off may increase algae blooms.'
+          : 'Dark start is not recommended for this setup. Enabling it may slow early plant adaptation.'
+      });
+    }
+
+    if (protocolPlan?.selection?.recommended_cycling_mode
+      && aquarium.engineSetup.user_preferences.cycling_mode_preference !== 'auto'
+      && aquarium.engineSetup.user_preferences.cycling_mode_preference !== protocolPlan.selection.recommended_cycling_mode) {
+      issues.push({
+        title: 'Cycling mode override',
+        detail: `Recommended mode is ${formatDisplayValue(protocolPlan.selection.recommended_cycling_mode)}. Overriding can increase cycle instability risk.`
+      });
+    }
+
+    return issues;
+  }, [aquarium, recommendedWaterTargets, recommendedPlantGuidance, protocolPlan]);
+
   const applyRecommendedWaterTargets = () => {
     if (!recommendedWaterTargets) return;
     if (recommendedWaterTargets.temperature.mean !== null) {
@@ -532,11 +990,61 @@ const App: React.FC = () => {
     }
   };
 
+  const productDefinitions = [
+    { role: 'gh_remineralizer', label: 'GH Remineralizer', defaultUnit: 'g', effectLabel: 'Δ GH' },
+    { role: 'kh_buffer', label: 'KH Buffer', defaultUnit: 'g', effectLabel: 'Δ KH' },
+    { role: 'bacteria_starter', label: 'Bacteria Starter', defaultUnit: 'mL' },
+    { role: 'fertilizer_micros', label: 'Fertilizer (Micros)', defaultUnit: 'mL' },
+    { role: 'ammonia_source', label: 'Ammonia Source', defaultUnit: 'mL', effectLabel: 'Δ Ammonia' },
+    { role: 'detoxifier_conditioner', label: 'Detoxifier/Conditioner', defaultUnit: 'mL' },
+    { role: 'water_clarifier', label: 'Water Clarifier', defaultUnit: 'mL' },
+    { role: 'water_quality_support', label: 'Water Quality Support', defaultUnit: 'mL' }
+  ] as const;
+
+  const updateProduct = (role: EngineSetup['product_stack']['user_products'][number]['role'], updater: (product: EngineSetup['product_stack']['user_products'][number]) => EngineSetup['product_stack']['user_products'][number]) => {
+    updateEngineSetup(prev => ({
+      ...prev,
+      product_stack: {
+        ...prev.product_stack,
+        user_products: prev.product_stack.user_products.map(product =>
+          product.role === role ? updater(product) : product
+        )
+      }
+    }));
+  };
+
   const resetAllData = () => {
     if (confirm("WARNING: This will delete all your logs and reset the tank to defaults. This cannot be undone. Proceed?")) {
       localStorage.removeItem(STORAGE_KEY);
       window.location.reload();
     }
+  };
+
+  const generateProtocolTasks = () => {
+    if (!protocolPlan?.phases?.length) return;
+    const tasks: Task[] = [];
+    protocolPlan.phases.forEach((phase) => {
+      const phaseId = phase.phase_id;
+      (phase.task_atoms || []).forEach((taskAtom) => {
+        if (!taskAtom?.cadence || !taskAtom.text) return;
+        tasks.push({
+          id: `${phaseId}_${taskAtom.cadence}_${tasks.length}`,
+          phaseId: taskAtom.cadence === 'one_time' ? (phaseId as PhaseId) : undefined,
+          startPhaseId: taskAtom.cadence !== 'one_time' ? (phaseId as PhaseId) : undefined,
+          endPhaseId: taskAtom.cadence !== 'one_time' && taskAtom.until_phase_id ? (taskAtom.until_phase_id as PhaseId) : undefined,
+          frequency: taskAtom.cadence === 'one_time' ? 'one-time' : taskAtom.cadence,
+          title: taskAtom.text,
+          completed: false
+        });
+      });
+    });
+
+    setAquarium(prev => ({
+      ...prev,
+      tasks,
+      currentPhase: (protocolPlan.phases?.[0]?.phase_id as PhaseId) || prev.currentPhase
+    }));
+    setActiveTab('roadmap');
   };
 
   const latestLog = aquarium.logs[aquarium.logs.length - 1] || {} as WaterLog;
@@ -634,18 +1142,50 @@ const App: React.FC = () => {
                 <h1 className="text-3xl font-extrabold text-white mb-1">Status</h1>
                 <p className="text-slate-400 text-sm font-medium">{aquarium.tankName} • {aquarium.tankSize}L</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 relative">
                 {aquarium.reminderSettings.enabled && (
                   <div className="bg-slate-900/80 p-2 rounded-2xl border border-slate-800 flex items-center justify-center">
                     <BellRing className="w-4 h-4 text-emerald-400 animate-pulse" />
                   </div>
                 )}
                 <button 
-                  onClick={() => setActiveTab('settings')}
+                  onClick={() => setShowTankSwitcher(value => !value)}
                   className="bg-slate-900/80 p-2 rounded-2xl border border-slate-800 flex items-center gap-2 active:scale-95 transition-all"
                 >
                   <Settings className="w-4 h-4 text-slate-500" />
                 </button>
+                {showTankSwitcher && (
+                  <div className="absolute right-0 top-12 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-3 w-56 z-50">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 pb-2">Tanks</p>
+                    <div className="space-y-1 max-h-56 overflow-y-auto no-scrollbar pb-2">
+                      {tanks.map((tank, index) => (
+                        <button
+                          key={tank.id}
+                          onClick={() => {
+                            setActiveTankId(tank.id);
+                            setShowTankSwitcher(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-2xl text-xs font-semibold border transition-colors ${
+                            tank.id === activeTankId
+                              ? 'bg-slate-100 text-slate-950 border-slate-100'
+                              : 'bg-slate-800/60 text-slate-300 border-slate-800'
+                          }`}
+                        >
+                          {getTankLabel(tank, index)}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => {
+                        addTank();
+                        setShowTankSwitcher(false);
+                      }}
+                      className="w-full mt-2 px-3 py-2 rounded-2xl text-xs font-bold bg-slate-100 text-slate-950 shadow-lg shadow-white/5"
+                    >
+                      Add New
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -804,7 +1344,7 @@ const App: React.FC = () => {
              <h1 className="text-3xl font-extrabold text-white">Manual</h1>
              
              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-               {PHASES.map(phase => (
+               {manualPhases.map(phase => (
                  <button 
                   key={phase.id}
                   onClick={() => setAquarium(prev => ({...prev, currentPhase: phase.id as PhaseId}))}
@@ -822,14 +1362,14 @@ const App: React.FC = () => {
 
              <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-5 space-y-4">
                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                 <span className="text-lg">{PHASES.find(p => p.id === aquarium.currentPhase)?.icon}</span> 
-                 {PHASES.find(p => p.id === aquarium.currentPhase)?.name}
+                 <span className="text-lg">{manualPhases.find(p => p.id === aquarium.currentPhase)?.icon}</span> 
+                 {manualPhases.find(p => p.id === aquarium.currentPhase)?.name}
                </h3>
                
                <div className="space-y-3">
                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Instructions</h4>
                  <ul className="space-y-2">
-                   {PHASES.find(p => p.id === aquarium.currentPhase)?.instructions.map((ins, i) => (
+                   {manualPhases.find(p => p.id === aquarium.currentPhase)?.instructions.map((ins, i) => (
                      <li key={i} className="text-xs text-slate-300 leading-relaxed flex gap-2">
                        <span className="text-slate-400 font-bold">•</span> {ins}
                      </li>
@@ -840,24 +1380,38 @@ const App: React.FC = () => {
                <div className="pt-4 border-t border-slate-800 space-y-3">
                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Expected Normal Behavior</h4>
                  <ul className="space-y-2">
-                   {PHASES.find(p => p.id === aquarium.currentPhase)?.expected.map((exp, i) => (
+                   {manualPhases.find(p => p.id === aquarium.currentPhase)?.expected.map((exp, i) => (
                      <li key={i} className="text-xs text-slate-400 italic flex gap-2">
                        <span className="text-slate-600 shrink-0">→</span> {exp}
                      </li>
                    ))}
                  </ul>
                </div>
+
+               {manualPhases.find(p => p.id === aquarium.currentPhase)?.exitChecks?.length > 0 && (
+                 <div className="pt-4 border-t border-slate-800 space-y-3">
+                   <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Phase Complete When</h4>
+                   <ul className="space-y-2">
+                     {manualPhases.find(p => p.id === aquarium.currentPhase)?.exitChecks.map((check, i) => (
+                       <li key={i} className="text-xs text-slate-300 leading-relaxed flex gap-2">
+                         <span className="text-slate-400 font-bold">•</span> {check}
+                       </li>
+                     ))}
+                   </ul>
+                 </div>
+               )}
              </div>
 
              <Checklist 
               tasks={aquarium.tasks} 
               activePhase={aquarium.currentPhase} 
-              onToggle={handleToggleTask} 
+              onToggle={handleToggleTask}
+              phaseOrder={manualPhases.map(phase => phase.id as PhaseId)}
              />
           </div>
         );
       case 'settings':
-        const reminderInputClasses = "w-full bg-slate-800 border border-slate-700 h-14 rounded-2xl text-base text-white outline-none focus:ring-2 focus:ring-slate-400 text-center transition-all appearance-none cursor-pointer";
+        const reminderInputClasses = "w-full bg-slate-800 border border-slate-700 h-14 rounded-2xl text-xs text-white outline-none focus:ring-2 focus:ring-slate-400 transition-all appearance-none cursor-pointer";
         const setupInputClasses = "w-full bg-slate-800 border border-slate-700 p-3.5 rounded-2xl text-xs text-white outline-none focus:ring-2 focus:ring-slate-500";
         const setupLabelClasses = "text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1";
         const setupSections = [
@@ -866,8 +1420,17 @@ const App: React.FC = () => {
           { id: 'water', label: 'Water' },
           { id: 'preferences', label: 'Preferences' },
           { id: 'products', label: 'Products' },
+          { id: 'protocol', label: 'Protocol' },
           { id: 'alerts', label: 'Alerts' },
           { id: 'data', label: 'Data' }
+        ] as const;
+        const protocolPreferenceItems = [
+          { key: 'cycling', label: 'Cycling' },
+          { key: 'maintenance', label: 'Maintenance' },
+          { key: 'stocking', label: 'Stocking' },
+          { key: 'plant_care', label: 'Plant Care' },
+          { key: 'alerts', label: 'Alerts' },
+          { key: 'emergency', label: 'Emergency' }
         ] as const;
 
         return (
@@ -1187,50 +1750,32 @@ const App: React.FC = () => {
                   <div className="space-y-1.5">
                     <label className={setupLabelClasses}>Tap KH (dKH)</label>
                     <input
-                      type="text"
-                      placeholder="Unknown"
-                      value={aquarium.engineSetup.water_source_profile.tap_kh_dkh ?? ''}
+                      type="number" step="0.1"
+                      value={aquarium.engineSetup.water_source_profile.tap_kh_dkh}
                       onChange={e => updateEngineSetup(prev => ({
                         ...prev,
-                        water_source_profile: { ...prev.water_source_profile, tap_kh_dkh: parseOptionalNumber(e.target.value) }
+                        water_source_profile: { ...prev.water_source_profile, tap_kh_dkh: parseNumber(e.target.value, 2) }
                       }))}
                       className={setupInputClasses}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className={setupLabelClasses}>WC % Range</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="number"
-                        value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0]}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          water_source_profile: {
-                            ...prev.water_source_profile,
-                            weekly_water_change_percent_target: [
-                              parseNumber(e.target.value, 25),
-                              prev.water_source_profile.weekly_water_change_percent_target[1]
-                            ]
-                          }
-                        }))}
-                        className={setupInputClasses}
-                      />
-                      <input
-                        type="number"
-                        value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[1]}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          water_source_profile: {
-                            ...prev.water_source_profile,
-                            weekly_water_change_percent_target: [
-                              prev.water_source_profile.weekly_water_change_percent_target[0],
-                              parseNumber(e.target.value, 30)
-                            ]
-                          }
-                        }))}
-                        className={setupInputClasses}
-                      />
-                    </div>
+                    <label className={setupLabelClasses}>Water Change %</label>
+                    <input
+                      type="number"
+                      value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0]}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        water_source_profile: {
+                          ...prev.water_source_profile,
+                          weekly_water_change_percent_target: [
+                            parseNumber(e.target.value, 30),
+                            parseNumber(e.target.value, 30)
+                          ]
+                        }
+                      }))}
+                      className={setupInputClasses}
+                    />
                   </div>
                 </div>
                 {showWaterAdvanced && (
@@ -1515,121 +2060,161 @@ const App: React.FC = () => {
             )}
 
             {activeSetupSection === 'preferences' && (
-              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Preferences</h3>
-                  <button
-                    onClick={() => setShowPreferencesAdvanced(value => !value)}
-                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-                  >
-                    {showPreferencesAdvanced ? 'Hide Advanced' : 'Show Advanced'}
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className={setupLabelClasses}>Cycling Mode</label>
-                    <select
-                      value={aquarium.engineSetup.user_preferences.cycling_mode_preference}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        user_preferences: { ...prev.user_preferences, cycling_mode_preference: e.target.value as EngineSetup['user_preferences']['cycling_mode_preference'] }
-                      }))}
-                      className={`${setupInputClasses} appearance-none`}
+              <div className="space-y-5">
+                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Preferences</h3>
+                    <button
+                      onClick={() => setShowPreferencesAdvanced(value => !value)}
+                      className="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
                     >
-                      <option value="auto">Auto</option>
-                      <option value="fishless_ammonia">Fishless Ammonia</option>
-                      <option value="fish_in">Fish-in</option>
-                      <option value="plant_assisted">Plant Assisted</option>
-                    </select>
+                      {showPreferencesAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                    </button>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className={setupLabelClasses}>Risk Tolerance</label>
-                    <select
-                      value={aquarium.engineSetup.user_preferences.risk_tolerance}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        user_preferences: { ...prev.user_preferences, risk_tolerance: e.target.value as EngineSetup['user_preferences']['risk_tolerance'] }
-                      }))}
-                      className={`${setupInputClasses} appearance-none`}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Cycling Mode</label>
+                      <select
+                        value={aquarium.engineSetup.user_preferences.cycling_mode_preference}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          user_preferences: { ...prev.user_preferences, cycling_mode_preference: e.target.value as EngineSetup['user_preferences']['cycling_mode_preference'] }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="auto">Auto</option>
+                        <option value="fishless_ammonia">Fishless Ammonia</option>
+                        <option value="fish_in">Fish-in</option>
+                        <option value="plant_assisted">Plant Assisted</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Risk Tolerance</label>
+                      <select
+                        value={aquarium.engineSetup.user_preferences.risk_tolerance}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          user_preferences: { ...prev.user_preferences, risk_tolerance: e.target.value as EngineSetup['user_preferences']['risk_tolerance'] }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
                 <div className="space-y-1.5">
                   <label className={setupLabelClasses}>Dark Start</label>
-                  <button
-                    onClick={() => updateEngineSetup(prev => ({
-                      ...prev,
-                      user_preferences: { ...prev.user_preferences, dark_start: !prev.user_preferences.dark_start }
-                    }))}
-                    className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.user_preferences.dark_start ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                  <select
+                    value={
+                      aquarium.engineSetup.user_preferences.dark_start === 'auto'
+                        ? 'auto'
+                        : aquarium.engineSetup.user_preferences.dark_start
+                          ? 'true'
+                          : 'false'
+                    }
+                    onChange={e => {
+                      const value = e.target.value;
+                      const nextValue = value === 'auto' ? 'auto' : value === 'true';
+                      updateEngineSetup(prev => ({
+                        ...prev,
+                        user_preferences: { ...prev.user_preferences, dark_start: nextValue }
+                      }));
+                    }}
+                    className={`${setupInputClasses} appearance-none`}
                   >
-                    {aquarium.engineSetup.user_preferences.dark_start ? 'Enabled' : 'Off'}
-                  </button>
+                    <option value="auto">Auto (Recommended)</option>
+                    <option value="true">Enabled</option>
+                    <option value="false">Off</option>
+                  </select>
                 </div>
-                {showPreferencesAdvanced && (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Goal Profile</label>
-                        <select
-                          value={aquarium.engineSetup.user_preferences.goal_profile}
-                          onChange={e => updateEngineSetup(prev => ({
-                            ...prev,
-                            user_preferences: { ...prev.user_preferences, goal_profile: e.target.value as EngineSetup['user_preferences']['goal_profile'] }
-                          }))}
-                          className={`${setupInputClasses} appearance-none`}
-                        >
-                          <option value="stability_first">Stability First</option>
-                          <option value="growth_first">Growth First</option>
-                          <option value="balanced">Balanced</option>
-                        </select>
+                  {showPreferencesAdvanced && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Goal Profile</label>
+                          <select
+                            value={aquarium.engineSetup.user_preferences.goal_profile}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              user_preferences: { ...prev.user_preferences, goal_profile: e.target.value as EngineSetup['user_preferences']['goal_profile'] }
+                            }))}
+                            className={`${setupInputClasses} appearance-none`}
+                          >
+                            <option value="stability_first">Stability First</option>
+                            <option value="growth_first">Growth First</option>
+                            <option value="balanced">Balanced</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Units</label>
+                          <select
+                            value={aquarium.engineSetup.user_preferences.units}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              user_preferences: { ...prev.user_preferences, units: e.target.value as EngineSetup['user_preferences']['units'] }
+                            }))}
+                            className={`${setupInputClasses} appearance-none`}
+                          >
+                            <option value="metric">Metric</option>
+                          </select>
+                        </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Units</label>
-                        <select
-                          value={aquarium.engineSetup.user_preferences.units}
-                          onChange={e => updateEngineSetup(prev => ({
-                            ...prev,
-                            user_preferences: { ...prev.user_preferences, units: e.target.value as EngineSetup['user_preferences']['units'] }
-                          }))}
-                          className={`${setupInputClasses} appearance-none`}
-                        >
-                          <option value="metric">Metric</option>
-                        </select>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Photoperiod Start</label>
+                          <input
+                            type="number" step="0.5"
+                            value={aquarium.engineSetup.user_preferences.photoperiod_hours_initial}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              user_preferences: { ...prev.user_preferences, photoperiod_hours_initial: parseNumber(e.target.value, 6) }
+                            }))}
+                            className={setupInputClasses}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Photoperiod Post</label>
+                          <input
+                            type="number" step="0.5"
+                            value={aquarium.engineSetup.user_preferences.photoperiod_hours_post_cycle}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              user_preferences: { ...prev.user_preferences, photoperiod_hours_post_cycle: parseNumber(e.target.value, 8) }
+                            }))}
+                            className={setupInputClasses}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Photoperiod Start</label>
-                        <input
-                          type="number" step="0.5"
-                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_initial}
-                          onChange={e => updateEngineSetup(prev => ({
+                  )}
+                </div>
+
+                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Protocol Preferences</h3>
+                  <p className="text-[11px] text-slate-500">Choose which protocol packs the engine should prepare.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {protocolPreferenceItems.map(item => {
+                      const isEnabled = aquarium.engineSetup.protocol_preferences[item.key];
+                      return (
+                        <button
+                          key={item.key}
+                          onClick={() => updateEngineSetup(prev => ({
                             ...prev,
-                            user_preferences: { ...prev.user_preferences, photoperiod_hours_initial: parseNumber(e.target.value, 6) }
+                            protocol_preferences: {
+                              ...prev.protocol_preferences,
+                              [item.key]: !prev.protocol_preferences[item.key]
+                            }
                           }))}
-                          className={setupInputClasses}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Photoperiod Post</label>
-                        <input
-                          type="number" step="0.5"
-                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_post_cycle}
-                          onChange={e => updateEngineSetup(prev => ({
-                            ...prev,
-                            user_preferences: { ...prev.user_preferences, photoperiod_hours_post_cycle: parseNumber(e.target.value, 8) }
-                          }))}
-                          className={setupInputClasses}
-                        />
-                      </div>
-                    </div>
+                          className={`py-3 rounded-2xl border text-xs font-bold ${isEnabled ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
@@ -1644,55 +2229,429 @@ const App: React.FC = () => {
                     {showProductsAdvanced ? 'Hide Advanced' : 'Show Advanced'}
                   </button>
                 </div>
-                <div className="space-y-1.5">
-                  <label className={setupLabelClasses}>Selected Product IDs</label>
-                  <input
-                    type="text"
-                    placeholder="gh_remineralizer, kh_buffer, bacteria_starter"
-                    value={formatCsvList(aquarium.engineSetup.product_stack.selected_product_ids)}
-                    onChange={e => updateEngineSetup(prev => ({
-                      ...prev,
-                      product_stack: { ...prev.product_stack, selected_product_ids: parseCsvList(e.target.value) }
-                    }))}
-                    className={setupInputClasses}
-                  />
+                <div className="space-y-4">
+                  {productDefinitions.map(def => {
+                    const product = aquarium.engineSetup.product_stack.user_products.find(item => item.role === def.role);
+                    if (!product) return null;
+                    const hasEffect = Boolean(def.effectLabel)
+                      && def.role !== 'ammonia_source'
+                      && !(def.role === 'kh_buffer' && product.bicarbonate)
+                      && !(def.role === 'ammonia_source' && product.pure_ammonia);
+                    const isKhBuffer = def.role === 'kh_buffer';
+                    const useBicarbonate = isKhBuffer && product.bicarbonate;
+                    const isAmmonia = def.role === 'ammonia_source';
+                    const usePureAmmonia = isAmmonia && product.pure_ammonia;
+                    const bicarbonatePreset = {
+                      name: 'Bicarbonate (NaHCO₃)',
+                      dose_amount: 0.03,
+                      dose_unit: 'g',
+                      per_volume_l: 1,
+                      effect_value: 1
+                    };
+                    return (
+                      <div key={def.role} className="border border-slate-800 rounded-3xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-white">{def.label}</p>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-widest">{def.role.replace('_', ' ')}</p>
+                          </div>
+                          <button
+                            onClick={() => updateProduct(def.role, current => ({ ...current, enabled: !current.enabled }))}
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                              product.enabled
+                                ? 'bg-slate-100 text-slate-950 border-slate-100'
+                                : 'bg-slate-800 text-slate-400 border-slate-700'
+                            }`}
+                          >
+                            {product.enabled ? 'Using' : 'Off'}
+                          </button>
+                        </div>
+                        {product.enabled && (
+                          <>
+                            {isKhBuffer && (
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 border border-slate-800 rounded-full px-3 py-2">
+                                <span>Use Bicarbonate</span>
+                                <button
+                                  onClick={() => updateProduct(def.role, current => ({
+                                    ...current,
+                                    bicarbonate: !current.bicarbonate,
+                                    name: !current.bicarbonate ? bicarbonatePreset.name : current.name,
+                                    dose_amount: !current.bicarbonate ? bicarbonatePreset.dose_amount : current.dose_amount,
+                                    dose_unit: !current.bicarbonate ? bicarbonatePreset.dose_unit : current.dose_unit,
+                                    per_volume_l: !current.bicarbonate ? bicarbonatePreset.per_volume_l : current.per_volume_l,
+                                    effect_value: !current.bicarbonate ? bicarbonatePreset.effect_value : current.effect_value
+                                  }))}
+                                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                                    product.bicarbonate
+                                      ? 'bg-slate-100 text-slate-950 border-slate-100'
+                                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                                  }`}
+                                >
+                                  {product.bicarbonate ? 'On' : 'Off'}
+                                </button>
+                              </div>
+                            )}
+                            {isAmmonia && (
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 border border-slate-800 rounded-full px-3 py-2">
+                                <span>Pure Ammonia</span>
+                                <button
+                                  onClick={() => updateProduct(def.role, current => ({
+                                    ...current,
+                                    pure_ammonia: !current.pure_ammonia,
+                                    name: !current.pure_ammonia ? 'Ammonia' : current.name
+                                  }))}
+                                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                                    product.pure_ammonia
+                                      ? 'bg-slate-100 text-slate-950 border-slate-100'
+                                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                                  }`}
+                                >
+                                  {product.pure_ammonia ? 'On' : 'Off'}
+                                </button>
+                              </div>
+                            )}
+                            {useBicarbonate && (
+                              <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+                                <div>
+                                  <span className="text-slate-500">Name:</span> {bicarbonatePreset.name}
+                                </div>
+                                <div>
+                                  <span className="text-slate-500">Dose:</span> {bicarbonatePreset.dose_amount} {bicarbonatePreset.dose_unit} / {bicarbonatePreset.per_volume_l} L
+                                </div>
+                                <div>
+                                  <span className="text-slate-500">Δ KH:</span> {bicarbonatePreset.effect_value} dKH
+                                </div>
+                              </div>
+                            )}
+                            {!useBicarbonate && !usePureAmmonia && (
+                              <div className="space-y-1.5">
+                                <label className={setupLabelClasses}>Name</label>
+                                <input
+                                  type="text"
+                                  value={product.name}
+                                  onChange={e => updateProduct(def.role, current => ({ ...current, name: e.target.value }))}
+                                  className={setupInputClasses}
+                                />
+                              </div>
+                            )}
+                            {usePureAmmonia && (
+                              <div className="space-y-1.5">
+                                <label className={setupLabelClasses}>Concentration %</label>
+                                <input
+                                  type="number" step="0.1"
+                                  value={product.ammonia_solution_percent ?? 10}
+                                  onChange={e => updateProduct(def.role, current => ({ ...current, ammonia_solution_percent: parseNumber(e.target.value, 10) }))}
+                                  className={setupInputClasses}
+                                />
+                                <p className="text-[11px] text-slate-400">
+                                  1 ppm per L ≈ {(() => {
+                                    const percent = product.ammonia_solution_percent ?? 10;
+                                    const ppmPerMlPerL = 200 * (percent / 10);
+                                    const mlPerL = ppmPerMlPerL ? 1 / ppmPerMlPerL : 0;
+                                    return `${mlPerL.toFixed(4)} mL/L`;
+                                  })()}
+                                </p>
+                              </div>
+                            )}
+                            {!useBicarbonate && !usePureAmmonia && (
+                              <div className={`grid gap-2 ${hasEffect ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                                <div className="space-y-1.5">
+                                  <label className={setupLabelClasses}>Dose</label>
+                                  <input
+                                    type="number"
+                                    value={product.dose_amount}
+                                    onChange={e => updateProduct(def.role, current => ({ ...current, dose_amount: parseNumber(e.target.value, 0) }))}
+                                    className={setupInputClasses}
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className={setupLabelClasses}>Unit</label>
+                                  <select
+                                    value={product.dose_unit}
+                                    onChange={e => updateProduct(def.role, current => ({ ...current, dose_unit: e.target.value as EngineSetup['product_stack']['user_products'][number]['dose_unit'] }))}
+                                    className={`${setupInputClasses} appearance-none`}
+                                  >
+                                    <option value="mL">mL</option>
+                                    <option value="g">g</option>
+                                    <option value="drops">drops</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className={setupLabelClasses}>Per L</label>
+                                  <input
+                                    type="number"
+                                    value={product.per_volume_l}
+                                    onChange={e => updateProduct(def.role, current => ({ ...current, per_volume_l: parseNumber(e.target.value, 0) }))}
+                                    className={setupInputClasses}
+                                  />
+                                </div>
+                                {hasEffect && (
+                                  <div className="space-y-1.5">
+                                    <label className={setupLabelClasses}>{def.effectLabel}</label>
+                                    <input
+                                      type="number"
+                                      value={product.effect_value}
+                                      onChange={e => updateProduct(def.role, current => ({ ...current, effect_value: parseNumber(e.target.value, 0) }))}
+                                      className={setupInputClasses}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="space-y-1.5">
-                  <label className={setupLabelClasses}>Ammonia Source</label>
-                  <select
-                    value={aquarium.engineSetup.product_stack.ammonia_source.type}
-                    onChange={e => updateEngineSetup(prev => ({
-                      ...prev,
-                      product_stack: {
-                        ...prev.product_stack,
-                        ammonia_source: { ...prev.product_stack.ammonia_source, type: e.target.value as EngineSetup['product_stack']['ammonia_source']['type'] }
-                      }
-                    }))}
-                    className={`${setupInputClasses} appearance-none`}
+              </div>
+            )}
+
+            {activeSetupSection === 'protocol' && (
+              <div className="space-y-5">
+                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Protocol Summary</h3>
+                    <span className="text-[10px] text-slate-500">Engine-guided</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">Review recommendations and enable overrides when you need to deviate.</p>
+                  <button
+                    onClick={generateProtocolTasks}
+                    disabled={!protocolPlan}
+                    className={`w-full py-3 rounded-2xl text-xs font-bold border transition-all ${
+                      protocolPlan
+                        ? 'bg-slate-100 text-slate-950 border-slate-100 active:scale-[0.98]'
+                        : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
+                    }`}
                   >
-                    <option value="pure_ammonia">Pure Ammonia</option>
-                    <option value="fish_food">Fish Food</option>
-                    <option value="none">None</option>
-                  </select>
+                    Generate Protocol
+                  </button>
                 </div>
-                {showProductsAdvanced && (
-                  <div className="space-y-1.5">
-                    <label className={setupLabelClasses}>Ammonia Solution %</label>
-                    <input
-                      type="number" step="0.1"
-                      value={aquarium.engineSetup.product_stack.ammonia_source.solution_percent ?? ''}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        product_stack: {
-                          ...prev.product_stack,
-                          ammonia_source: {
-                            ...prev.product_stack.ammonia_source,
-                            solution_percent: parseOptionalNumber(e.target.value)
-                          }
+
+                {aquarium.engineSetup.protocol_preferences.cycling && (
+                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Cycling Protocol</h4>
+                      <button
+                        onClick={() => updateEngineSetup(prev => ({
+                          ...prev,
+                          protocol_overrides: { ...prev.protocol_overrides, cycling: !prev.protocol_overrides.cycling }
+                        }))}
+                        className={`px-3 py-2 rounded-2xl border text-[10px] font-bold ${aquarium.engineSetup.protocol_overrides.cycling ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                      >
+                        Override
+                      </button>
+                    </div>
+                    <div className="space-y-2 text-[11px] text-slate-400">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Recommended</span>
+                        <span className="text-slate-200 font-semibold">{formatDisplayValue(protocolPlan?.selection?.recommended_cycling_mode || 'fishless_ammonia')}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Current</span>
+                        <span className="text-slate-200 font-semibold">
+                          {aquarium.engineSetup.user_preferences.cycling_mode_preference === 'auto'
+                            ? `Auto (${formatDisplayValue(protocolPlan?.selection?.recommended_cycling_mode || 'fishless_ammonia')})`
+                            : formatDisplayValue(aquarium.engineSetup.user_preferences.cycling_mode_preference)}
+                        </span>
+                      </div>
+                      {typeof protocolPlan?.selection?.risk_score_1_to_5 === 'number' && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Risk</span>
+                          <span className="text-slate-200 font-semibold">{protocolPlan.selection.risk_score_1_to_5}/5</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`space-y-2 ${aquarium.engineSetup.protocol_overrides.cycling ? 'opacity-100' : 'opacity-60 pointer-events-none'}`}>
+                      <label className={setupLabelClasses}>Override Cycling Mode</label>
+                      <select
+                        value={aquarium.engineSetup.user_preferences.cycling_mode_preference}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          user_preferences: { ...prev.user_preferences, cycling_mode_preference: e.target.value as EngineSetup['user_preferences']['cycling_mode_preference'] }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                        disabled={!aquarium.engineSetup.protocol_overrides.cycling}
+                      >
+                        <option value="auto">Auto (Recommended)</option>
+                        <option value="fishless_ammonia">Fishless Ammonia</option>
+                        <option value="fish_in">Fish-in</option>
+                        <option value="plant_assisted">Plant Assisted</option>
+                      </select>
+                    </div>
+
+                    {aquarium.engineSetup.protocol_overrides.cycling
+                      && aquarium.engineSetup.user_preferences.cycling_mode_preference !== 'auto'
+                      && protocolPlan?.selection?.recommended_cycling_mode
+                      && aquarium.engineSetup.user_preferences.cycling_mode_preference !== protocolPlan.selection.recommended_cycling_mode && (
+                      <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-2xl text-[10px] text-amber-300">
+                        Overrides increase risk. Monitor ammonia and nitrite closely in the first weeks.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {aquarium.engineSetup.protocol_preferences.cycling && (
+                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Dark Start</h4>
+                      <button
+                        onClick={() => updateEngineSetup(prev => ({
+                          ...prev,
+                          protocol_overrides: { ...prev.protocol_overrides, dark_start: !prev.protocol_overrides.dark_start }
+                        }))}
+                        className={`px-3 py-2 rounded-2xl border text-[10px] font-bold ${aquarium.engineSetup.protocol_overrides.dark_start ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                      >
+                        Override
+                      </button>
+                    </div>
+                    <div className="space-y-2 text-[11px] text-slate-400">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Recommended</span>
+                        <span className="text-slate-200 font-semibold">{protocolPlan?.selection?.recommended_dark_start ? 'Enabled' : 'Off'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Current</span>
+                        <span className="text-slate-200 font-semibold">
+                          {aquarium.engineSetup.user_preferences.dark_start === 'auto'
+                            ? `Auto (${protocolPlan?.selection?.recommended_dark_start ? 'Enabled' : 'Off'})`
+                            : aquarium.engineSetup.user_preferences.dark_start
+                              ? 'Enabled'
+                              : 'Off'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={`space-y-2 ${aquarium.engineSetup.protocol_overrides.dark_start ? 'opacity-100' : 'opacity-60 pointer-events-none'}`}>
+                      <label className={setupLabelClasses}>Override Dark Start</label>
+                      <select
+                        value={
+                          aquarium.engineSetup.user_preferences.dark_start === 'auto'
+                            ? 'auto'
+                            : aquarium.engineSetup.user_preferences.dark_start
+                              ? 'true'
+                              : 'false'
                         }
-                      }))}
-                      className={setupInputClasses}
-                    />
+                        onChange={e => {
+                          const value = e.target.value;
+                          const nextValue = value === 'auto' ? 'auto' : value === 'true';
+                          updateEngineSetup(prev => ({
+                            ...prev,
+                            user_preferences: { ...prev.user_preferences, dark_start: nextValue }
+                          }));
+                        }}
+                        className={`${setupInputClasses} appearance-none`}
+                        disabled={!aquarium.engineSetup.protocol_overrides.dark_start}
+                      >
+                        <option value="auto">Auto (Recommended)</option>
+                        <option value="true">Enabled</option>
+                        <option value="false">Off</option>
+                      </select>
+                    </div>
+                    {aquarium.engineSetup.protocol_overrides.dark_start
+                      && typeof protocolPlan?.selection?.recommended_dark_start === 'boolean'
+                      && aquarium.engineSetup.user_preferences.dark_start !== 'auto'
+                      && aquarium.engineSetup.user_preferences.dark_start !== protocolPlan.selection.recommended_dark_start && (
+                      <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-2xl text-[10px] text-amber-300">
+                        Skipping the recommended dark start can increase algae risk in early weeks.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {aquarium.engineSetup.protocol_preferences.maintenance && (
+                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Maintenance Protocol</h4>
+                      <button
+                        onClick={() => updateEngineSetup(prev => ({
+                          ...prev,
+                          protocol_overrides: { ...prev.protocol_overrides, maintenance: !prev.protocol_overrides.maintenance }
+                        }))}
+                        className={`px-3 py-2 rounded-2xl border text-[10px] font-bold ${aquarium.engineSetup.protocol_overrides.maintenance ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                      >
+                        Override
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className={`space-y-1.5 ${aquarium.engineSetup.protocol_overrides.maintenance ? '' : 'opacity-60 pointer-events-none'}`}>
+                        <label className={setupLabelClasses}>Water Change %</label>
+                        <input
+                          type="number"
+                          value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0]}
+                          onChange={e => updateEngineSetup(prev => ({
+                            ...prev,
+                            water_source_profile: {
+                              ...prev.water_source_profile,
+                              weekly_water_change_percent_target: [
+                                parseNumber(e.target.value, prev.water_source_profile.weekly_water_change_percent_target[0]),
+                                parseNumber(e.target.value, prev.water_source_profile.weekly_water_change_percent_target[0])
+                              ]
+                            }
+                          }))}
+                          className={setupInputClasses}
+                          disabled={!aquarium.engineSetup.protocol_overrides.maintenance}
+                        />
+                      </div>
+                      <div className={`space-y-1.5 ${aquarium.engineSetup.protocol_overrides.maintenance ? '' : 'opacity-60 pointer-events-none'}`}>
+                        <label className={setupLabelClasses}>Photoperiod Start</label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_initial}
+                          onChange={e => updateEngineSetup(prev => ({
+                            ...prev,
+                            user_preferences: { ...prev.user_preferences, photoperiod_hours_initial: parseNumber(e.target.value, 6) }
+                          }))}
+                          className={setupInputClasses}
+                          disabled={!aquarium.engineSetup.protocol_overrides.maintenance}
+                        />
+                      </div>
+                      <div className={`space-y-1.5 ${aquarium.engineSetup.protocol_overrides.maintenance ? '' : 'opacity-60 pointer-events-none'}`}>
+                        <label className={setupLabelClasses}>Photoperiod Post</label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_post_cycle}
+                          onChange={e => updateEngineSetup(prev => ({
+                            ...prev,
+                            user_preferences: { ...prev.user_preferences, photoperiod_hours_post_cycle: parseNumber(e.target.value, 8) }
+                          }))}
+                          className={setupInputClasses}
+                          disabled={!aquarium.engineSetup.protocol_overrides.maintenance}
+                        />
+                      </div>
+                      <div className="flex items-end pb-3 text-[10px] text-slate-500">
+                        Targets stay aligned to your Water + Biology settings.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {aquarium.engineSetup.protocol_preferences.alerts && (
+                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Alerts Protocol</h4>
+                    <p className="text-[11px] text-slate-500">Notifications follow your Alerts setup.</p>
+                  </div>
+                )}
+
+                {protocolDiscrepancies.length > 0 && (
+                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-3">
+                    <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Protocol Checks</h4>
+                    <div className="space-y-3">
+                      {protocolDiscrepancies.map((issue, index) => (
+                        <div key={index} className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-2xl">
+                          <p className="text-[11px] font-semibold text-amber-200">{issue.title}</p>
+                          <p className="text-[10px] text-amber-300 mt-1">{issue.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!protocolPlan && (
+                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl text-[11px] text-slate-500">
+                    Protocol recommendations are unavailable until the engine package loads.
                   </div>
                 )}
               </div>
@@ -1736,7 +2695,7 @@ const App: React.FC = () => {
                           type="time"
                           value={aquarium.reminderSettings.dailyTime}
                           onChange={e => updateReminder('dailyTime', e.target.value)}
-                          className={reminderInputClasses}
+                          className={`${reminderInputClasses} text-center`}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1766,7 +2725,7 @@ const App: React.FC = () => {
                           min="1" max="28"
                           value={aquarium.reminderSettings.monthlyDay}
                           onChange={e => updateReminder('monthlyDay', parseInt(e.target.value) || 1)}
-                          className={reminderInputClasses}
+                          className={`${reminderInputClasses} text-center`}
                         />
                       </div>
                       <div className="flex items-end pb-3 text-[10px] text-slate-600 font-medium italic">
@@ -1781,8 +2740,14 @@ const App: React.FC = () => {
             {activeSetupSection === 'data' && (
               <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-6">
                 <button 
-                  onClick={resetAllData}
+                  onClick={() => setShowDeleteTankModal(true)}
                   className="w-full py-4 bg-red-950/20 hover:bg-red-900/30 text-red-500 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-red-900/30 active:scale-95"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete Tank
+                </button>
+                <button 
+                  onClick={resetAllData}
+                  className="w-full py-4 bg-slate-900/60 hover:bg-slate-900 text-slate-300 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-slate-800 active:scale-95"
                 >
                   <RefreshCw className="w-4 h-4" /> Reset All Data
                 </button>
@@ -1830,6 +2795,32 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {showDeleteTankModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowDeleteTankModal(false)} />
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm relative z-10 shadow-2xl space-y-4">
+            <h3 className="text-lg font-bold text-white">Delete Tank</h3>
+            <p className="text-[12px] text-slate-400">
+              Are you sure you want to delete "{aquarium.tankName || 'this tank'}"? This cannot be undone.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowDeleteTankModal(false)}
+                className="py-3 bg-slate-800 text-slate-300 font-bold rounded-2xl border border-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteActiveTank}
+                className="py-3 bg-red-600 text-white font-bold rounded-2xl border border-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPhasePicker && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center animate-in slide-in-from-bottom-full duration-300">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setShowPhasePicker(false)} />
@@ -1837,7 +2828,7 @@ const App: React.FC = () => {
             <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-6" />
             <h3 className="text-xl font-black text-white mb-6 text-center">Switch Phase</h3>
             <div className="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-1">
-              {PHASES.map(phase => (
+              {manualPhases.map(phase => (
                 <button 
                   key={phase.id}
                   onClick={() => {
@@ -1846,8 +2837,8 @@ const App: React.FC = () => {
                   }}
                   className={`p-5 rounded-[24px] border text-left flex items-center gap-4 transition-all active:scale-95 ${
                     aquarium.currentPhase === phase.id 
-                    ? 'bg-slate-100 border-slate-100 shadow-lg shadow-white/5' 
-                    : 'bg-slate-800/40 border-slate-800 hover:border-slate-700'
+                      ? 'bg-slate-100 border-slate-100 shadow-lg shadow-white/5' 
+                      : 'bg-slate-800/40 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <span className="text-2xl grayscale-[0.5] group-hover:grayscale-0">{phase.icon}</span>
@@ -1856,7 +2847,7 @@ const App: React.FC = () => {
                       {phase.name.split(' — ')[1] || phase.name}
                     </p>
                     <p className={`text-[10px] font-medium truncate ${aquarium.currentPhase === phase.id ? 'text-slate-700' : 'text-slate-500'}`}>
-                      {phase.objectives[0]}
+                      {phase.objectives?.[0] || 'Protocol phase'}
                     </p>
                   </div>
                   {aquarium.currentPhase === phase.id && (

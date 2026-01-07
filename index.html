@@ -70,6 +70,36 @@
       .square-btn {
         border-radius: 12px !important;
       }
+      input[type="time"] {
+        text-align: center;
+        text-align-last: center;
+        padding-left: 0;
+        padding-right: 0;
+      }
+      input[type="time"]::-webkit-datetime-edit {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        width: 100%;
+      }
+      input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+      input[type="time"]::-webkit-date-and-time-value {
+        text-align: center;
+        margin: 0 auto;
+        width: 100%;
+      }
+      input[type="time"]::-webkit-datetime-edit-text,
+      input[type="time"]::-webkit-datetime-edit-hour-field,
+      input[type="time"]::-webkit-datetime-edit-minute-field,
+      input[type="time"]::-webkit-datetime-edit-ampm-field {
+        text-align: center;
+      }
       button,
       input,
       select,
