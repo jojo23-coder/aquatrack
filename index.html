@@ -41,6 +41,47 @@
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
       }
+      .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .tag-pill__remove {
+        color: #94a3b8;
+        font-size: 12px;
+        line-height: 1;
+      }
+      .tag-pill:hover .tag-pill__remove {
+        color: #f8fafc;
+      }
+      .square-btn {
+        border-radius: 12px !important;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        border-radius: 999px !important;
+      }
+      ul li {
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid #1e293b;
+      }
     </style>
     <script type="importmap">
 {

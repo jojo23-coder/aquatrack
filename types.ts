@@ -51,6 +51,66 @@ export interface ReminderSettings {
   monthlyDay: number; // 1-28
 }
 
+export interface EngineSetup {
+  user_preferences: {
+    cycling_mode_preference: 'auto' | 'fishless_ammonia' | 'fish_in' | 'plant_assisted';
+    dark_start: boolean;
+    risk_tolerance: 'low' | 'medium' | 'high';
+    goal_profile: 'stability_first' | 'growth_first' | 'balanced';
+    photoperiod_hours_initial: number;
+    photoperiod_hours_post_cycle: number;
+    units: 'metric';
+  };
+  tank_profile: {
+    tank_volume_l_gross: number;
+    net_volume_method: 'explicit' | 'estimate_multiplier';
+    estimated_net_multiplier: number;
+    net_water_volume_l?: number;
+    substrate: {
+      type: 'inert' | 'aquasoil';
+      sand_cap_cm: number;
+    };
+    filtration: {
+      filter_model?: string;
+      rated_flow_lph?: number;
+      flow_class: 'low' | 'medium' | 'high';
+    };
+    co2: {
+      enabled: boolean;
+      injection_type: 'inline' | 'diffuser' | 'reactor';
+      target_ph_drop: number;
+      surface_agitation: 'flat' | 'gentle_ripple' | 'turbulent';
+    };
+    temperature_target_c: [number, number];
+  };
+  water_source_profile: {
+    tap_ph: number;
+    tap_gh_dgh: number;
+    tap_kh_dkh: number | null;
+    disinfectant: 'none' | 'chlorine' | 'chloramine' | 'unknown';
+    weekly_water_change_percent_target: [number, number];
+  };
+  biology_profile: {
+    plants: {
+      categories: Array<'moss' | 'epiphytes' | 'stems' | 'floaters' | 'root_feeders'>;
+      demand_class: 'low' | 'medium' | 'high' | 'auto';
+      species: string[];
+    };
+    livestock_plan: {
+      fish: string[];
+      shrimp: string[];
+      cleanup_crew: string[];
+    };
+  };
+  product_stack: {
+    ammonia_source: {
+      type: 'pure_ammonia' | 'fish_food' | 'none';
+      solution_percent: number | null;
+    };
+    selected_product_ids: string[];
+  };
+}
+
 export interface AquariumState {
   tankName: string;
   tankSize: number;
@@ -60,6 +120,7 @@ export interface AquariumState {
   tasks: Task[];
   currentPhase: PhaseId;
   reminderSettings: ReminderSettings;
+  engineSetup: EngineSetup;
   targets: {
     temperature: ParameterRange;
     pH: ParameterRange;

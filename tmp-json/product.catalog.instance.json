@@ -1,0 +1,261 @@
+{
+  "version": "0.1",
+  "catalog_id": "generic_default_catalog_v1",
+  "products": [
+    {
+      "product_id": "conditioner_detoxifier",
+      "display_name": "Water Conditioner / Detoxifier",
+      "brand": null,
+      "category": "detoxifier_conditioner",
+      "dose_model": {
+        "dose_basis": "per_volume",
+        "amount": 5,
+        "unit": "mL",
+        "per_volume_l": 200,
+        "frequency_default": "as_needed",
+        "scaling_rule": "linear_by_volume",
+        "notes": "Use for disinfectant neutralization when needed and as emergency support when ammonia/nitrite is detectable with livestock."
+      },
+      "effect_model": {
+        "effect_type": "detox_support",
+        "strength": null,
+        "strength_units": null,
+        "calculation_method": "Conditional behavioral effect (do not model as parameter delta).",
+        "notes": "Not a substitute for water changes."
+      },
+      "constraints": {
+        "allowed_phases": null,
+        "requires_trigger": true,
+        "warnings": [
+          "Do not rely on conditioner alone for ammonia/nitrite issues; perform water changes.",
+          "Follow label dosing and safety guidance."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": "Typical: 5 mL per 200 L.", "user_notes": null }
+    },
+    {
+      "product_id": "bacteria_starter",
+      "display_name": "Bacteria Starter",
+      "brand": null,
+      "category": "bacteria_starter",
+      "dose_model": {
+        "dose_basis": "per_volume",
+        "amount": 5,
+        "unit": "mL",
+        "per_volume_l": 40,
+        "frequency_default": "daily",
+        "scaling_rule": "linear_by_volume",
+        "notes": "Often dosed daily for the first week, then weekly during cycling."
+      },
+      "effect_model": {
+        "effect_type": "bioaugmentation_support",
+        "strength": null,
+        "strength_units": null,
+        "calculation_method": "Non-quantitative support.",
+        "notes": "No direct measurable delta; used as schedule-driven support."
+      },
+      "constraints": {
+        "allowed_phases": null,
+        "requires_trigger": false,
+        "warnings": [
+          "Not a substitute for an ammonia source during fishless cycling."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": "Typical: 5 mL per 40 L.", "user_notes": null }
+    },
+    {
+      "product_id": "gh_remineralizer",
+      "display_name": "GH Remineralizer",
+      "brand": null,
+      "category": "remineralizer_gh",
+      "dose_model": {
+        "dose_basis": "none",
+        "amount": null,
+        "unit": "g",
+        "per_volume_l": null,
+        "frequency_default": "per_water_change",
+        "scaling_rule": "none",
+        "notes": "Dose via GH target calculator. Pre-mix fully in replacement water."
+      },
+      "effect_model": {
+        "effect_type": "delta_GH_dGH",
+        "strength": 3,
+        "strength_units": "dGH per 16 g per 80 L",
+        "calculation_method": "Derived: 0.0666667 g/L increases GH by 1 dGH.",
+        "notes": "Use this conversion for deterministic GH dosing."
+      },
+      "constraints": {
+        "allowed_phases": null,
+        "requires_trigger": false,
+        "warnings": [
+          "Does not raise KH; KH must be handled separately.",
+          "Avoid sudden large GH swings; keep weekly changes consistent."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": "16 g per 80 L raises GH by 3 dGH.", "user_notes": null }
+    },
+    {
+      "product_id": "kh_buffer",
+      "display_name": "KH Buffer",
+      "brand": null,
+      "category": "buffer_kh",
+      "dose_model": {
+        "dose_basis": "none",
+        "amount": null,
+        "unit": "g",
+        "per_volume_l": null,
+        "frequency_default": "per_water_change",
+        "scaling_rule": "none",
+        "notes": "Dose via KH target calculator. Dissolve and mix in replacement water."
+      },
+      "effect_model": {
+        "effect_type": "delta_KH_dKH",
+        "strength": 1,
+        "strength_units": "dKH per 0.6 g per 10 L",
+        "calculation_method": "Rule-of-thumb: grams = (target_kh - tap_kh) * (vol/10) * 0.6; clamp at ≥0.",
+        "notes": "Verify KH and adjust gradually."
+      },
+      "constraints": {
+        "allowed_phases": null,
+        "requires_trigger": false,
+        "warnings": [
+          "Avoid sudden KH jumps; keep changes consistent.",
+          "Always dissolve/mix before adding to tank."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": "Rule-of-thumb model.", "user_notes": null }
+    },
+    {
+      "product_id": "ammonia_solution",
+      "display_name": "Ammonia Solution (for fishless cycling)",
+      "brand": null,
+      "category": "ammonia_source",
+      "dose_model": {
+        "dose_basis": "none",
+        "amount": null,
+        "unit": "mL",
+        "per_volume_l": null,
+        "frequency_default": "as_needed",
+        "scaling_rule": "none",
+        "notes": "Dose via TAN target calculator; redose only when ammonia reads 0 during fishless cycling."
+      },
+      "effect_model": {
+        "effect_type": "target_TAN_ppm",
+        "strength": null,
+        "strength_units": null,
+        "calculation_method": "Calibrated scaling (engine constant) for solution_percent==10; otherwise require calibration.",
+        "notes": "Only used in fishless cycling phases and completion test."
+      },
+      "constraints": {
+        "allowed_phases": ["phase_2_first_week_days_1_7", "phase_3_active_cycling_weeks_2_4", "phase_4_cycle_complete"],
+        "requires_trigger": false,
+        "warnings": [
+          "Use unscented ammonia with no surfactants.",
+          "Never exceed 3 ppm during cycling."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": null, "user_notes": null }
+    },
+    {
+      "product_id": "fertilizer_micros",
+      "display_name": "Fertilizer (Micronutrients)",
+      "brand": null,
+      "category": "fertilizer_micros",
+      "dose_model": {
+        "dose_basis": "per_volume",
+        "amount": 5,
+        "unit": "mL",
+        "per_volume_l": 250,
+        "frequency_default": "weekly",
+        "scaling_rule": "linear_by_volume",
+        "notes": "Start at 0.5× label dose for low-demand epiphyte/moss setups; increase only if needed."
+      },
+      "effect_model": {
+        "effect_type": "trace_micro_support",
+        "strength": null,
+        "strength_units": null,
+        "calculation_method": "Non-quantitative; adjust via plant response.",
+        "notes": "Do not model as GH/KH delta."
+      },
+      "constraints": {
+        "allowed_phases": ["phase_4_cycle_complete", "phase_6_maintenance"],
+        "requires_trigger": false,
+        "warnings": [
+          "Start low; increase only if deficiencies appear and algae remains controlled."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": "Typical: 5 mL per 250 L weekly.", "user_notes": null }
+    },
+    {
+      "product_id": "water_clarifier",
+      "display_name": "Water Clarifier",
+      "brand": null,
+      "category": "water_clarifier",
+      "dose_model": {
+        "dose_basis": "per_volume",
+        "amount": 5,
+        "unit": "mL",
+        "per_volume_l": 80,
+        "frequency_default": "as_needed",
+        "scaling_rule": "linear_by_volume",
+        "notes": "Use only when persistent particulate cloudiness remains after filtration settles."
+      },
+      "effect_model": {
+        "effect_type": "clarify_support",
+        "strength": null,
+        "strength_units": null,
+        "calculation_method": "Non-deterministic; visual outcome-based.",
+        "notes": "Do not schedule routinely."
+      },
+      "constraints": {
+        "allowed_phases": ["phase_1_initial_start_day_0", "phase_2_first_week_days_1_7", "phase_6_maintenance"],
+        "requires_trigger": true,
+        "warnings": [
+          "Can clog fine mechanical media; monitor flow after dosing.",
+          "Do not use to mask underlying husbandry issues."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": "Typical: 5 mL per 80 L.", "user_notes": null }
+    },
+    {
+      "product_id": "water_quality_support",
+      "display_name": "Water Quality Support (organic waste support)",
+      "brand": null,
+      "category": "water_quality_support",
+      "dose_model": {
+        "dose_basis": "per_volume",
+        "amount": 5,
+        "unit": "mL",
+        "per_volume_l": 40,
+        "frequency_default": "as_needed",
+        "scaling_rule": "linear_by_volume",
+        "notes": "Optional as-needed support; not a substitute for water changes or filter care."
+      },
+      "effect_model": {
+        "effect_type": "none",
+        "strength": null,
+        "strength_units": null,
+        "calculation_method": "Non-deterministic.",
+        "notes": "Do not schedule routinely."
+      },
+      "constraints": {
+        "allowed_phases": ["phase_6_maintenance"],
+        "requires_trigger": true,
+        "warnings": [
+          "Use sparingly and only when you have a clear reason."
+        ]
+      },
+      "metadata": { "manufacturer_label_reference": "Typical: 5 mL per 40 L.", "user_notes": null }
+    }
+  ],
+  "role_map": {
+    "detoxifier_conditioner": "conditioner_detoxifier",
+    "bacteria_starter": "bacteria_starter",
+    "gh_remineralizer": "gh_remineralizer",
+    "kh_buffer": "kh_buffer",
+    "ammonia_source": "ammonia_solution",
+    "fertilizer_micros": "fertilizer_micros",
+    "water_clarifier": "water_clarifier",
+    "water_quality_support": "water_quality_support"
+  }
+}

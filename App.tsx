@@ -1,14 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { AquariumState, TankType, WaterLog, PhaseId, ParameterRange, ReminderSettings } from './types';
+import { AquariumState, TankType, WaterLog, PhaseId, ParameterRange, ReminderSettings, EngineSetup } from './types';
 import { INITIAL_TASKS, MOCK_LOGS, PHASES } from './constants';
 import WaterParameterChart from './components/WaterParameterChart';
 import Checklist from './components/Checklist';
 import LogForm from './components/LogForm';
 import { LayoutDashboard, ClipboardList, PlusCircle, Settings, Droplets, Info, ChevronRight, CheckCircle2, Trash2, Edit2, History, AlertCircle, Target, X, Wind, Layers, Bell, Clock, Calendar, BellRing, RefreshCw } from 'lucide-react';
+import biologyCatalog from './data/biologyCatalog';
 
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
 
 const STORAGE_KEY = 'aquatrack_v1_data';
+
+const fishSpeciesIndex = new Map();
+biologyCatalog.fish_groups.forEach(group => {
+  group.common_examples.forEach(name => {
+    fishSpeciesIndex.set(name, { group, type: 'fish' });
+  });
+});
+
+const shrimpSpeciesIndex = new Map();
+biologyCatalog.shrimp_groups.forEach(group => {
+  group.common_examples.forEach(name => {
+    shrimpSpeciesIndex.set(name, { group, type: 'shrimp' });
+  });
+});
+
+const plantSpeciesIndex = new Map();
+biologyCatalog.plant_groups.forEach(group => {
+  group.common_examples.forEach(name => {
+    plantSpeciesIndex.set(name, { group, type: 'plant' });
+  });
+});
+
+const fishOptions = Array.from(fishSpeciesIndex.keys()).sort();
+const shrimpOptions = Array.from(shrimpSpeciesIndex.keys()).sort();
+const plantOptions = Array.from(plantSpeciesIndex.keys()).sort();
+
+const getRequirementRanges = (speciesName) => {
+  const fishMatch = fishSpeciesIndex.get(speciesName);
+  if (fishMatch) return fishMatch.group.typical_requirements;
+  const shrimpMatch = shrimpSpeciesIndex.get(speciesName);
+  if (shrimpMatch) return shrimpMatch.group.typical_requirements;
+  return null;
+};
+
+const rangesOverlap = (rangeA, rangeB) => {
+  if (!rangeA || !rangeB) return true;
+  return Math.max(rangeA[0], rangeB[0]) <= Math.min(rangeA[1], rangeB[1]);
+};
+
+const intersectRange = (ranges) => {
+  if (!ranges.length) return null;
+  let min = ranges[0][0];
+  let max = ranges[0][1];
+  ranges.forEach(range => {
+    min = Math.max(min, range[0]);
+    max = Math.min(max, range[1]);
+  });
+  if (min > max) return null;
+  return [min, max];
+};
+
+const meanRange = (range) => {
+  if (!range) return null;
+  return (range[0] + range[1]) / 2;
+};
+
+const intersectSets = (sets) => {
+  if (!sets.length) return [];
+  let common = new Set(sets[0]);
+  sets.slice(1).forEach(values => {
+    common = new Set(values.filter(value => common.has(value)));
+  });
+  return Array.from(common);
+};
+
+const formatDisplayValue = (value) => {
+  if (!value) return '';
+  return value
+    .toString()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase());
+};
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -17,6 +90,101 @@ const App: React.FC = () => {
   const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
   const [showPhasePicker, setShowPhasePicker] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>('default');
+  const [showTankAdvanced, setShowTankAdvanced] = useState(false);
+  const [showWaterAdvanced, setShowWaterAdvanced] = useState(false);
+  const [showBiologyAdvanced, setShowBiologyAdvanced] = useState(false);
+  const [showPreferencesAdvanced, setShowPreferencesAdvanced] = useState(false);
+  const [showProductsAdvanced, setShowProductsAdvanced] = useState(false);
+  const [activeSetupSection, setActiveSetupSection] = useState<'tank' | 'water' | 'biology' | 'preferences' | 'products' | 'alerts' | 'data'>('tank');
+  const [selectedFishToAdd, setSelectedFishToAdd] = useState(fishOptions[0] || '');
+  const [selectedShrimpToAdd, setSelectedShrimpToAdd] = useState(shrimpOptions[0] || '');
+  const [selectedPlantToAdd, setSelectedPlantToAdd] = useState(plantOptions[0] || '');
+
+  const defaultEngineSetup: EngineSetup = {
+    user_preferences: {
+      cycling_mode_preference: 'auto',
+      dark_start: false,
+      risk_tolerance: 'low',
+      goal_profile: 'stability_first',
+      photoperiod_hours_initial: 6,
+      photoperiod_hours_post_cycle: 8,
+      units: 'metric'
+    },
+    tank_profile: {
+      tank_volume_l_gross: 60,
+      net_volume_method: 'estimate_multiplier',
+      estimated_net_multiplier: 0.85,
+      net_water_volume_l: undefined,
+      substrate: {
+        type: 'inert',
+        sand_cap_cm: 2.0
+      },
+      filtration: {
+        filter_model: '',
+        rated_flow_lph: undefined,
+        flow_class: 'medium'
+      },
+      co2: {
+        enabled: true,
+        injection_type: 'diffuser',
+        target_ph_drop: 1.0,
+        surface_agitation: 'gentle_ripple'
+      },
+      temperature_target_c: [22, 24]
+    },
+    water_source_profile: {
+      tap_ph: 7.2,
+      tap_gh_dgh: 2.0,
+      tap_kh_dkh: null,
+      disinfectant: 'unknown',
+      weekly_water_change_percent_target: [25, 30]
+    },
+    biology_profile: {
+      plants: {
+        categories: ['epiphytes'],
+        demand_class: 'auto',
+        species: []
+      },
+      livestock_plan: {
+        fish: [],
+        shrimp: [],
+        cleanup_crew: []
+      }
+    },
+    product_stack: {
+      ammonia_source: {
+        type: 'pure_ammonia',
+        solution_percent: 10
+      },
+      selected_product_ids: []
+    }
+  };
+
+  const defaultState: AquariumState = {
+    tankName: "Lava Rock 60L",
+    tankSize: 60,
+    tankType: TankType.PLANTED,
+    startDate: new Date().toISOString().split('T')[0],
+    logs: MOCK_LOGS,
+    tasks: INITIAL_TASKS,
+    currentPhase: 'phase_1_initial_start_day_0',
+    reminderSettings: {
+      enabled: false,
+      dailyTime: "09:00",
+      weeklyDay: 1, // Monday
+      monthlyDay: 1
+    },
+    engineSetup: defaultEngineSetup,
+    targets: {
+      temperature: { min: 22.0, max: 24.0 },
+      pH: { min: 6.4, max: 7.8 },
+      ammonia: 0.0,
+      nitrite: 0.0,
+      nitrate: { min: 5.0, max: 30.0 },
+      gh: { min: 5.0, max: 7.0 },
+      kh: { min: 2.0, max: 4.0 }
+    }
+  };
   
   // Initialize state from localStorage or defaults
   const [aquarium, setAquarium] = useState<AquariumState>(() => {
@@ -26,38 +194,66 @@ const App: React.FC = () => {
         const parsed = JSON.parse(saved);
         // Basic validation: ensure we have the minimum required structure
         if (parsed.tankName && Array.isArray(parsed.logs)) {
-          return parsed;
+          return {
+            ...defaultState,
+            ...parsed,
+            reminderSettings: { ...defaultState.reminderSettings, ...parsed.reminderSettings },
+            engineSetup: {
+              ...defaultEngineSetup,
+              ...parsed.engineSetup,
+              user_preferences: {
+                ...defaultEngineSetup.user_preferences,
+                ...parsed.engineSetup?.user_preferences
+              },
+              tank_profile: {
+                ...defaultEngineSetup.tank_profile,
+                ...parsed.engineSetup?.tank_profile,
+                substrate: {
+                  ...defaultEngineSetup.tank_profile.substrate,
+                  ...parsed.engineSetup?.tank_profile?.substrate
+                },
+                filtration: {
+                  ...defaultEngineSetup.tank_profile.filtration,
+                  ...parsed.engineSetup?.tank_profile?.filtration
+                },
+                co2: {
+                  ...defaultEngineSetup.tank_profile.co2,
+                  ...parsed.engineSetup?.tank_profile?.co2
+                }
+              },
+              water_source_profile: {
+                ...defaultEngineSetup.water_source_profile,
+                ...parsed.engineSetup?.water_source_profile
+              },
+              biology_profile: {
+                ...defaultEngineSetup.biology_profile,
+                ...parsed.engineSetup?.biology_profile,
+                plants: {
+                  ...defaultEngineSetup.biology_profile.plants,
+                  ...parsed.engineSetup?.biology_profile?.plants
+                },
+                livestock_plan: {
+                  ...defaultEngineSetup.biology_profile.livestock_plan,
+                  ...parsed.engineSetup?.biology_profile?.livestock_plan
+                }
+              },
+              product_stack: {
+                ...defaultEngineSetup.product_stack,
+                ...parsed.engineSetup?.product_stack,
+                ammonia_source: {
+                  ...defaultEngineSetup.product_stack.ammonia_source,
+                  ...parsed.engineSetup?.product_stack?.ammonia_source
+                }
+              }
+            }
+          };
         }
       } catch (e) {
         console.error("Failed to load saved aquarium data", e);
       }
     }
     
-    // Default initial state
-    return {
-      tankName: "Lava Rock 60L",
-      tankSize: 60,
-      tankType: TankType.PLANTED,
-      startDate: new Date().toISOString().split('T')[0],
-      logs: MOCK_LOGS,
-      tasks: INITIAL_TASKS,
-      currentPhase: 'phase_1_initial_start_day_0',
-      reminderSettings: {
-        enabled: false,
-        dailyTime: "09:00",
-        weeklyDay: 1, // Monday
-        monthlyDay: 1
-      },
-      targets: {
-        temperature: { min: 22.0, max: 24.0 },
-        pH: { min: 6.4, max: 7.8 },
-        ammonia: 0.0,
-        nitrite: 0.0,
-        nitrate: { min: 5.0, max: 30.0 },
-        gh: { min: 5.0, max: 7.0 },
-        kh: { min: 2.0, max: 4.0 }
-      }
-    };
+    return defaultState;
   });
 
   // Persist state to localStorage whenever it changes
@@ -145,6 +341,194 @@ const App: React.FC = () => {
         body: "We'll ping you about unfinished tasks on your scheduled days.",
         icon: "/favicon.ico"
       });
+    }
+  };
+
+  const updateEngineSetup = (updater: (prevSetup: EngineSetup) => EngineSetup) => {
+    setAquarium(prev => ({
+      ...prev,
+      engineSetup: updater(prev.engineSetup)
+    }));
+  };
+
+  const parseCsvList = (value: string) =>
+    value
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
+
+  const formatCsvList = (values: string[]) => values.join(', ');
+
+  const parseNumber = (value: string, fallback = 0) => {
+    const normalized = value.replace(',', '.').trim();
+    const parsed = parseFloat(normalized);
+    return Number.isNaN(parsed) ? fallback : parsed;
+  };
+
+  const parseOptionalNumber = (value: string) => {
+    const normalized = value.replace(',', '.').trim();
+    if (!normalized) return null;
+    const parsed = parseFloat(normalized);
+    return Number.isNaN(parsed) ? null : parsed;
+  };
+
+  const targetSpreads: Record<'temperature' | 'pH' | 'nitrate' | 'gh' | 'kh', number> = {
+    temperature: 1,
+    pH: 0.3,
+    nitrate: 10,
+    gh: 1,
+    kh: 1
+  };
+
+  const getTargetCenter = (range: ParameterRange) => (range.min + range.max) / 2;
+
+  const updateTargetCenter = (key: keyof typeof targetSpreads, value: number) => {
+    const spread = targetSpreads[key];
+    setAquarium(prev => ({
+      ...prev,
+      targets: {
+        ...prev.targets,
+        [key]: {
+          min: value - spread,
+          max: value + spread
+        }
+      }
+    }));
+  };
+
+  const addLivestock = (key: keyof AquariumState['engineSetup']['biology_profile']['livestock_plan'], name: string) => {
+    if (!name) return;
+    updateEngineSetup(prev => {
+      const list = prev.biology_profile.livestock_plan[key];
+      if (list.includes(name)) return prev;
+      return {
+        ...prev,
+        biology_profile: {
+          ...prev.biology_profile,
+          livestock_plan: {
+            ...prev.biology_profile.livestock_plan,
+            [key]: [...list, name]
+          }
+        }
+      };
+    });
+  };
+
+  const removeLivestock = (key: keyof AquariumState['engineSetup']['biology_profile']['livestock_plan'], name: string) => {
+    updateEngineSetup(prev => ({
+      ...prev,
+      biology_profile: {
+        ...prev.biology_profile,
+        livestock_plan: {
+          ...prev.biology_profile.livestock_plan,
+          [key]: prev.biology_profile.livestock_plan[key].filter(item => item !== name)
+        }
+      }
+    }));
+  };
+
+  const addPlant = (name: string) => {
+    if (!name) return;
+    updateEngineSetup(prev => {
+      const list = prev.biology_profile.plants.species;
+      if (list.includes(name)) return prev;
+      return {
+        ...prev,
+        biology_profile: {
+          ...prev.biology_profile,
+          plants: {
+            ...prev.biology_profile.plants,
+            species: [...list, name]
+          }
+        }
+      };
+    });
+  };
+
+  const removePlant = (name: string) => {
+    updateEngineSetup(prev => ({
+      ...prev,
+      biology_profile: {
+        ...prev.biology_profile,
+        plants: {
+          ...prev.biology_profile.plants,
+          species: prev.biology_profile.plants.species.filter(item => item !== name)
+        }
+      }
+    }));
+  };
+
+  const compatibilityWarnings = (() => {
+    const allSpecies = [
+      ...aquarium.engineSetup.biology_profile.livestock_plan.fish,
+      ...aquarium.engineSetup.biology_profile.livestock_plan.shrimp
+    ];
+    const warnings = [];
+    for (let i = 0; i < allSpecies.length; i += 1) {
+      for (let j = i + 1; j < allSpecies.length; j += 1) {
+        const a = allSpecies[i];
+        const b = allSpecies[j];
+        const reqA = getRequirementRanges(a);
+        const reqB = getRequirementRanges(b);
+        if (!reqA || !reqB) continue;
+        const incompatible =
+          !rangesOverlap(reqA.temperature_c, reqB.temperature_c) ||
+          !rangesOverlap(reqA.ph, reqB.ph) ||
+          !rangesOverlap(reqA.gh_dgh, reqB.gh_dgh) ||
+          !rangesOverlap(reqA.kh_dkh, reqB.kh_dkh);
+        if (incompatible) {
+          warnings.push(`${a} ↔ ${b}`);
+        }
+      }
+    }
+    return warnings;
+  })();
+
+  const recommendedWaterTargets = (() => {
+    const allSpecies = [
+      ...aquarium.engineSetup.biology_profile.livestock_plan.fish,
+      ...aquarium.engineSetup.biology_profile.livestock_plan.shrimp
+    ];
+    const requirements = allSpecies.map(name => getRequirementRanges(name)).filter(Boolean);
+    if (!requirements.length) return null;
+    const temperatureRange = intersectRange(requirements.map(req => req.temperature_c));
+    const phRange = intersectRange(requirements.map(req => req.ph));
+    const ghRange = intersectRange(requirements.map(req => req.gh_dgh));
+    const khRange = intersectRange(requirements.map(req => req.kh_dkh));
+    return {
+      temperature: { range: temperatureRange, mean: meanRange(temperatureRange) },
+      pH: { range: phRange, mean: meanRange(phRange) },
+      gh: { range: ghRange, mean: meanRange(ghRange) },
+      kh: { range: khRange, mean: meanRange(khRange) }
+    };
+  })();
+
+  const recommendedPlantGuidance = (() => {
+    const selectedPlants = aquarium.engineSetup.biology_profile.plants.species;
+    const plantGroups = selectedPlants
+      .map(name => plantSpeciesIndex.get(name)?.group)
+      .filter(Boolean);
+    if (!plantGroups.length) return null;
+    const lightOptions = intersectSets(plantGroups.map(group => group.typical_requirements.light || []));
+    const co2Options = intersectSets(plantGroups.map(group => group.typical_requirements.co2 || []));
+    const growthRates = Array.from(new Set(plantGroups.map(group => group.typical_requirements.growth_rate).filter(Boolean)));
+    const growthRate = growthRates.length === 1 ? growthRates[0] : 'mixed';
+    return { lightOptions, co2Options, growthRate };
+  })();
+
+  const applyRecommendedWaterTargets = () => {
+    if (!recommendedWaterTargets) return;
+    if (recommendedWaterTargets.temperature.mean !== null) {
+      updateTargetCenter('temperature', recommendedWaterTargets.temperature.mean);
+    }
+    if (recommendedWaterTargets.pH.mean !== null) {
+      updateTargetCenter('pH', recommendedWaterTargets.pH.mean);
+    }
+    if (recommendedWaterTargets.gh.mean !== null) {
+      updateTargetCenter('gh', recommendedWaterTargets.gh.mean);
+    }
+    if (recommendedWaterTargets.kh.mean !== null) {
+      updateTargetCenter('kh', recommendedWaterTargets.kh.mean);
     }
   };
 
@@ -274,13 +658,13 @@ const App: React.FC = () => {
                   <div key={stat.id} className="relative group">
                     <button 
                       onClick={() => toggleHighlight(stat.id)}
-                      className={`w-full bg-slate-900/50 border p-3 pt-4 rounded-2xl flex flex-col justify-center items-center text-center transition-all active:scale-95 overflow-hidden min-h-[85px] ${
+                      className={`w-full bg-slate-900/50 border p-3 pt-4 rounded-2xl square-btn flex flex-col justify-center items-center text-center transition-all active:scale-95 overflow-hidden min-h-[85px] ${
                         highlightedParam === stat.id 
                         ? 'border-slate-300 bg-slate-300/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]' 
                         : 'border-slate-800'
                       }`}
                     >
-                      {isWarning && <div className="absolute top-1 left-1"><AlertCircle className={`w-2 h-2 ${colorClass}`} /></div>}
+                      
                       <div className="flex flex-col items-center">
                         <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">{stat.label}</span>
                         {stat.subLabel && <span className="text-[7px] font-bold text-slate-500 uppercase -mt-0.5 mb-1">{stat.subLabel}</span>}
@@ -292,7 +676,7 @@ const App: React.FC = () => {
                         e.stopPropagation();
                         setInfoModal({ title: stat.label + (stat.subLabel ? ` (${stat.subLabel})` : ''), content: stat.note });
                       }}
-                      className="absolute top-1.5 right-1.5 p-1 bg-slate-800 rounded-full border border-slate-700 text-slate-500 hover:text-white transition-colors z-10"
+                      className={`absolute top-1.5 right-1.5 p-1 bg-slate-800 rounded-full border border-slate-700 ${isWarning ? colorClass : 'text-slate-500'} hover:text-white transition-colors z-10`}
                     >
                       <Info className="w-2.5 h-2.5" />
                     </button>
@@ -474,45 +858,848 @@ const App: React.FC = () => {
         );
       case 'settings':
         const reminderInputClasses = "w-full bg-slate-800 border border-slate-700 h-14 rounded-2xl text-base text-white outline-none focus:ring-2 focus:ring-slate-400 text-center transition-all appearance-none cursor-pointer";
-        
+        const setupInputClasses = "w-full bg-slate-800 border border-slate-700 p-3.5 rounded-2xl text-xs text-white outline-none focus:ring-2 focus:ring-slate-500";
+        const setupLabelClasses = "text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1";
+        const setupSections = [
+          { id: 'tank', label: 'Tank' },
+          { id: 'biology', label: 'Biology' },
+          { id: 'water', label: 'Water' },
+          { id: 'preferences', label: 'Preferences' },
+          { id: 'products', label: 'Products' },
+          { id: 'alerts', label: 'Alerts' },
+          { id: 'data', label: 'Data' }
+        ] as const;
+
         return (
           <div className="px-4 space-y-6 pb-24 animate-in fade-in duration-300 pt-4">
             <h1 className="text-3xl font-extrabold text-white">Setup</h1>
-            
-            <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-6">
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Tank Identity</label>
-                <div className="space-y-3">
-                  <input 
-                    type="text"
-                    placeholder="Tank Name"
-                    value={aquarium.tankName}
-                    onChange={e => setAquarium(prev => ({...prev, tankName: e.target.value}))}
-                    className="w-full bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input 
-                      type="number"
-                      placeholder="Volume (L)"
-                      value={aquarium.tankSize}
-                      onChange={e => setAquarium(prev => ({...prev, tankSize: parseInt(e.target.value) || 0}))}
-                      className="w-full min-w-0 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500"
-                    />
-                    <select 
-                      value={aquarium.tankType}
-                      onChange={e => setAquarium(prev => ({...prev, tankType: e.target.value as TankType}))}
-                      className="w-full min-w-0 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-white outline-none focus:ring-2 focus:ring-slate-500 appearance-none"
+
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+              {setupSections.map(section => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSetupSection(section.id)}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shrink-0 border ${
+                    activeSetupSection === section.id
+                      ? 'bg-slate-100 border-slate-100 text-slate-950 shadow-lg shadow-white/5'
+                      : 'bg-slate-900 border-slate-800 text-slate-500'
+                  }`}
+                >
+                  {section.label}
+                </button>
+              ))}
+            </div>
+
+            {activeSetupSection === 'tank' && (
+              <div className="space-y-6">
+                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-6">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block ml-1">Tank Identity</label>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Tank Name"
+                        value={aquarium.tankName}
+                        onChange={e => setAquarium(prev => ({...prev, tankName: e.target.value}))}
+                        className="w-full bg-slate-800 border border-slate-700 p-4 rounded-2xl text-xs text-white outline-none focus:ring-2 focus:ring-slate-500"
+                      />
+                      <select
+                        value={aquarium.tankType}
+                        onChange={e => setAquarium(prev => ({...prev, tankType: e.target.value as TankType}))}
+                        className="w-full min-w-0 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-xs text-white outline-none focus:ring-2 focus:ring-slate-500 appearance-none"
+                      >
+                        <option value={TankType.PLANTED}>Planted</option>
+                        <option value={TankType.FRESHWATER}>Freshwater</option>
+                        <option value={TankType.SALTWATER}>Saltwater</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Tank Properties</h3>
+                    <button
+                      onClick={() => setShowTankAdvanced(value => !value)}
+                      className="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
                     >
-                      <option value={TankType.PLANTED}>Planted</option>
-                      <option value={TankType.FRESHWATER}>Freshwater</option>
-                      <option value={TankType.SALTWATER}>Saltwater</option>
+                      {showTankAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Gross Volume (L)</label>
+                      <input
+                        type="number"
+                        value={aquarium.engineSetup.tank_profile.tank_volume_l_gross}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          tank_profile: { ...prev.tank_profile, tank_volume_l_gross: parseNumber(e.target.value) }
+                        }))}
+                        onBlur={e => setAquarium(prev => ({
+                          ...prev,
+                          tankSize: parseNumber(e.target.value, prev.tankSize)
+                        }))}
+                        className={setupInputClasses}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Net Volume Method</label>
+                      <select
+                        value={aquarium.engineSetup.tank_profile.net_volume_method}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          tank_profile: { ...prev.tank_profile, net_volume_method: e.target.value as EngineSetup['tank_profile']['net_volume_method'] }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="estimate_multiplier">Estimate</option>
+                        <option value="explicit">Explicit</option>
+                      </select>
+                    </div>
+                  </div>
+                  {aquarium.engineSetup.tank_profile.net_volume_method === 'explicit' && (
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Net Water Volume (L)</label>
+                      <input
+                        type="number"
+                        value={aquarium.engineSetup.tank_profile.net_water_volume_l ?? ''}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          tank_profile: { ...prev.tank_profile, net_water_volume_l: parseOptionalNumber(e.target.value) ?? undefined }
+                        }))}
+                        className={setupInputClasses}
+                      />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Substrate</label>
+                      <select
+                        value={aquarium.engineSetup.tank_profile.substrate.type}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          tank_profile: {
+                            ...prev.tank_profile,
+                            substrate: { ...prev.tank_profile.substrate, type: e.target.value as EngineSetup['tank_profile']['substrate']['type'] }
+                          }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="inert">Inert</option>
+                        <option value="aquasoil">Aquasoil</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Flow Class</label>
+                      <select
+                        value={aquarium.engineSetup.tank_profile.filtration.flow_class}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          tank_profile: {
+                            ...prev.tank_profile,
+                            filtration: { ...prev.tank_profile.filtration, flow_class: e.target.value as EngineSetup['tank_profile']['filtration']['flow_class'] }
+                          }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {showTankAdvanced && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Net Multiplier</label>
+                          <input
+                            type="number" step="0.01"
+                            value={aquarium.engineSetup.tank_profile.estimated_net_multiplier}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: { ...prev.tank_profile, estimated_net_multiplier: parseNumber(e.target.value, 0.85) }
+                            }))}
+                            className={setupInputClasses}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Sand Cap (cm)</label>
+                          <input
+                            type="number" step="0.1"
+                            value={aquarium.engineSetup.tank_profile.substrate.sand_cap_cm}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: {
+                                ...prev.tank_profile,
+                                substrate: { ...prev.tank_profile.substrate, sand_cap_cm: parseNumber(e.target.value, 2) }
+                              }
+                            }))}
+                            className={setupInputClasses}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>CO2 Enabled</label>
+                          <button
+                            onClick={() => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: { ...prev.tank_profile, co2: { ...prev.tank_profile.co2, enabled: !prev.tank_profile.co2.enabled } }
+                            }))}
+                            className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.tank_profile.co2.enabled ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                          >
+                            {aquarium.engineSetup.tank_profile.co2.enabled ? 'On' : 'Off'}
+                          </button>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>CO2 Injection</label>
+                          <select
+                            value={aquarium.engineSetup.tank_profile.co2.injection_type}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: {
+                                ...prev.tank_profile,
+                                co2: { ...prev.tank_profile.co2, injection_type: e.target.value as EngineSetup['tank_profile']['co2']['injection_type'] }
+                              }
+                            }))}
+                            className={`${setupInputClasses} appearance-none`}
+                          >
+                            <option value="diffuser">Diffuser</option>
+                            <option value="inline">Inline</option>
+                            <option value="reactor">Reactor</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Target pH Drop</label>
+                          <input
+                            type="number" step="0.1"
+                            value={aquarium.engineSetup.tank_profile.co2.target_ph_drop}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: {
+                                ...prev.tank_profile,
+                                co2: { ...prev.tank_profile.co2, target_ph_drop: parseNumber(e.target.value, 1) }
+                              }
+                            }))}
+                            className={setupInputClasses}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Surface Agitation</label>
+                          <select
+                            value={aquarium.engineSetup.tank_profile.co2.surface_agitation}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: {
+                                ...prev.tank_profile,
+                                co2: { ...prev.tank_profile.co2, surface_agitation: e.target.value as EngineSetup['tank_profile']['co2']['surface_agitation'] }
+                              }
+                            }))}
+                            className={`${setupInputClasses} appearance-none`}
+                          >
+                            <option value="flat">Flat</option>
+                            <option value="gentle_ripple">Gentle Ripple</option>
+                            <option value="turbulent">Turbulent</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Temp Min (°C)</label>
+                          <input
+                            type="number" step="0.1"
+                            value={aquarium.engineSetup.tank_profile.temperature_target_c[0]}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: {
+                                ...prev.tank_profile,
+                                temperature_target_c: [parseNumber(e.target.value, 22), prev.tank_profile.temperature_target_c[1]]
+                              }
+                            }))}
+                            className={setupInputClasses}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Temp Max (°C)</label>
+                          <input
+                            type="number" step="0.1"
+                            value={aquarium.engineSetup.tank_profile.temperature_target_c[1]}
+                            onChange={e => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: {
+                                ...prev.tank_profile,
+                                temperature_target_c: [prev.tank_profile.temperature_target_c[0], parseNumber(e.target.value, 24)]
+                              }
+                            }))}
+                            className={setupInputClasses}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeSetupSection === 'water' && (
+              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Water Properties</h3>
+                  <button
+                    onClick={() => setShowWaterAdvanced(value => !value)}
+                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                  >
+                    {showWaterAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Tap pH</label>
+                    <input
+                      type="number" step="0.1"
+                      value={aquarium.engineSetup.water_source_profile.tap_ph}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        water_source_profile: { ...prev.water_source_profile, tap_ph: parseNumber(e.target.value, 7) }
+                      }))}
+                      className={setupInputClasses}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Tap GH (dGH)</label>
+                    <input
+                      type="number" step="0.1"
+                      value={aquarium.engineSetup.water_source_profile.tap_gh_dgh}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        water_source_profile: { ...prev.water_source_profile, tap_gh_dgh: parseNumber(e.target.value, 0) }
+                      }))}
+                      className={setupInputClasses}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Tap KH (dKH)</label>
+                    <input
+                      type="text"
+                      placeholder="Unknown"
+                      value={aquarium.engineSetup.water_source_profile.tap_kh_dkh ?? ''}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        water_source_profile: { ...prev.water_source_profile, tap_kh_dkh: parseOptionalNumber(e.target.value) }
+                      }))}
+                      className={setupInputClasses}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>WC % Range</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0]}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: {
+                            ...prev.water_source_profile,
+                            weekly_water_change_percent_target: [
+                              parseNumber(e.target.value, 25),
+                              prev.water_source_profile.weekly_water_change_percent_target[1]
+                            ]
+                          }
+                        }))}
+                        className={setupInputClasses}
+                      />
+                      <input
+                        type="number"
+                        value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[1]}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: {
+                            ...prev.water_source_profile,
+                            weekly_water_change_percent_target: [
+                              prev.water_source_profile.weekly_water_change_percent_target[0],
+                              parseNumber(e.target.value, 30)
+                            ]
+                          }
+                        }))}
+                        className={setupInputClasses}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {showWaterAdvanced && (
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Disinfectant</label>
+                    <select
+                      value={aquarium.engineSetup.water_source_profile.disinfectant}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        water_source_profile: { ...prev.water_source_profile, disinfectant: e.target.value as EngineSetup['water_source_profile']['disinfectant'] }
+                      }))}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      <option value="unknown">Unknown</option>
+                      <option value="none">None</option>
+                      <option value="chlorine">Chlorine</option>
+                      <option value="chloramine">Chloramine</option>
                     </select>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Targets</h4>
+                    <Target className="w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: 'temperature', label: 'Temp Target (°C)', key: 'temperature', step: 0.1 },
+                      { id: 'pH', label: 'pH Target', key: 'pH', step: 0.1 },
+                      { id: 'nitrate', label: 'Nitrate Target (ppm)', key: 'nitrate', step: 1 },
+                      { id: 'gh', label: 'GH Target (dGH)', key: 'gh', step: 0.1 },
+                      { id: 'kh', label: 'KH Target (dKH)', key: 'kh', step: 0.1 }
+                    ].map(target => (
+                      <div key={target.id} className="space-y-1">
+                        <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">{target.label}</label>
+                        <input
+                          type="number"
+                          step={target.step}
+                          value={getTargetCenter(aquarium.targets[target.key as keyof typeof aquarium.targets] as ParameterRange)}
+                          onChange={e => updateTargetCenter(target.key as keyof typeof targetSpreads, parseNumber(e.target.value))}
+                          className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
+                        />
+                        <span className="text-[9px] text-slate-500 ml-1">
+                          Range: {(aquarium.targets[target.key as keyof typeof aquarium.targets] as ParameterRange).min.toFixed(1)}–{(aquarium.targets[target.key as keyof typeof aquarium.targets] as ParameterRange).max.toFixed(1)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Ammonia Max</label>
+                      <input
+                        type="number" step="0.01"
+                        value={aquarium.targets.ammonia}
+                        onChange={e => updateTarget('ammonia', 'val', parseNumber(e.target.value))}
+                        className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Nitrite Max</label>
+                      <input
+                        type="number" step="0.01"
+                        value={aquarium.targets.nitrite}
+                        onChange={e => updateTarget('nitrite', 'val', parseNumber(e.target.value))}
+                        className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Reminders Section */}
-              <div className="pt-4 border-t border-slate-800">
+            {activeSetupSection === 'biology' && (
+              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Biology</h3>
+                  <button
+                    onClick={() => setShowBiologyAdvanced(value => !value)}
+                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                  >
+                    {showBiologyAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                  </button>
+                </div>
+                {compatibilityWarnings.length > 0 && (
+                  <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-2xl text-[10px] text-amber-300">
+                    <strong className="font-bold">Potential incompatibilities:</strong> {compatibilityWarnings.join(', ')}.
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <label className={setupLabelClasses}>Fish</label>
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <select
+                      value={selectedFishToAdd}
+                      onChange={e => setSelectedFishToAdd(e.target.value)}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      {fishOptions.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => addLivestock('fish', selectedFishToAdd)}
+                      className="px-4 rounded-2xl bg-slate-100 text-slate-950 text-xs font-bold"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {aquarium.engineSetup.biology_profile.livestock_plan.fish.length > 0 && (
+                    <div className="tag-list pt-1">
+                      {aquarium.engineSetup.biology_profile.livestock_plan.fish.map(name => (
+                        <button
+                          key={name}
+                          onClick={() => removeLivestock('fish', name)}
+                          className="tag-pill"
+                        >
+                          <span>{name}</span>
+                          <span className="tag-pill__remove">×</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className={setupLabelClasses}>Shrimp</label>
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <select
+                      value={selectedShrimpToAdd}
+                      onChange={e => setSelectedShrimpToAdd(e.target.value)}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      {shrimpOptions.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => addLivestock('shrimp', selectedShrimpToAdd)}
+                      className="px-4 rounded-2xl bg-slate-100 text-slate-950 text-xs font-bold"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {aquarium.engineSetup.biology_profile.livestock_plan.shrimp.length > 0 && (
+                    <div className="tag-list pt-1">
+                      {aquarium.engineSetup.biology_profile.livestock_plan.shrimp.map(name => (
+                        <button
+                          key={name}
+                          onClick={() => removeLivestock('shrimp', name)}
+                          className="tag-pill"
+                        >
+                          <span>{name}</span>
+                          <span className="tag-pill__remove">×</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className={setupLabelClasses}>Plants</label>
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <select
+                      value={selectedPlantToAdd}
+                      onChange={e => setSelectedPlantToAdd(e.target.value)}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      {plantOptions.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => addPlant(selectedPlantToAdd)}
+                      className="px-4 rounded-2xl bg-slate-100 text-slate-950 text-xs font-bold"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {aquarium.engineSetup.biology_profile.plants.species.length > 0 && (
+                    <div className="tag-list pt-1">
+                      {aquarium.engineSetup.biology_profile.plants.species.map(name => (
+                        <button
+                          key={name}
+                          onClick={() => removePlant(name)}
+                          className="tag-pill"
+                        >
+                          <span>{name}</span>
+                          <span className="tag-pill__remove">×</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="pt-4 border-t border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Recommended Targets</h4>
+                    <button
+                      onClick={applyRecommendedWaterTargets}
+                      disabled={!recommendedWaterTargets}
+                      className={`px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                        recommendedWaterTargets
+                          ? 'bg-slate-100 text-slate-950 border-slate-100'
+                          : 'bg-slate-800 text-slate-500 border-slate-700'
+                      }`}
+                    >
+                      Export to Water
+                    </button>
+                  </div>
+                  {recommendedWaterTargets ? (
+                    <div className="grid grid-cols-2 gap-3 text-[11px] text-slate-300">
+                      <div>
+                        <span className="text-slate-500">Temp:</span>{' '}
+                        {recommendedWaterTargets.temperature.range
+                          ? `${recommendedWaterTargets.temperature.range[0]}–${recommendedWaterTargets.temperature.range[1]} C (target ${recommendedWaterTargets.temperature.mean?.toFixed(1)} C)`
+                          : 'No overlap'}
+                      </div>
+                      <div>
+                        <span className="text-slate-500">pH:</span>{' '}
+                        {recommendedWaterTargets.pH.range
+                          ? `${recommendedWaterTargets.pH.range[0]}–${recommendedWaterTargets.pH.range[1]} (target ${recommendedWaterTargets.pH.mean?.toFixed(2)})`
+                          : 'No overlap'}
+                      </div>
+                      <div>
+                        <span className="text-slate-500">GH:</span>{' '}
+                        {recommendedWaterTargets.gh.range
+                          ? `${recommendedWaterTargets.gh.range[0]}–${recommendedWaterTargets.gh.range[1]} dGH (target ${recommendedWaterTargets.gh.mean?.toFixed(1)} dGH)`
+                          : 'No overlap'}
+                      </div>
+                      <div>
+                        <span className="text-slate-500">KH:</span>{' '}
+                        {recommendedWaterTargets.kh.range
+                          ? `${recommendedWaterTargets.kh.range[0]}–${recommendedWaterTargets.kh.range[1]} dKH (target ${recommendedWaterTargets.kh.mean?.toFixed(1)} dKH)`
+                          : 'No overlap'}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500">Add fish or shrimp to see recommended water targets.</p>
+                  )}
+                  {recommendedPlantGuidance ? (
+                    <div className="text-[11px] text-slate-300 space-y-1">
+                      <div>
+                        <span className="text-slate-500">Light:</span>{' '}
+                        {recommendedPlantGuidance.lightOptions.length
+                          ? recommendedPlantGuidance.lightOptions.map(formatDisplayValue).join(', ')
+                          : 'No overlap'}
+                      </div>
+                      <div>
+                        <span className="text-slate-500">CO2:</span>{' '}
+                        {recommendedPlantGuidance.co2Options.length
+                          ? recommendedPlantGuidance.co2Options.map(formatDisplayValue).join(', ')
+                          : 'No overlap'}
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Growth Rate:</span> {formatDisplayValue(recommendedPlantGuidance.growthRate)}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500">Add plants to see light and CO2 guidance.</p>
+                  )}
+                </div>
+                {showBiologyAdvanced && (
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Plant Demand</label>
+                    <select
+                      value={aquarium.engineSetup.biology_profile.plants.demand_class}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        biology_profile: {
+                          ...prev.biology_profile,
+                          plants: { ...prev.biology_profile.plants, demand_class: e.target.value as EngineSetup['biology_profile']['plants']['demand_class'] }
+                        }
+                      }))}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeSetupSection === 'preferences' && (
+              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Preferences</h3>
+                  <button
+                    onClick={() => setShowPreferencesAdvanced(value => !value)}
+                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                  >
+                    {showPreferencesAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Cycling Mode</label>
+                    <select
+                      value={aquarium.engineSetup.user_preferences.cycling_mode_preference}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        user_preferences: { ...prev.user_preferences, cycling_mode_preference: e.target.value as EngineSetup['user_preferences']['cycling_mode_preference'] }
+                      }))}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="fishless_ammonia">Fishless Ammonia</option>
+                      <option value="fish_in">Fish-in</option>
+                      <option value="plant_assisted">Plant Assisted</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Risk Tolerance</label>
+                    <select
+                      value={aquarium.engineSetup.user_preferences.risk_tolerance}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        user_preferences: { ...prev.user_preferences, risk_tolerance: e.target.value as EngineSetup['user_preferences']['risk_tolerance'] }
+                      }))}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={setupLabelClasses}>Dark Start</label>
+                  <button
+                    onClick={() => updateEngineSetup(prev => ({
+                      ...prev,
+                      user_preferences: { ...prev.user_preferences, dark_start: !prev.user_preferences.dark_start }
+                    }))}
+                    className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.user_preferences.dark_start ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                  >
+                    {aquarium.engineSetup.user_preferences.dark_start ? 'Enabled' : 'Off'}
+                  </button>
+                </div>
+                {showPreferencesAdvanced && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className={setupLabelClasses}>Goal Profile</label>
+                        <select
+                          value={aquarium.engineSetup.user_preferences.goal_profile}
+                          onChange={e => updateEngineSetup(prev => ({
+                            ...prev,
+                            user_preferences: { ...prev.user_preferences, goal_profile: e.target.value as EngineSetup['user_preferences']['goal_profile'] }
+                          }))}
+                          className={`${setupInputClasses} appearance-none`}
+                        >
+                          <option value="stability_first">Stability First</option>
+                          <option value="growth_first">Growth First</option>
+                          <option value="balanced">Balanced</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className={setupLabelClasses}>Units</label>
+                        <select
+                          value={aquarium.engineSetup.user_preferences.units}
+                          onChange={e => updateEngineSetup(prev => ({
+                            ...prev,
+                            user_preferences: { ...prev.user_preferences, units: e.target.value as EngineSetup['user_preferences']['units'] }
+                          }))}
+                          className={`${setupInputClasses} appearance-none`}
+                        >
+                          <option value="metric">Metric</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className={setupLabelClasses}>Photoperiod Start</label>
+                        <input
+                          type="number" step="0.5"
+                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_initial}
+                          onChange={e => updateEngineSetup(prev => ({
+                            ...prev,
+                            user_preferences: { ...prev.user_preferences, photoperiod_hours_initial: parseNumber(e.target.value, 6) }
+                          }))}
+                          className={setupInputClasses}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className={setupLabelClasses}>Photoperiod Post</label>
+                        <input
+                          type="number" step="0.5"
+                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_post_cycle}
+                          onChange={e => updateEngineSetup(prev => ({
+                            ...prev,
+                            user_preferences: { ...prev.user_preferences, photoperiod_hours_post_cycle: parseNumber(e.target.value, 8) }
+                          }))}
+                          className={setupInputClasses}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeSetupSection === 'products' && (
+              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Products</h3>
+                  <button
+                    onClick={() => setShowProductsAdvanced(value => !value)}
+                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+                  >
+                    {showProductsAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={setupLabelClasses}>Selected Product IDs</label>
+                  <input
+                    type="text"
+                    placeholder="gh_remineralizer, kh_buffer, bacteria_starter"
+                    value={formatCsvList(aquarium.engineSetup.product_stack.selected_product_ids)}
+                    onChange={e => updateEngineSetup(prev => ({
+                      ...prev,
+                      product_stack: { ...prev.product_stack, selected_product_ids: parseCsvList(e.target.value) }
+                    }))}
+                    className={setupInputClasses}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className={setupLabelClasses}>Ammonia Source</label>
+                  <select
+                    value={aquarium.engineSetup.product_stack.ammonia_source.type}
+                    onChange={e => updateEngineSetup(prev => ({
+                      ...prev,
+                      product_stack: {
+                        ...prev.product_stack,
+                        ammonia_source: { ...prev.product_stack.ammonia_source, type: e.target.value as EngineSetup['product_stack']['ammonia_source']['type'] }
+                      }
+                    }))}
+                    className={`${setupInputClasses} appearance-none`}
+                  >
+                    <option value="pure_ammonia">Pure Ammonia</option>
+                    <option value="fish_food">Fish Food</option>
+                    <option value="none">None</option>
+                  </select>
+                </div>
+                {showProductsAdvanced && (
+                  <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Ammonia Solution %</label>
+                    <input
+                      type="number" step="0.1"
+                      value={aquarium.engineSetup.product_stack.ammonia_source.solution_percent ?? ''}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        product_stack: {
+                          ...prev.product_stack,
+                          ammonia_source: {
+                            ...prev.product_stack.ammonia_source,
+                            solution_percent: parseOptionalNumber(e.target.value)
+                          }
+                        }
+                      }))}
+                      className={setupInputClasses}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeSetupSection === 'alerts' && (
+              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-6">
                 <div className="flex items-center justify-between mb-4 px-1">
                   <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Reminders & Alerts</h4>
                   <Bell className={`w-3.5 h-3.5 transition-colors ${aquarium.reminderSettings.enabled ? 'text-white' : 'text-slate-400'}`} />
@@ -589,71 +1776,10 @@ const App: React.FC = () => {
                   </div>
                 </div>
               </div>
+            )}
 
-              <div className="pt-4 border-t border-slate-800">
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Safe Target Ranges</h4>
-                  <Target className="w-3.5 h-3.5 text-slate-400" />
-                </div>
-                
-                <div className="space-y-5">
-                  {[
-                    { id: 'temperature', label: 'Temp (°C)', key: 'temperature' },
-                    { id: 'pH', label: 'pH Level', key: 'pH' },
-                    { id: 'nitrate', label: 'Nitrate (ppm)', key: 'nitrate' },
-                    { id: 'gh', label: 'GH (dGH)', key: 'gh' },
-                    { id: 'kh', label: 'KH (dKH)', key: 'kh' },
-                  ].map(target => (
-                    <div key={target.id} className="grid grid-cols-2 gap-3 items-end">
-                      <div className="col-span-2">
-                        <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">{target.label}</label>
-                      </div>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-500">MIN</span>
-                        <input 
-                          type="number" step="0.1"
-                          value={(aquarium.targets[target.key as keyof typeof aquarium.targets] as ParameterRange).min}
-                          onChange={e => updateTarget(target.key as any, 'min', parseFloat(e.target.value) || 0)}
-                          className="w-full bg-slate-800/50 border border-slate-700 p-3 pl-10 rounded-xl text-xs text-white text-right outline-none"
-                        />
-                      </div>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-500">MAX</span>
-                        <input 
-                          type="number" step="0.1"
-                          value={(aquarium.targets[target.key as keyof typeof aquarium.targets] as ParameterRange).max}
-                          onChange={e => updateTarget(target.key as any, 'max', parseFloat(e.target.value) || 0)}
-                          className="w-full bg-slate-800/50 border border-slate-700 p-3 pl-10 rounded-xl text-xs text-white text-right outline-none"
-                        />
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Ammonia Max</label>
-                      <input 
-                        type="number" step="0.01"
-                        value={aquarium.targets.ammonia}
-                        onChange={e => updateTarget('ammonia', 'val', parseFloat(e.target.value) || 0)}
-                        className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Nitrite Max</label>
-                      <input 
-                        type="number" step="0.01"
-                        value={aquarium.targets.nitrite}
-                        onChange={e => updateTarget('nitrite', 'val', parseFloat(e.target.value) || 0)}
-                        className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Data Management Section */}
-              <div className="pt-8 border-t border-slate-800">
+            {activeSetupSection === 'data' && (
+              <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-6">
                 <button 
                   onClick={resetAllData}
                   className="w-full py-4 bg-red-950/20 hover:bg-red-900/30 text-red-500 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-red-900/30 active:scale-95"
@@ -661,7 +1787,8 @@ const App: React.FC = () => {
                   <RefreshCw className="w-4 h-4" /> Reset All Data
                 </button>
               </div>
-            </div>
+            )}
+
             <p className="text-center text-slate-600 text-[10px] px-8 pb-4">
               AquaTrack v1.4 • Locally Persistent Storage
             </p>
