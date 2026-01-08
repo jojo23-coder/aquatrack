@@ -1,0 +1,294 @@
+Rewrite and implement the deterministic PHASE GENERATION engine with NO missing dependencies.
+Output phases ONLY (no instructions/tasks/exit checks/notes).
+
+==================================================
+SECTION 1 — INPUT VARIABLES (only these)
+==================================================
+
+Cycling selection
+- cycling_mode_preference: "auto" | "fishless_ammonia" | "fish_in" | "plant_assisted"
+- override_acknowledged: boolean  // may be used by UI; not needed for phase list
+
+Dark start selection
+- dark_start_mode: "auto" | "on" | "off"
+
+Tank & goals
+- substrate_type: "inert" | "aquasoil"
+- plants_present_in_plan: boolean
+- plant_mass_level: "low" | "medium" | "high" | null
+- fast_growing_plants_present: boolean | null
+- shrimp_planned: boolean
+- goal_profile: "stability_first" | "growth_first" | "balanced"
+- risk_tolerance: "low" | "medium" | "high"
+
+CO2 inputs
+- co2_enabled: boolean
+- co2_start_intent: "eventual" | "from_start" | null  // if null treat as "eventual"
+
+Lighting inputs
+- photoperiod_hours_initial: number
+- photoperiod_hours_post_cycle: number
+- light_intensity_class: "low" | "medium" | "high" | null  // optional
+
+Capability / availability
+- ammonia_source_available: boolean
+- can_test_ammonia: boolean
+- can_test_nitrite: boolean
+
+==================================================
+SECTION 2 — OUTPUT CONTRACT
+==================================================
+
+Output ONLY an ordered array of phase objects:
+- phase_id: string  // canonical short id: DS1, F2, I1, PA3, etc.
+- phase_name: string
+- sequence_number: integer  // strictly increasing, unique
+- modifiers_applied: string[]  // exact strings specified below
+
+Do NOT output any other fields (no instructions/tasks/exit checks/notes).
+
+==================================================
+SECTION 3 — CANONICAL PHASE IDS
+==================================================
+
+Fishless ammonia: F1, F2, F3, F4, F5
+Fish-in: I1, I2, I3, I4
+Plant-assisted: PA1, PA2, PA3, PA4
+Dark start: DS1, DS2, DS3
+
+==================================================
+SECTION 4 — MODIFIER STRINGS (exact allowed values)
+==================================================
+
+Base:
+- "dark_start"
+- "lighting"
+- "co2"
+
+Lighting variants:
+- "lighting:off"
+- "lighting:minimal"
+- "lighting:ramp"
+
+CO2 variants:
+- "co2:off"
+- "co2:start_allowed"
+
+(Use only what applies; keep minimal and deterministic.)
+
+==================================================
+SECTION 5 — DERIVED STATE (compute internally)
+==================================================
+
+A) Resolve CO2 start intent default
+- if co2_start_intent is null → co2_start_intent = "eventual"
+
+B) Recommend cycling mode (only for auto; used to resolve final selection)
+If cycling_mode_preference != "auto":
+- user_selected_cycling_mode = cycling_mode_preference
+Else (auto):
+1) If shrimp_planned == true:
+   user_selected_cycling_mode = "fishless_ammonia"
+2) Else if plants_present_in_plan == true
+        AND (plant_mass_level == "high" OR fast_growing_plants_present == true)
+        AND risk_tolerance != "low":
+   user_selected_cycling_mode = "plant_assisted"
+3) Else if ammonia_source_available == false:
+   - If risk_tolerance == "high" AND can_test_ammonia AND can_test_nitrite:
+       user_selected_cycling_mode = "fish_in"
+     Else:
+       user_selected_cycling_mode = "fishless_ammonia"  // may be blocking in UI, but still generate phases
+4) Else:
+   user_selected_cycling_mode = "fishless_ammonia"
+
+C) Recommend dark start (boolean)
+recommended_dark_start = (
+   substrate_type == "aquasoil"
+   OR (co2_enabled == true AND photoperiod_hours_initial >= 8)
+   OR (goal_profile == "stability_first" AND risk_tolerance == "low")
+)
+
+D) Resolve dark_start_enabled from dark_start_mode
+- if dark_start_mode == "on": dark_start_enabled = true
+- if dark_start_mode == "off": dark_start_enabled = false
+- if dark_start_mode == "auto": dark_start_enabled = recommended_dark_start
+
+E) Resolve lighting behavior flags
+- If dark_start_enabled == true AND user_selected_cycling_mode != "fish_in":
+    lights_off_during_cycling = true
+  Else:
+    lights_off_during_cycling = false
+
+- fish_in_minimal_light = (
+    user_selected_cycling_mode == "fish_in"
+    AND dark_start_enabled == true
+  )
+Note: For fish-in, dark_start_enabled does NOT create DS phases; it only triggers minimal light variant.
+
+F) Resolve CO2 start gate (derived; for modifiers_applied and phase variants)
+If co2_enabled == false:
+  co2_start_gate = "never"
+Else if dark_start_enabled == true AND user_selected_cycling_mode != "fish_in":
+  co2_start_gate = "post_dark_start_exit"
+Else if user_selected_cycling_mode == "fishless_ammonia":
+  co2_start_gate = "post_cycle_stable"
+Else if user_selected_cycling_mode == "fish_in":
+  co2_start_gate = "post_cycle_stable"
+Else if user_selected_cycling_mode == "plant_assisted":
+  if co2_start_intent == "from_start": co2_start_gate = "plant_assisted_very_low"
+  else: co2_start_gate = "post_cycle_stable"
+Else:
+  co2_start_gate = "never"
+
+G) Hard conflict resolution (plant-assisted + dark start)
+If user_selected_cycling_mode == "plant_assisted" AND dark_start_enabled == true:
+- Force user_selected_cycling_mode = "fishless_ammonia"
+- Keep dark_start_enabled = true
+- Recompute lights_off_during_cycling and co2_start_gate accordingly
+
+==================================================
+SECTION 6 — SEQUENCE NUMBER SYSTEM (MANDATORY)
+==================================================
+
+Hundreds indicate phase family position:
+- 100–199 setup / pre-cycling
+- 200–299 early cycling
+- 300–399 mid cycling
+- 400–499 completion/testing
+- 500–599 transition/exit
+
+Variant offsets (use these exact rules):
+- Base (no special variant): +0
+- Dark start variant: +1
+- Lighting minimal variant (fish-in only): +2
+- CO2-from-start variant (plant-assisted only): +3
+- Combined: +10 + (sum of applicable small offsets), but MUST remain unique and deterministic
+
+Concrete required variant mapping:
+- Fishless normal F1: 100
+- Fishless normal F2: 200
+- Fishless normal F3: 300
+- Fishless normal F4: 400
+- Fishless normal F5: 500
+
+- Dark start DS1: 101
+- Dark start DS2: 201
+- Dark start DS3: 501
+- Fishless-with-dark-start F2: 210
+- Fishless-with-dark-start F3: 310
+- Fishless-with-dark-start F4: 410
+
+- Fish-in normal I1: 100
+- Fish-in minimal-light I1: 102
+- Fish-in I2: 200
+- Fish-in I3: 300
+- Fish-in I4: 500
+
+- Plant-assisted normal PA1: 100
+- Plant-assisted CO2-from-start PA1: 103
+- Plant-assisted PA2: 200
+- Plant-assisted PA3: 300
+- Plant-assisted PA4: 500
+
+(Do not invent new sequence numbers unless adding new variants later.)
+
+==================================================
+SECTION 7 — PHASE TOPOLOGY GENERATION (ONLY PHASES)
+==================================================
+
+General rules:
+- Generate EXACTLY ONE cycling protocol: fishless_ammonia OR fish_in OR plant_assisted
+- Generate Dark Start phases ONLY if dark_start_enabled == true AND mode != fish_in
+- Prevent duplicates:
+  - No repeated phase_id
+  - No repeated sequence_number
+  - Exactly one transition phase must exist in output:
+    - DS3 OR F5 OR I4 OR PA4
+
+A) If user_selected_cycling_mode == "fishless_ammonia":
+
+If dark_start_enabled == false:
+Output phases (in order):
+1) F1 sequence 100 modifiers_applied:
+   - Always include "lighting" (because photoperiod exists)
+   - Include "co2:off" if co2_enabled==true else omit
+2) F2 sequence 200 modifiers_applied:
+   - Include "co2:off" if co2_enabled==true
+3) F3 sequence 300 modifiers_applied:
+   - Include "co2:off" if co2_enabled==true
+4) F4 sequence 400 modifiers_applied:
+   - Include "co2:off" if co2_enabled==true
+5) F5 sequence 500 modifiers_applied:
+   - Include "lighting:ramp"
+   - Include "co2:start_allowed" iff co2_start_gate == "post_cycle_stable"
+
+If dark_start_enabled == true:
+Output phases (in order):
+1) DS1 sequence 101 modifiers_applied: ["dark_start","lighting:off","co2:off"(if co2_enabled)]
+2) DS2 sequence 201 modifiers_applied: ["dark_start","lighting:off","co2:off"(if co2_enabled)]
+3) F2 sequence 210 modifiers_applied: ["dark_start","lighting:off","co2:off"(if co2_enabled)]
+4) F3 sequence 310 modifiers_applied: ["dark_start","lighting:off","co2:off"(if co2_enabled)]
+5) F4 sequence 410 modifiers_applied: ["dark_start","lighting:off","co2:off"(if co2_enabled)]
+6) DS3 sequence 501 modifiers_applied:
+   - Always include "dark_start"
+   - Always include "lighting:ramp"
+   - Include "co2:start_allowed" iff co2_start_gate == "post_dark_start_exit"
+
+Do NOT output F1 or F5 in dark start case (DS phases replace setup + transition).
+
+B) If user_selected_cycling_mode == "fish_in":
+
+Never output DS phases.
+
+Determine I1 variant:
+- If fish_in_minimal_light == true:
+    I1 sequence = 102, modifiers_applied includes "lighting:minimal"
+  Else:
+    I1 sequence = 100
+
+Output phases (in order):
+1) I1 (100 or 102) modifiers_applied:
+   - Always include "lighting"
+   - Always include "co2:off" if co2_enabled==true
+2) I2 sequence 200 modifiers_applied:
+   - include "co2:off" if co2_enabled==true
+3) I3 sequence 300 modifiers_applied:
+   - include "co2:off" if co2_enabled==true
+4) I4 sequence 500 modifiers_applied:
+   - include "lighting:ramp"
+   - include "co2:start_allowed" iff co2_start_gate == "post_cycle_stable"
+
+C) If user_selected_cycling_mode == "plant_assisted":
+
+dark_start_enabled must be false at this point (conflict resolution already handled).
+
+Determine PA1 variant:
+- If co2_start_gate == "plant_assisted_very_low":
+    PA1 sequence = 103 and include modifiers_applied "co2"
+  Else:
+    PA1 sequence = 100
+
+Output phases (in order):
+1) PA1 (100 or 103) modifiers_applied:
+   - include "lighting"
+   - include "co2:start_allowed" iff co2_start_gate == "plant_assisted_very_low"
+2) PA2 sequence 200 modifiers_applied:
+   - include "co2:off" if co2_enabled==true AND co2_start_gate != "plant_assisted_very_low"
+3) PA3 sequence 300 modifiers_applied:
+   - include "co2:off" if co2_enabled==true AND co2_start_gate != "plant_assisted_very_low"
+4) PA4 sequence 500 modifiers_applied:
+   - include "lighting:ramp"
+   - include "co2:start_allowed" iff co2_start_gate == "post_cycle_stable"
+
+==================================================
+SECTION 8 — OUTPUT RULES
+==================================================
+
+Output ordered phases only:
+[
+  { phase_id, phase_name, sequence_number, modifiers_applied[] },
+  ...
+]
+
+Phase names should be human-readable but stable (e.g., "Fishless Setup", "Dark Start Cycling", etc.).
+Output MUST be deterministic: same inputs → same phase list and sequence numbers.

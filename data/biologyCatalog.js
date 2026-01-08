@@ -4,6 +4,8 @@ const biologyCatalog = {
     {
       group_id: "tetras",
       display_name: "Tetras",
+      sensitive: false,
+      digger: false,
       typical_behavior: ["schooling"],
       typical_requirements: {
         temperature_c: [22, 27],
@@ -23,6 +25,8 @@ const biologyCatalog = {
     {
       group_id: "rasboras_danios",
       display_name: "Rasboras & Danios",
+      sensitive: false,
+      digger: false,
       typical_behavior: ["schooling", "active_swimmers"],
       typical_requirements: {
         temperature_c: [20, 26],
@@ -41,6 +45,8 @@ const biologyCatalog = {
     {
       group_id: "livebearers",
       display_name: "Livebearers",
+      sensitive: false,
+      digger: false,
       typical_behavior: ["active", "often_prolific_breeders"],
       typical_requirements: {
         temperature_c: [22, 28],
@@ -59,6 +65,8 @@ const biologyCatalog = {
     {
       group_id: "corydoras",
       display_name: "Corydoras (armored catfish)",
+      sensitive: false,
+      digger: true,
       typical_behavior: ["shoaling", "bottom_dweller"],
       typical_requirements: {
         temperature_c: [22, 26],
@@ -77,6 +85,8 @@ const biologyCatalog = {
     {
       group_id: "loaches",
       display_name: "Loaches",
+      sensitive: true,
+      digger: true,
       typical_behavior: ["bottom_dweller", "social (many species)"],
       typical_requirements: {
         temperature_c: [22, 28],
@@ -94,6 +104,8 @@ const biologyCatalog = {
     {
       group_id: "gourami_bettas",
       display_name: "Gourami & Betta relatives",
+      sensitive: false,
+      digger: false,
       typical_behavior: ["labyrinth_fish", "territorial (some species)"],
       typical_requirements: {
         temperature_c: [24, 30],
@@ -111,6 +123,8 @@ const biologyCatalog = {
     {
       group_id: "cichlids_dwarf",
       display_name: "Dwarf Cichlids (South American/West African)",
+      sensitive: true,
+      digger: true,
       typical_behavior: ["territorial", "pairing/spawning"],
       typical_requirements: {
         temperature_c: [24, 28],
@@ -127,6 +141,8 @@ const biologyCatalog = {
     {
       group_id: "cichlids_african_rift",
       display_name: "African Rift Lake Cichlids",
+      sensitive: false,
+      digger: true,
       typical_behavior: ["highly_territorial", "aggressive (often)"],
       typical_requirements: {
         temperature_c: [24, 27],
@@ -143,6 +159,8 @@ const biologyCatalog = {
     {
       group_id: "plecos_otocinclus",
       display_name: "Algae grazers (Plecos, Otocinclus)",
+      sensitive: true,
+      digger: true,
       typical_behavior: ["grazer", "often_shy"],
       typical_requirements: {
         temperature_c: [22, 28],
@@ -159,6 +177,8 @@ const biologyCatalog = {
     {
       group_id: "goldfish_coldwater",
       display_name: "Goldfish & Coldwater",
+      sensitive: false,
+      digger: true,
       typical_behavior: ["high_waste_output"],
       typical_requirements: {
         temperature_c: [18, 22],

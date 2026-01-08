@@ -35,6 +35,12 @@
               "sand_cap_cm": { "type": "number", "default": 2.0 }
             }
           },
+          "hardscape": {
+            "type": "object",
+            "fields": {
+              "type": { "type": "string", "enum": ["wood", "stone", "mixed"], "default": "mixed" }
+            }
+          },
           "filtration": {
             "type": "object",
             "fields": {
@@ -43,6 +49,7 @@
               "flow_class": { "type": "string", "enum": ["low", "medium", "high"], "default": "medium" }
             }
           },
+          "heater_installed": { "type": "boolean", "default": true },
           "co2": {
             "type": "object",
             "fields": {
@@ -58,8 +65,9 @@
           "tap_ph": { "type": "number", "required": true },
           "tap_gh_dgh": { "type": "number", "required": true },
           "tap_kh_dkh": { "type": "number_or_null", "default": null },
+          "tap_ammonia_ppm": { "type": "number", "default": 0 },
           "disinfectant": { "type": "string", "enum": ["none", "chlorine", "chloramine", "unknown"], "default": "unknown" },
-          "weekly_water_change_percent_target": { "type": "array", "items": "number", "default": [25, 30] }
+          "weekly_water_change_percent_target": { "type": "number", "default": 25 }
         },
         "biology_profile": {
           "plants": {
@@ -75,6 +83,13 @@
               "fish": { "type": "array", "default": [] },
               "shrimp": { "type": "array", "default": [] },
               "cleanup_crew": { "type": "array", "default": [] }
+            }
+          },
+          "livestock_traits": {
+            "type": "object",
+            "fields": {
+              "is_sensitive": { "type": "boolean", "default": false },
+              "has_diggers": { "type": "boolean", "default": false }
             }
           }
         },
@@ -166,8 +181,8 @@
         },
         "derived": {
           "net_water_volume_l": "number",
-          "weekly_water_change_percent_range": "array",
-          "weekly_water_change_volume_l_range": "array",
+        "weekly_water_change_percent_range": "number",
+        "weekly_water_change_volume_l_range": "number",
           "photoperiod_hours_initial": "number",
           "photoperiod_hours_post_cycle": "number"
         },

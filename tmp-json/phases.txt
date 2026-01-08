@@ -1,0 +1,134 @@
+CASE: Fishless ammonia + dark start + CO2
+- DS1 (dark start setup) seq=101 modifiers=[dark_start]
+  - instruction: You are doing a 'Dark Start'. By keeping lights OFF and plants OUT, we prevent algae while the filter matures. It requires patience but guarantees a cleaner start.
+  - instruction: Do NOT plant anything yet. Keep the tank filled, filter running, heater on, but completely dark. Cover the tank with a blanket or cardboard if the room is bright.
+  - instruction: Rinse your Inert substrate (sand/gravel) thoroughly in a bucket until the water runs clear. Dust is the enemy of clear water.
+  - instruction: Handle your Aquasoil gently. Do NOT rinse it. Rinsing active soil breaks down the nutrient pellets and turns your tank into a mud bath.
+  - instruction: Rinse your stones to remove loose dust before placing them.
+  - instruction: Soak your driftwood, glue it to rocks, or weigh it down. Dry wood floats! Don't panic if it releases tannins (tea-colored water); this is natural.
+  - instruction: Time to fill! Place a plastic bag or plate on the substrate and pour water onto *that* to prevent clouding.
+  - instruction: Since you have chlorine/chloramine, we must treat the full tank volume. If using a hose, add the conditioner to the tank *before* filling.
+  - task [one_time]: Add {{doses.detoxifier_conditioner.fullfill_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}}.
+  - task [one_time]: Fill the tank with water.
+  - instruction: Run the filter 24/7. Oxygen is vital for the bacteria.
+  - task [one_time]: Turn on heater (aim for 24-26°C).
+  - instruction: Verify that all light sources are disabled. Light is the enemy of the Dark Start.
+  - task [one_time]: Confirm: Lights Unplugged.
+  - task [one_time]: Confirm: CO2 Unplugged.
+  - instruction: We need to know your starting water chemistry to track the cycle progress, so measure and log pH, GH and KH.
+  - task [one_time]: Measure and log pH.
+  - task [one_time]: Measure and log GH and KH.
+- DS2 (dark start cycling) seq=201 modifiers=[dark_start]
+  - instruction: The tank is now cycling in the dark. There is nothing to look at, but invisible work is happening. Do not be tempted to turn on lights.
+  - expected_behaviour: Because there is no light, you should see very little algae. You might still see white fungal fuzz on driftwood—this is harmless and will disappear.
+  - instruction: Since your substrate is inert, the water is currently clean. You must add the ammonia manually to start the process.
+  - task [one_time]: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.
+  - instruction: Your Aquasoil is likely releasing high amounts of ammonia already. We must test before dosing to avoid overdosing the tank.
+  - task [one_time]: Measure and log Ammonia.
+  - instruction: If your test reads over 2.0 ppm, DO NOT dose ammonia today. If it reads near 0, proceed with the dose below.
+  - task [one_time]: Only if Ammonia < 2.0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.
+  - instruction: Beneficial bacteria supplements introduce the specific strains of life we are trying to grow.
+  - task [daily]: Add {{products.bacteria_starter.dose_text}} of {{products.bacteria_starter.display_name}}.
+- F2 (ammonia introduction) seq=210 modifiers=[dark_start]
+  - instruction: We are now maintaining the ammonia levels while waiting for the bacteria to catch up. Keep the tank dark.
+  - instruction: Your Aquasoil is likely still releasing ammonia. This is free food for your bacteria—let the soil do the work. You might not need to dose for weeks.
+  - task [per_event]: Measure and log Ammonia.
+  - instruction: If the test reads 0 ppm, the bacteria have finished their meal and need more.
+  - task [per_event]: Only if Ammonia is 0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.
+  - instruction: As water evaporates, minerals stay behind. Top off with pure freshwater (dechlorinated) to prevent minerals from building up too high.
+  - task [as_needed]: Top off evaporated water.
+- F3 (nitrite dominance) seq=310 modifiers=[dark_start]
+  - instruction: Nitrite is spiking. This phase often takes the longest. The tank must remain dark.
+  - instruction: Do NOT plant yet! High levels of Ammonia and Nitrite are toxic to plants and will melt their delicate tissues. This is exactly why we are waiting.
+  - instruction: Do NOT clean your filter. The brown sludge inside is the bacterial colony you are trying to grow.
+  - instruction: We must continue feeding the bacteria, but only when they have finished their last meal. Overdosing now can stall the cycle.
+  - task [per_event]: Measure and log Ammonia.
+  - task [per_event]: Only if Ammonia is 0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.
+  - task [per_event]: Measure and log Nitrite.
+  - instruction: Water changes are still needed to replenish minerals that the bacteria consume. Without minerals (KH), the cycle can stall.
+  - task [weekly]: Add {{doses.detoxifier_conditioner.wc_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} to the bucket.
+  - task [weekly]: Dissolve {{doses.gh_remineralizer.gh_remineralizer_g_wc_range}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in the bucket.
+  - task [weekly]: Dissolve {{doses.kh_buffer.kh_buffer_g_wc_range}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in the bucket.
+  - task [weekly]: Perform a {{derived.weekly_water_change_percent_range}}% water change.
+  - instruction: Cover the tank immediately after maintenance to keep the light out.
+  - task [as_needed]: Top off evaporated water with freshwater.
+- F4 (completion test) seq=410 modifiers=[dark_start]
+  - instruction: The cycle seems finished. Let's verify before we unmask the tank. We need to be 100% sure the filter can handle the bioload.
+  - instruction: We will dose ammonia one last time. If the bacteria can clear BOTH ammonia and nitrite to exactly 0 ppm in 24 hours, we are ready to plant.
+  - task [per_event]: The Test: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.
+  - instruction: Wait exactly 24 hours before performing the final tests. Do not test early.
+  - task [per_event]: Measure and log Ammonia.
+  - task [per_event]: Measure and log Nitrite.
+- DS3 (dark start exit & planting) seq=501 modifiers=[dark_start, co2]
+  - instruction: It is finally time! Your filter is mature, and now we can plant the tank without fear of melting or algae.
+  - instruction: First, drain the tank almost fully (90%). This removes all the accumulated Nitrates and makes planting much easier.
+  - task [one_time]: Drain the tank down to the substrate level.
+  - instruction: Planting Epiphytes (Anubias/Buce): Glue or tie them to hardscape. If you bury the rhizome in the substrate, they will rot.
+  - task [one_time]: Plant your Epiphytes.
+  - instruction: Planting Stems: Trim the bottom inch off and remove lower leaves. Plant in small bunches to encourage new root growth.
+  - task [one_time]: Plant your Stems.
+  - instruction: If you have heavy root feeders (Crypts/Swords), they need food at their feet immediately.
+  - task [one_time]: Insert root tabs deep into the substrate beneath the root feeders.
+  - instruction: Time to refill. Use the 'bag trick' (pour water onto a plastic bag) to avoid blasting your new plants out of the soil.
+  - instruction: CRITICAL: You must dechlorinate the water. Chlorine will kill the bacteria colony you just spent weeks growing.
+  - task [one_time]: Add {{doses.detoxifier_conditioner.fullfill_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} to the tank *before* filling.
+  - task [one_time]: Refill the tank gently.
+  - instruction: Now we turn the lights on! Start conservatively to prevent an algae shock.
+  - task [one_time]: Set light timer to 6 hours.
+  - instruction: Start CO2 with a low bubble rate (e.g., 1 bubble every 3 seconds). Check the drop checker **2–3 hours after the CO2 turns on**. You are aiming for a **Dark Green** color (Safe).
+  - task [one_time]: Turn on CO2.
+  - instruction: Your new plants are hungry and need nutrients immediately to recover from planting stress.
+  - task [one_time]: Add {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}}.
+
+CASE: Fish-in + forced dark start (minimal light variant)
+- I1 (setup) seq=102 modifiers=[lighting:minimal]
+  - instruction: You are cycling with fish ('Fish-in') using a 'Minimal Light' start. This reduces stress on the fish and prevents algae during the unstable early weeks.
+  - instruction: Rinse your Inert substrate (sand/gravel) thoroughly until water runs clear.
+  - instruction: Handle your Aquasoil gently. Do NOT rinse it.
+  - instruction: Planting Epiphytes (Anubias/Ferns): Glue or tie them to hardscape. Never bury the rhizome.
+  - instruction: Planting Stems: Trim the bottom inch and plant in small bunches.
+  - instruction: Treat the water with conditioner *before* filling the tank.
+  - task [one_time]: Add {{doses.detoxifier_conditioner.fullfill_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}}.
+  - task [one_time]: Fill the tank gently.
+  - instruction: Turn on Filter and Heater (aim for 24-26°C).
+  - instruction: Set your lights to a minimal **4–6 hours** a day. We will ramp this up later once the tank is stable.
+  - instruction: Keep CO2 OFF initially. Your fish are already stressed; adding CO2 now adds suffocation risk.
+  - instruction: CRITICAL WARNING: You are using active Aquasoil with fish. This soil releases heavy ammonia. You must test daily and will likely need 50% water changes every day for 2 weeks.
+  - instruction: Acclimation: Float bag for 15 mins. Add 1 cup tank water to bag every 5 mins for 20 mins. Net fish out; discard bag water.
+  - task [one_time]: Add your fish.
+  - task [one_time]: Add {{products.bacteria_starter.display_name}} (Double dose for Day 1 safety).
+  - instruction: Feed VERY lightly—once every 2 days initially.
+  - task [per_event]: Test Ammonia and Nitrite immediately.
+- I2 (stabilization) seq=200 modifiers=[]
+  - instruction: Your primary job right now is to keep toxins low. If Ammonia or Nitrite rises above 0.5ppm, the fish are suffering and need your help immediately.
+  - task [daily]: Measure and log Ammonia and Nitrite.
+  - instruction: Feed your fish very lightly—only what they can eat in 30 seconds. If in doubt, skip a day. Hungry fish are healthier than poisoned fish.
+  - task [daily]: Remove any uneaten food or decaying plant leaves immediately.
+  - task [daily]: Add {{products.bacteria_starter.display_name}} to support the filter.
+  - instruction: EVALUATE: Did your tests read > 0.5 ppm? If YES, perform the Emergency Protocol below.
+  - task [as_needed]: EMERGENCY: Perform a {{50}}% water change. Temperature match carefully!
+  - task [as_needed]: Add {{doses.detoxifier_conditioner.ewc_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} to the new water.
+  - instruction: Note: Conditioners only bind ammonia for ~24 hours. You must test again tomorrow.
+- I3 (biofilter build) seq=300 modifiers=[]
+  - instruction: If you are seeing consistent 0 ppm Ammonia readings, your first bacteria colony is working! You can slowly increase feeding to normal levels.
+  - instruction: Don't relax yet. The second phase involves a 'Nitrite Spike'. Nitrite is just as toxic as Ammonia, so keep testing.
+  - task [per_event]: Measure and log Ammonia.
+  - task [per_event]: Measure and log Nitrite.
+  - instruction: Weekly water changes are essential to remove Nitrate and keep the fish healthy. Prepare your water in a bucket first.
+  - task [weekly]: Add {{doses.detoxifier_conditioner.wc_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} to the bucket.
+  - task [weekly]: Dissolve {{doses.gh_remineralizer.gh_remineralizer_g_wc_range}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in the bucket.
+  - task [weekly]: Dissolve {{doses.kh_buffer.kh_buffer_g_wc_range}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in the bucket.
+  - task [weekly]: Perform a {{derived.weekly_water_change_percent_range}}% water change.
+  - instruction: You can clean algae off the glass, but do NOT vacuum the substrate deeply yet. Your bacteria live in the gravel.
+  - task [weekly]: Clean glass (optional).
+- I4 (transition) seq=500 modifiers=[]
+  - instruction: Your tank has been stable for a while with consistently 0 ppm Ammonia and Nitrite. It is safe to assume the cycle is established.
+  - instruction: We must increase the light to our target, but we must do it slowly. Sudden jumps in light energy will cause algae blooms because plants cannot adapt that fast.
+  - task [weekly]: Ramp Up: Increase your light timer by 30 minutes this week. Repeat weekly until you reach {{setup.photoperiod_hours_post_cycle}} hours.
+  - instruction: Time to enable your CO2 system. Set the timer to turn ON 1 hour before the lights, and OFF 1 hour before the lights go out.
+  - instruction: Start with a safe, low bubble rate (e.g., 1 bubble every 3 seconds). Check the drop checker **2–3 hours after the CO2 turns on**. You are aiming for a **Dark Green** color (Safe).
+  - task [one_time]: Turn on CO2.
+  - instruction: You can add more fish now, but only a few at a time. The bacteria need time to multiply to handle the new waste.
+  - task [per_event]: Add a small batch of new livestock.
+  - instruction: With the cycle finished and lights increasing, your plants need food.
+  - task [weekly]: Start Routine: Add {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}}.

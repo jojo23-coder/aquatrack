@@ -43,6 +43,9 @@ const formatRange = (range, decimals = 2) => {
 };
 
 const averageRange = (range) => {
+  if (typeof range === 'number') {
+    return range;
+  }
   if (!Array.isArray(range) || range.length !== 2) {
     return null;
   }
@@ -156,7 +159,10 @@ const deriveNetVolume = (tankProfile) => {
 };
 
 const deriveWeeklyWcRange = (netVolume, percentRange) => {
-  const [low, high] = percentRange;
+  const range = Array.isArray(percentRange)
+    ? percentRange
+    : [percentRange, percentRange];
+  const [low, high] = range;
   return [netVolume * (low / 100), netVolume * (high / 100)];
 };
 
@@ -206,6 +212,10 @@ const buildPlaceholderMap = (data) => {
       unit: doseModel.unit || ''
     };
   };
+  const getRoleDoseAmount = (role, volume) => {
+    const dose = getRoleDose(role, volume);
+    return dose ? dose.amount : null;
+  };
   const doseToString = (dose) => {
     if (!dose) return 'per label';
     return `${formatNumber(dose.amount, 1)} ${dose.unit}`.trim();
@@ -222,6 +232,18 @@ const buildPlaceholderMap = (data) => {
   const conditionerFull = getRoleDose('detoxifier_conditioner', derived.net_water_volume_l);
   const bacteriaFull = getRoleDose('bacteria_starter', derived.net_water_volume_l);
   const bacteriaWeekly = getRoleDose('bacteria_starter', derived.net_water_volume_l);
+  const roleDoseAmounts = {};
+  const ewcVolume = derived.net_water_volume_l * 0.5;
+  Object.keys(roleMap || {}).forEach((role) => {
+    const fullFillAmount = getRoleDoseAmount(role, derived.net_water_volume_l);
+    const wcAmounts = (derived.weekly_water_change_volume_l_range || []).map((volume) =>
+      getRoleDoseAmount(role, volume)
+    );
+    const ewcAmount = getRoleDoseAmount(role, ewcVolume);
+    roleDoseAmounts[`doses.${role}.fullfill_dose_amount`] = formatNumber(fullFillAmount, 2);
+    roleDoseAmounts[`doses.${role}.wc_dose_amount`] = formatRange(wcAmounts, 2);
+    roleDoseAmounts[`doses.${role}.ewc_dose_amount`] = formatNumber(ewcAmount, 2);
+  });
 
   const cycleSafe = cyclingMode === 'fishless_ammonia'
     ? { ammonia: 6, nitrite: 5 }
@@ -238,8 +260,8 @@ const buildPlaceholderMap = (data) => {
     cycle_ammonia_max: formatNumber(calculatorDefaults.cycle_ammonia_max_ppm, 1),
     ammonia_ml_range: formatRange(dosingReference.ammonia_ml_range, 2),
     ammonia_solution_percent: formatNumber(ammoniaSolutionPercent ?? 'N/A', 0),
-    weekly_wc_percent_range: formatRange(derived.weekly_water_change_percent_range, 0),
-    weekly_wc_volume_l_range: formatRange(derived.weekly_water_change_volume_l_range, 1),
+    weekly_wc_percent_range: formatNumber(averageRange(derived.weekly_water_change_percent_range), 0),
+    weekly_wc_volume_l_range: formatNumber(averageRange(derived.weekly_water_change_volume_l_range), 1),
     gh_full_fill_g_range: formatRange(dosingReference.gh_full_fill_g_range, 2),
     gh_full_fill_g_target: formatNumber(ghFullFillTarget, 1),
     gh_wc_g_range: formatRange(dosingReference.gh_wc_g_range, 2),
@@ -267,7 +289,8 @@ const buildPlaceholderMap = (data) => {
     conditioner_full_dose: doseToString(conditionerFull),
     bacteria_full_dose: doseToString(bacteriaFull),
     bacteria_weekly_dose: doseToString(bacteriaWeekly),
-    co2_schedule: dosingReference.co2_schedule || 'CO2 schedule unavailable'
+    co2_schedule: dosingReference.co2_schedule || 'CO2 schedule unavailable',
+    ...roleDoseAmounts
   };
 };
 
@@ -278,6 +301,138 @@ const renderTemplateText = (template, replacements) => {
     }
     return `{${key}}`;
   });
+};
+
+const renderMustacheLike = (template, context) => {
+  return template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (_, key) => {
+    const value = getByPath(context, key.trim());
+    return value === undefined || value === null ? `{{${key}}}` : String(value);
+  });
+};
+
+const evaluateTemplateCondition = (expression, context) => {
+  if (!expression || typeof expression !== 'string') return true;
+  const sanitized = expression.replace(/[^-()\w\s.'"<>=!&|]/g, '');
+  try {
+    // eslint-disable-next-line no-new-func
+    return Function('context', `with (context) { return (${sanitized}); }`)(context);
+  } catch (error) {
+    return false;
+  }
+};
+
+const buildTemplateContext = ({
+  normalizedSetup,
+  derived,
+  targets,
+  calculatorDefaults,
+  dosingReference,
+  roleMap
+}) => {
+  const plantCategories = normalizedSetup.biology_profile.plants?.categories || [];
+  const shrimpPlanned = (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0;
+  const setupContext = {
+    substrate_type: normalizedSetup.tank_profile.substrate.type,
+    hardscape_type: normalizedSetup.tank_profile.hardscape.type,
+    co2_enabled: normalizedSetup.tank_profile.co2.enabled,
+    heater_installed: normalizedSetup.tank_profile.heater_installed,
+    photoperiod_hours_initial: normalizedSetup.user_preferences.photoperiod_hours_initial,
+    photoperiod_hours_post_cycle: normalizedSetup.user_preferences.photoperiod_hours_post_cycle,
+    plants_present: (normalizedSetup.biology_profile.plants?.species || []).length > 0
+  };
+
+  const products = {};
+  const doses = {};
+  const wcVolumes = derived.weekly_water_change_volume_l_range || [];
+  const wcVolumeTarget = averageRange(wcVolumes);
+  const allRoles = Object.keys(ROLE_CATEGORIES);
+  allRoles.forEach((role) => {
+    const product = roleMap?.[role] || null;
+    const doseModel = product?.dose_model;
+    const perVolume = doseModel?.dose_basis === 'per_volume'
+      && typeof doseModel?.amount === 'number'
+      && typeof doseModel?.per_volume_l === 'number'
+      && doseModel.per_volume_l > 0;
+    const doseUnit = doseModel?.unit || '';
+    const doseText = perVolume
+      ? `${formatNumber((derived.net_water_volume_l / doseModel.per_volume_l) * doseModel.amount, 2)} ${doseUnit}`.trim()
+      : 'per label';
+    products[role] = {
+      selected: !!product,
+      display_name: product?.display_name || role.replace(/_/g, ' '),
+      dose_unit: doseUnit,
+      dose_text: doseText
+    };
+    if (perVolume) {
+      const fullAmount = (derived.net_water_volume_l / doseModel.per_volume_l) * doseModel.amount;
+      const wcAmounts = wcVolumes.map(volume => (volume / doseModel.per_volume_l) * doseModel.amount);
+      const wcTarget = averageRange(wcAmounts);
+      const ewcAmount = (derived.net_water_volume_l * 0.5 / doseModel.per_volume_l) * doseModel.amount;
+      doses[role] = {
+        fullfill_dose_amount: formatNumber(fullAmount, 1),
+        wc_dose_amount: formatNumber(wcTarget, 1),
+        ewc_dose_amount: formatNumber(ewcAmount, 1)
+      };
+    } else {
+      doses[role] = {};
+    }
+  });
+
+  doses.ammonia_source = {
+    ...doses.ammonia_source,
+    ammonia_ml_range: formatNumber(
+      Array.isArray(dosingReference.ammonia_ml_range)
+        ? (() => {
+            const values = dosingReference.ammonia_ml_range.filter((value) => value !== null);
+            return values.length ? Math.max(...values) : null;
+          })()
+        : null,
+      1
+    )
+  };
+  doses.fertilizer_micros = {
+    ...doses.fertilizer_micros,
+    fertilizer_micros_ml_week_start: formatNumber(dosingReference.fertilizer_start_ml_week, 1),
+    fertilizer_micros_ml_week_range: formatNumber(averageRange(dosingReference.fertilizer_maint_ml_week_range), 1)
+  };
+  doses.gh_remineralizer = {
+    ...doses.gh_remineralizer,
+    gh_remineralizer_g_wc_range: formatNumber(averageRange(dosingReference.gh_wc_g_range), 1)
+  };
+  doses.kh_buffer = {
+    ...doses.kh_buffer,
+    kh_buffer_g_wc_range: formatNumber(averageRange(dosingReference.kh_wc_g_range), 1)
+  };
+
+  return {
+    setup: setupContext,
+    derived: {
+      net_water_volume_l: formatNumber(derived.net_water_volume_l, 1),
+      weekly_water_change_percent_range: formatNumber(averageRange(derived.weekly_water_change_percent_range), 0),
+      weekly_water_change_volume_l_range: formatNumber(wcVolumeTarget, 1)
+    },
+    targets: {
+      cycle_ammonia_target_ppm_range: formatNumber(2, 1),
+      cycle_ammonia_max_ppm: formatNumber(calculatorDefaults.cycle_ammonia_max_ppm, 1),
+      ...targets
+    },
+    products,
+    doses,
+    plants: {
+      has_epiphytes: plantCategories.includes('epiphytes'),
+      has_stems: plantCategories.includes('stems'),
+      has_root_feeders: plantCategories.includes('root_feeders')
+    },
+    livestock: {
+      has_shrimp: shrimpPlanned,
+      is_sensitive: normalizedSetup.biology_profile.livestock_traits.is_sensitive,
+      has_diggers: normalizedSetup.biology_profile.livestock_traits.has_diggers
+    },
+    source_water: {
+      disinfectant: normalizedSetup.water_source_profile.disinfectant,
+      ammonia_ppm: normalizedSetup.water_source_profile.tap_ammonia_ppm
+    }
+  };
 };
 
 const shouldSkipTriggerInstruction = (text, roleMap) => {
@@ -525,6 +680,339 @@ const buildPhasesFromRuleset = ({ ruleset, context, replacements }) => {
   return phases;
 };
 
+const deriveCo2StartGate = ({ co2Enabled, darkStartEnabled, cyclingMode, co2StartIntent }) => {
+  if (!co2Enabled) return 'never';
+  if (darkStartEnabled && cyclingMode !== 'fish_in') return 'post_dark_start_exit';
+  if (cyclingMode === 'fishless_ammonia') return 'post_cycle_stable';
+  if (cyclingMode === 'fish_in') return 'post_cycle_stable';
+  if (cyclingMode === 'plant_assisted') {
+    return co2StartIntent === 'from_start' ? 'plant_assisted_very_low' : 'post_cycle_stable';
+  }
+  return 'post_cycle_stable';
+};
+
+const generatePhaseList = ({
+  setup,
+  enginePackage,
+  generatedAtIso = DEFAULT_GENERATED_AT_ISO
+}) => {
+  const normalizedSetup = normalizeSetup(setup, []);
+  const shrimpPlanned = (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0;
+  const tapKh = normalizedSetup.water_source_profile.tap_kh_dkh;
+  const tapKhStatus = tapKh === null || tapKh < 2 ? 'unknown_or_low' : 'ok';
+  const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none';
+
+  const cyclingDecision = evaluateDecisionTable(
+    enginePackage.decision_tables['cycling_mode.decision_table.json'],
+    {
+      cycling_mode_preference: normalizedSetup.user_preferences.cycling_mode_preference,
+      shrimp_planned: shrimpPlanned,
+      risk_tolerance: normalizedSetup.user_preferences.risk_tolerance,
+      tap_kh_status: tapKhStatus,
+      ammonia_available: ammoniaAvailable
+    }
+  );
+
+  const darkDecision = evaluateDecisionTable(
+    enginePackage.decision_tables['dark_start.decision_table.json'],
+    {
+      dark_start: normalizedSetup.user_preferences.dark_start === true,
+      goal_profile: normalizedSetup.user_preferences.goal_profile,
+      high_light: normalizedSetup.user_preferences.photoperiod_hours_initial >= 8,
+      aquasoil: normalizedSetup.tank_profile.substrate.type === 'aquasoil'
+    }
+  );
+
+  const recommendedCyclingMode = cyclingDecision.recommended_cycling_mode || 'fishless_ammonia';
+  const userSelectedCyclingMode =
+    normalizedSetup.user_preferences.cycling_mode_preference !== 'auto'
+      ? normalizedSetup.user_preferences.cycling_mode_preference
+      : recommendedCyclingMode;
+  const recommendedDarkStart = !!darkDecision.recommended_dark_start;
+  const darkStartPreference = normalizedSetup.user_preferences.dark_start;
+  const darkStartEnabled =
+    darkStartPreference === 'auto' || darkStartPreference === undefined
+      ? recommendedDarkStart
+      : !!darkStartPreference;
+
+  const darkStartAllowed = userSelectedCyclingMode !== 'plant_assisted';
+  const darkStartFinal = darkStartAllowed ? darkStartEnabled : false;
+  const darkStartForced = userSelectedCyclingMode === 'fish_in' && darkStartPreference === true;
+
+  const photoperiodStartHours = normalizedSetup.user_preferences.photoperiod_hours_initial;
+  const lightsOnDuringCycling = !(darkStartFinal && userSelectedCyclingMode !== 'fish_in');
+  const lightingMinimal = darkStartForced
+    || (lightsOnDuringCycling && photoperiodStartHours <= 6 && (userSelectedCyclingMode === 'fish_in' || userSelectedCyclingMode === 'plant_assisted' || userSelectedCyclingMode === 'fishless_ammonia'));
+
+  const co2StartIntent = normalizedSetup.tank_profile.co2.start_intent || 'eventual';
+  const co2StartGate = deriveCo2StartGate({
+    co2Enabled: normalizedSetup.tank_profile.co2.enabled,
+    darkStartEnabled: darkStartFinal,
+    cyclingMode: userSelectedCyclingMode,
+    co2StartIntent
+  });
+
+  const phases = [];
+  const seenIds = new Set();
+  const seenSequences = new Set();
+  const addPhase = (phase_id, phase_name, sequence_number, modifiers_applied = []) => {
+    if (seenIds.has(phase_id)) {
+      throw new Error(`Duplicate phase_id ${phase_id}`);
+    }
+    if (seenSequences.has(sequence_number)) {
+      throw new Error(`Duplicate sequence_number ${sequence_number}`);
+    }
+    seenIds.add(phase_id);
+    seenSequences.add(sequence_number);
+    phases.push({
+      phase_id,
+      phase_name,
+      sequence_number,
+      modifiers_applied
+    });
+  };
+
+  if (userSelectedCyclingMode === 'fishless_ammonia') {
+    if (!darkStartFinal) {
+      const f1Seq = lightingMinimal ? 102 : 100;
+      const f5Seq = lightingMinimal ? 502 : 500;
+      const lightingModifier = lightingMinimal ? ['lighting:minimal'] : [];
+      addPhase('F1', 'setup', f1Seq, lightingModifier);
+      addPhase('F2', 'ammonia introduction', 200, []);
+      addPhase('F3', 'nitrite dominance', 300, []);
+      addPhase('F4', 'completion test', 400, []);
+      const transitionModifiers = lightingMinimal ? ['lighting:minimal'] : [];
+      if (co2StartGate === 'post_cycle_stable' && normalizedSetup.tank_profile.co2.enabled) {
+        transitionModifiers.push('co2');
+      }
+      addPhase('F5', 'transition to planted/stocked state', f5Seq, transitionModifiers);
+    } else {
+      addPhase('DS1', 'dark start setup', 101, ['dark_start']);
+      addPhase('DS2', 'dark start cycling', 201, ['dark_start']);
+      const ds3Modifiers = ['dark_start'];
+      if (co2StartGate === 'post_dark_start_exit' && normalizedSetup.tank_profile.co2.enabled) {
+        ds3Modifiers.push('co2');
+      }
+      addPhase('DS3', 'dark start exit & planting', 501, ds3Modifiers);
+      addPhase('F2', 'ammonia introduction', 210, ['dark_start']);
+      addPhase('F3', 'nitrite dominance', 310, ['dark_start']);
+      addPhase('F4', 'completion test', 410, ['dark_start']);
+    }
+  }
+
+  if (userSelectedCyclingMode === 'fish_in') {
+    const i1Seq = lightingMinimal ? 102 : 100;
+    const i1Modifiers = lightingMinimal ? ['lighting:minimal'] : [];
+    addPhase('I1', 'setup', i1Seq, i1Modifiers);
+    addPhase('I2', 'stabilization', 200, []);
+    addPhase('I3', 'biofilter build', 300, []);
+    const i4Modifiers = [];
+    if (co2StartGate === 'post_cycle_stable' && normalizedSetup.tank_profile.co2.enabled) {
+      i4Modifiers.push('co2');
+    }
+    addPhase('I4', 'transition', 500, i4Modifiers);
+  }
+
+  if (userSelectedCyclingMode === 'plant_assisted') {
+    const paLighting = photoperiodStartHours <= 6;
+    const paCo2Low = co2StartGate === 'plant_assisted_very_low';
+    let pa1Seq = 100;
+    const pa1Modifiers = [];
+    if (paLighting) {
+      pa1Seq = 102;
+      pa1Modifiers.push('lighting:minimal');
+    }
+    if (paCo2Low) {
+      pa1Seq = paLighting ? 113 : 103;
+      pa1Modifiers.push('co2:very_low');
+    }
+    addPhase('PA1', 'planted setup', pa1Seq, pa1Modifiers);
+    addPhase('PA2', 'stabilization', 200, []);
+    addPhase('PA3', 'initial bioload', 300, []);
+    const pa4Modifiers = [];
+    if (co2StartGate === 'post_cycle_stable' && normalizedSetup.tank_profile.co2.enabled) {
+      pa4Modifiers.push('co2');
+    }
+    addPhase('PA4', 'transition', 500, pa4Modifiers);
+  }
+
+  addPhase('R1', 'routine maintenance', 600, []);
+
+  const ordered = [...phases].sort((a, b) => a.sequence_number - b.sequence_number);
+  return {
+    meta: {
+      generated_at_iso: generatedAtIso
+    },
+    phases: ordered
+  };
+};
+
+const generatePhasesFromTemplates = ({
+  setup,
+  productCatalog,
+  enginePackage,
+  phaseTemplates,
+  userTargets,
+  generatedAtIso = DEFAULT_GENERATED_AT_ISO
+}) => {
+  const normalizedSetup = normalizeSetup(setup, []);
+  const weeklyWcPercentRange = normalizedSetup.water_source_profile.weekly_water_change_percent_target;
+  const derivedNetVolume = deriveNetVolume(normalizedSetup.tank_profile);
+  const weeklyWcVolumeRange = deriveWeeklyWcRange(derivedNetVolume, weeklyWcPercentRange);
+  const parameterLimits = enginePackage?.parameter_limits?.['parameter_limits.generic.json'] || {};
+  const calculatorDefaults = enginePackage?.calculators?.['calculator.framework.json']?.defaults || {};
+  const calculatorConstants = enginePackage?.calculators?.['calculator.framework.json']?.constants || {};
+
+  const mapUserTargets = (targets) => {
+    if (!targets) return null;
+    return {
+      temperature_c: { target_range: [targets.temperature.min, targets.temperature.max] },
+      ph_co2_on: { target_range: [targets.pH.min, targets.pH.max] },
+      gh_dgh: { target_range: [targets.gh.min, targets.gh.max], target: (targets.gh.min + targets.gh.max) / 2 },
+      kh_dkh: { target_range: [targets.kh.min, targets.kh.max], target: (targets.kh.min + targets.kh.max) / 2 },
+      ammonia_ppm: { target: targets.ammonia },
+      nitrite_ppm: { target: targets.nitrite },
+      nitrate_ppm: { target_range: [targets.nitrate.min, targets.nitrate.max] }
+    };
+  };
+  const effectiveTargets = mapUserTargets(userTargets) || parameterLimits;
+  const targetGhRange = effectiveTargets.gh_dgh?.target_range
+    || [parameterLimits.gh_dgh?.min ?? 0, parameterLimits.gh_dgh?.max ?? 0];
+  const targetKh = effectiveTargets.kh_dkh?.target
+    ?? effectiveTargets.kh_dkh?.max
+    ?? parameterLimits.kh_dkh?.max
+    ?? 0;
+
+  const ammoniaSolutionPercent = normalizedSetup.product_stack.ammonia_source.solution_percent
+    ?? calculatorDefaults.ammonia_solution_percent;
+  const ammoniaTargetRange = calculatorDefaults.cycle_ammonia_target_ppm_range || [1.5, 2.0];
+  const ammoniaMlRange = ammoniaTargetRange.map((ppm) =>
+    calcAmmoniaMl(
+      derivedNetVolume,
+      ppm,
+      ammoniaSolutionPercent,
+      calculatorConstants.ammonia_calibration
+    )
+  );
+
+  const ghFullFillRange = calcGhGRange(
+    normalizedSetup.water_source_profile.tap_gh_dgh,
+    targetGhRange,
+    derivedNetVolume,
+    calculatorConstants.gh_remineralizer.g_per_l_per_1_dgh
+  );
+  const ghWcLow = calcGhGRange(
+    normalizedSetup.water_source_profile.tap_gh_dgh,
+    targetGhRange,
+    weeklyWcVolumeRange[0],
+    calculatorConstants.gh_remineralizer.g_per_l_per_1_dgh
+  );
+  const ghWcHigh = calcGhGRange(
+    normalizedSetup.water_source_profile.tap_gh_dgh,
+    targetGhRange,
+    weeklyWcVolumeRange[1],
+    calculatorConstants.gh_remineralizer.g_per_l_per_1_dgh
+  );
+  const ghWcRange = [ghWcLow[0], ghWcHigh[1]];
+  const khFullFillG = calcKhG(
+    normalizedSetup.water_source_profile.tap_kh_dkh ?? 0,
+    targetKh,
+    derivedNetVolume,
+    calculatorConstants.kh_buffer_rule_of_thumb.g_per_10l_per_1_dkh
+  );
+  const khWcRange = weeklyWcVolumeRange.map((volume) =>
+    calcKhG(
+      normalizedSetup.water_source_profile.tap_kh_dkh ?? 0,
+      targetKh,
+      volume,
+      calculatorConstants.kh_buffer_rule_of_thumb.g_per_10l_per_1_dkh
+    )
+  );
+  const fertilizerStartMl = calcFertilizerMlWeek(
+    derivedNetVolume,
+    calculatorDefaults.fertilizer_start_factor,
+    calculatorConstants.fertilizer_micros_label
+  );
+  const fertilizerMaintRange = calculatorDefaults.fertilizer_maint_factor_range.map((factor) =>
+    calcFertilizerMlWeek(derivedNetVolume, factor, calculatorConstants.fertilizer_micros_label)
+  );
+
+  const dosingReference = {
+    ammonia_ml_range: ammoniaMlRange.map((value) => (value === null ? null : roundTo(value, 2))),
+    gh_full_fill_g_range: ghFullFillRange.map((value) => roundTo(value, 2)),
+    gh_wc_g_range: ghWcRange.map((value) => roundTo(value, 2)),
+    kh_full_fill_g: roundTo(khFullFillG, 2),
+    kh_wc_g_range: khWcRange.map((value) => roundTo(value, 2)),
+    fertilizer_start_ml_week: roundTo(fertilizerStartMl, 2),
+    fertilizer_maint_ml_week_range: fertilizerMaintRange.map((value) => roundTo(value, 2))
+  };
+
+  const userProducts = normalizedSetup.product_stack.user_products || [];
+  const enabledUserProducts = userProducts.filter((product) => product.enabled);
+  const effectiveCatalog = enabledUserProducts.length
+    ? buildCatalogFromUserProducts(enabledUserProducts)
+    : (productCatalog?.products || []);
+  const selectedIds = enabledUserProducts.length
+    ? enabledUserProducts.map((product) => product.role)
+    : (normalizedSetup.product_stack.selected_product_ids || []);
+  const roleMap = selectProductsByRole(effectiveCatalog, selectedIds, []);
+
+  const templateContext = buildTemplateContext({
+    normalizedSetup,
+    derived: {
+      net_water_volume_l: derivedNetVolume,
+      weekly_water_change_percent_range: weeklyWcPercentRange,
+      weekly_water_change_volume_l_range: weeklyWcVolumeRange
+    },
+    targets: effectiveTargets,
+    calculatorDefaults,
+    dosingReference,
+    roleMap
+  });
+
+  const phaseList = generatePhaseList({ setup, enginePackage, generatedAtIso });
+  const templates = phaseTemplates?.phase_templates || [];
+
+  const phases = phaseList.phases.map((phase) => {
+    const template = templates.find((entry) =>
+      entry.phase_id === phase.phase_id && entry.sequence_number === phase.sequence_number
+    ) || templates.find((entry) => entry.phase_id === phase.phase_id);
+    const atoms = (template?.atoms || []).filter((atom) => {
+      if (!atom.conditions || atom.conditions.length === 0) return true;
+      return atom.conditions.every((condition) => evaluateTemplateCondition(condition, templateContext));
+    });
+    const instruction_atoms = [];
+    const expected_behavior_atoms = [];
+    const task_atoms = [];
+    atoms.forEach((atom) => {
+      const text = renderMustacheLike(atom.text_template, templateContext);
+      if (atom.type === 'instruction') {
+        instruction_atoms.push({ text });
+      } else if (atom.type === 'expected_behaviour') {
+        expected_behavior_atoms.push(text);
+      } else if (atom.type === 'task') {
+        task_atoms.push({ text, cadence: atom.cadence || 'one_time' });
+      }
+    });
+    return {
+      phase_id: phase.phase_id,
+      phase_name: template?.phase_name || phase.phase_name,
+      sequence_number: phase.sequence_number,
+      modifiers_applied: phase.modifiers_applied,
+      instruction_atoms,
+      expected_behavior_atoms,
+      task_atoms
+    };
+  });
+
+  return {
+    meta: {
+      generated_at_iso: generatedAtIso
+    },
+    phases
+  };
+};
+
 const normalizeSetup = (setup, notes) => {
   const normalized = {
     user_preferences: {
@@ -545,25 +1033,38 @@ const normalizeSetup = (setup, notes) => {
         type: setup?.tank_profile?.substrate?.type ?? 'inert',
         sand_cap_cm: setup?.tank_profile?.substrate?.sand_cap_cm ?? 2.0
       },
+      hardscape: {
+        type: setup?.tank_profile?.hardscape?.type ?? 'mixed'
+      },
       filtration: {
         filter_model: setup?.tank_profile?.filtration?.filter_model ?? '',
         rated_flow_lph: setup?.tank_profile?.filtration?.rated_flow_lph ?? 0,
         flow_class: setup?.tank_profile?.filtration?.flow_class ?? 'medium'
       },
+      heater_installed: setup?.tank_profile?.heater_installed ?? true,
       co2: {
         enabled: setup?.tank_profile?.co2?.enabled ?? true,
         injection_type: setup?.tank_profile?.co2?.injection_type ?? 'diffuser',
         target_ph_drop: setup?.tank_profile?.co2?.target_ph_drop ?? 1.0,
-        surface_agitation: setup?.tank_profile?.co2?.surface_agitation ?? 'gentle_ripple'
+        surface_agitation: setup?.tank_profile?.co2?.surface_agitation ?? 'gentle_ripple',
+        start_intent: setup?.tank_profile?.co2?.start_intent ?? 'eventual'
       },
       temperature_target_c: setup?.tank_profile?.temperature_target_c ?? [22, 24]
+    },
+    testing: {
+      can_test_ammonia: setup?.testing?.can_test_ammonia ?? true,
+      can_test_nitrite: setup?.testing?.can_test_nitrite ?? true,
+      can_test_nitrate: setup?.testing?.can_test_nitrate ?? true
     },
     water_source_profile: {
       tap_ph: setup?.water_source_profile?.tap_ph ?? 7.0,
       tap_gh_dgh: setup?.water_source_profile?.tap_gh_dgh ?? 0,
       tap_kh_dkh: setup?.water_source_profile?.tap_kh_dkh ?? null,
+      tap_ammonia_ppm: setup?.water_source_profile?.tap_ammonia_ppm ?? 0,
       disinfectant: setup?.water_source_profile?.disinfectant ?? 'unknown',
-      weekly_water_change_percent_target: setup?.water_source_profile?.weekly_water_change_percent_target ?? [25, 30]
+      weekly_water_change_percent_target: Array.isArray(setup?.water_source_profile?.weekly_water_change_percent_target)
+        ? setup?.water_source_profile?.weekly_water_change_percent_target?.[0] ?? 25
+        : setup?.water_source_profile?.weekly_water_change_percent_target ?? 25
     },
     biology_profile: {
       plants: {
@@ -574,6 +1075,10 @@ const normalizeSetup = (setup, notes) => {
         fish: setup?.biology_profile?.livestock_plan?.fish ?? [],
         shrimp: setup?.biology_profile?.livestock_plan?.shrimp ?? [],
         cleanup_crew: setup?.biology_profile?.livestock_plan?.cleanup_crew ?? []
+      },
+      livestock_traits: {
+        is_sensitive: setup?.biology_profile?.livestock_traits?.is_sensitive ?? false,
+        has_diggers: setup?.biology_profile?.livestock_traits?.has_diggers ?? false
       }
     },
     product_stack: {
@@ -851,11 +1356,16 @@ export const generatePlan = ({
     user_dark_start_override: userSelectedDarkStart !== recommendedDarkStart,
     dark_start_preference: darkStartPreference ?? 'auto',
     substrate_type: normalizedSetup.tank_profile.substrate.type,
+    hardscape_type: normalizedSetup.tank_profile.hardscape.type,
+    heater_installed: normalizedSetup.tank_profile.heater_installed,
     co2_enabled: normalizedSetup.tank_profile.co2.enabled,
     plants_present: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
     shrimp_planned: shrimpPlanned,
+    livestock_sensitive: normalizedSetup.biology_profile.livestock_traits.is_sensitive,
+    livestock_diggers: normalizedSetup.biology_profile.livestock_traits.has_diggers,
     risk_tolerance: normalizedSetup.user_preferences.risk_tolerance,
     tap_kh_status: tapKhStatus,
+    tap_ammonia_ppm: normalizedSetup.water_source_profile.tap_ammonia_ppm,
     disinfectant: normalizedSetup.water_source_profile.disinfectant,
     ammonia_available: ammoniaAvailable,
     roles_enabled: new Set(Object.entries(roleMap).filter(([, product]) => !!product).map(([role]) => role))
@@ -919,7 +1429,7 @@ export const generatePlan = ({
     derived: {
       net_water_volume_l: roundTo(derivedNetVolume, 2),
       weekly_water_change_percent_range: weeklyWcPercentRange,
-      weekly_water_change_volume_l_range: weeklyWcVolumeRange.map((value) => roundTo(value, 2)),
+      weekly_water_change_volume_l_range: roundTo(averageRange(weeklyWcVolumeRange), 2),
       photoperiod_hours_initial: normalizedSetup.user_preferences.photoperiod_hours_initial,
       photoperiod_hours_post_cycle: normalizedSetup.user_preferences.photoperiod_hours_post_cycle
     },
@@ -941,5 +1451,7 @@ export {
   calcAmmoniaMl,
   calcGhGRange,
   calcKhG,
-  calcFertilizerMlWeek
+  calcFertilizerMlWeek,
+  generatePhaseList,
+  generatePhasesFromTemplates
 };

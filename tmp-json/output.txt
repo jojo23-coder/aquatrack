@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Fishless ammonia + dark start + CO2",
+    "result": {
+      "meta": {
+        "generated_at_iso": "1970-01-01T00:00:00.000Z"
+      },
+      "phases": [
+        {
+          "phase_id": "DS1",
+          "phase_name": "dark start setup",
+          "sequence_number": 101,
+          "modifiers_applied": [
+            "dark_start"
+          ]
+        },
+        {
+          "phase_id": "DS2",
+          "phase_name": "dark start cycling",
+          "sequence_number": 201,
+          "modifiers_applied": [
+            "dark_start"
+          ]
+        },
+        {
+          "phase_id": "F2",
+          "phase_name": "ammonia introduction",
+          "sequence_number": 210,
+          "modifiers_applied": [
+            "dark_start"
+          ]
+        },
+        {
+          "phase_id": "F3",
+          "phase_name": "nitrite dominance",
+          "sequence_number": 310,
+          "modifiers_applied": [
+            "dark_start"
+          ]
+        },
+        {
+          "phase_id": "F4",
+          "phase_name": "completion test",
+          "sequence_number": 410,
+          "modifiers_applied": [
+            "dark_start"
+          ]
+        },
+        {
+          "phase_id": "DS3",
+          "phase_name": "dark start exit & planting",
+          "sequence_number": 501,
+          "modifiers_applied": [
+            "dark_start",
+            "co2"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "Fish-in + forced dark start (minimal light variant)",
+    "result": {
+      "meta": {
+        "generated_at_iso": "1970-01-01T00:00:00.000Z"
+      },
+      "phases": [
+        {
+          "phase_id": "I1",
+          "phase_name": "setup",
+          "sequence_number": 102,
+          "modifiers_applied": [
+            "lighting:minimal"
+          ]
+        },
+        {
+          "phase_id": "I2",
+          "phase_name": "stabilization",
+          "sequence_number": 200,
+          "modifiers_applied": []
+        },
+        {
+          "phase_id": "I3",
+          "phase_name": "biofilter build",
+          "sequence_number": 300,
+          "modifiers_applied": []
+        },
+        {
+          "phase_id": "I4",
+          "phase_name": "transition",
+          "sequence_number": 500,
+          "modifiers_applied": []
+        }
+      ]
+    }
+  }
+]

@@ -91,16 +91,21 @@ export interface EngineSetup {
       type: 'inert' | 'aquasoil';
       sand_cap_cm: number;
     };
+    hardscape: {
+      type: 'wood' | 'stone' | 'mixed';
+    };
     filtration: {
       filter_model?: string;
       rated_flow_lph?: number;
       flow_class: 'low' | 'medium' | 'high';
     };
+    heater_installed: boolean;
     co2: {
       enabled: boolean;
       injection_type: 'inline' | 'diffuser' | 'reactor';
       target_ph_drop: number;
       surface_agitation: 'flat' | 'gentle_ripple' | 'turbulent';
+      start_intent?: 'from_start' | 'eventual';
     };
     temperature_target_c: [number, number];
   };
@@ -108,8 +113,9 @@ export interface EngineSetup {
     tap_ph: number;
     tap_gh_dgh: number;
     tap_kh_dkh: number | null;
+    tap_ammonia_ppm: number;
     disinfectant: 'none' | 'chlorine' | 'chloramine' | 'unknown';
-    weekly_water_change_percent_target: [number, number];
+    weekly_water_change_percent_target: number;
   };
   biology_profile: {
     plants: {
@@ -121,6 +127,10 @@ export interface EngineSetup {
       fish: string[];
       shrimp: string[];
       cleanup_crew: string[];
+    };
+    livestock_traits: {
+      is_sensitive: boolean;
+      has_diggers: boolean;
     };
   };
   product_stack: {
@@ -141,6 +151,11 @@ export interface EngineSetup {
       ammonia_solution_percent?: number;
       pure_ammonia?: boolean;
     }>;
+  };
+  testing: {
+    can_test_ammonia: boolean;
+    can_test_nitrite: boolean;
+    can_test_nitrate: boolean;
   };
 }
 

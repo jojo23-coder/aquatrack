@@ -9,36 +9,31 @@ import biologyCatalog from './data/biologyCatalog';
 import enginePackage from './data/aquatrack_engine.package.json';
 import productCatalog from './data/product.catalog.instance.json';
 import protocolRuleset from './data/protocol.ruleset.json';
-import { generatePlan } from './engine/planEngine';
+import phaseTemplates from './data/phase-templates.lookup.json';
+import { generatePlan, generatePhasesFromTemplates } from './engine/planEngine';
 
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
 
 const STORAGE_KEY = 'aquatrack_v1_data';
 
 const fishSpeciesIndex = new Map();
-biologyCatalog.fish_groups.forEach(group => {
-  group.common_examples.forEach(name => {
-    fishSpeciesIndex.set(name, { group, type: 'fish' });
-  });
-});
-
 const shrimpSpeciesIndex = new Map();
-biologyCatalog.shrimp_groups.forEach(group => {
-  group.common_examples.forEach(name => {
-    shrimpSpeciesIndex.set(name, { group, type: 'shrimp' });
-  });
-});
-
 const plantSpeciesIndex = new Map();
-biologyCatalog.plant_groups.forEach(group => {
-  group.common_examples.forEach(name => {
-    plantSpeciesIndex.set(name, { group, type: 'plant' });
-  });
-});
 
-const fishOptions = Array.from(fishSpeciesIndex.keys()).sort();
-const shrimpOptions = Array.from(shrimpSpeciesIndex.keys()).sort();
-const plantOptions = Array.from(plantSpeciesIndex.keys()).sort();
+const registerGroup = (map, group, type) => {
+  map.set(group.display_name, { group, type });
+  group.common_examples.forEach(name => {
+    map.set(name, { group, type });
+  });
+};
+
+biologyCatalog.fish_groups.forEach(group => registerGroup(fishSpeciesIndex, group, 'fish'));
+biologyCatalog.shrimp_groups.forEach(group => registerGroup(shrimpSpeciesIndex, group, 'shrimp'));
+biologyCatalog.plant_groups.forEach(group => registerGroup(plantSpeciesIndex, group, 'plant'));
+
+const fishOptions = biologyCatalog.fish_groups.map(group => group.display_name).sort();
+const shrimpOptions = biologyCatalog.shrimp_groups.map(group => group.display_name).sort();
+const plantOptions = biologyCatalog.plant_groups.map(group => group.display_name).sort();
 
 const getRequirementRanges = (speciesName) => {
   const fishMatch = fishSpeciesIndex.get(speciesName);
@@ -138,16 +133,21 @@ const App: React.FC = () => {
         type: 'inert',
         sand_cap_cm: 2.0
       },
+      hardscape: {
+        type: 'mixed'
+      },
       filtration: {
         filter_model: '',
         rated_flow_lph: undefined,
         flow_class: 'medium'
       },
+      heater_installed: true,
       co2: {
         enabled: true,
         injection_type: 'diffuser',
         target_ph_drop: 1.0,
-        surface_agitation: 'gentle_ripple'
+        surface_agitation: 'gentle_ripple',
+        start_intent: 'eventual'
       },
       temperature_target_c: [22, 24]
     },
@@ -155,8 +155,9 @@ const App: React.FC = () => {
       tap_ph: 7.2,
       tap_gh_dgh: 5.0,
       tap_kh_dkh: 2.0,
+      tap_ammonia_ppm: 0,
       disinfectant: 'unknown',
-      weekly_water_change_percent_target: [30, 30]
+      weekly_water_change_percent_target: 30
     },
     biology_profile: {
       plants: {
@@ -168,6 +169,10 @@ const App: React.FC = () => {
         fish: [],
         shrimp: [],
         cleanup_crew: []
+      },
+      livestock_traits: {
+        is_sensitive: false,
+        has_diggers: false
       }
     },
     product_stack: {
@@ -253,6 +258,11 @@ const App: React.FC = () => {
           effect_value: 0
         }
       ]
+    },
+    testing: {
+      can_test_ammonia: true,
+      can_test_nitrite: true,
+      can_test_nitrate: true
     }
   };
 
@@ -339,6 +349,11 @@ const App: React.FC = () => {
 
   const hydrateTank = (raw: Partial<AquariumState> = {}): AquariumState => {
     const base = createSeedTank();
+    const safeEngineSetup = (raw.engineSetup && typeof raw.engineSetup === 'object') ? raw.engineSetup : {};
+    const rawWaterProfile = (safeEngineSetup as AquariumState['engineSetup'])?.water_source_profile;
+    const wcValue = Array.isArray(rawWaterProfile?.weekly_water_change_percent_target)
+      ? rawWaterProfile?.weekly_water_change_percent_target?.[0]
+      : rawWaterProfile?.weekly_water_change_percent_target;
     return {
       ...base,
       ...raw,
@@ -346,60 +361,73 @@ const App: React.FC = () => {
       reminderSettings: { ...base.reminderSettings, ...raw.reminderSettings },
       engineSetup: {
         ...defaultEngineSetup,
-        ...raw.engineSetup,
+        ...safeEngineSetup,
         user_preferences: {
           ...defaultEngineSetup.user_preferences,
-          ...raw.engineSetup?.user_preferences
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.user_preferences
         },
         protocol_preferences: {
           ...defaultEngineSetup.protocol_preferences,
-          ...raw.engineSetup?.protocol_preferences
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.protocol_preferences
         },
         protocol_overrides: {
           ...defaultEngineSetup.protocol_overrides,
-          ...raw.engineSetup?.protocol_overrides
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.protocol_overrides
         },
         tank_profile: {
           ...defaultEngineSetup.tank_profile,
-          ...raw.engineSetup?.tank_profile,
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.tank_profile,
           substrate: {
             ...defaultEngineSetup.tank_profile.substrate,
-            ...raw.engineSetup?.tank_profile?.substrate
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.tank_profile?.substrate
+          },
+          hardscape: {
+            ...defaultEngineSetup.tank_profile.hardscape,
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.tank_profile?.hardscape
           },
           filtration: {
             ...defaultEngineSetup.tank_profile.filtration,
-            ...raw.engineSetup?.tank_profile?.filtration
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.tank_profile?.filtration
           },
           co2: {
             ...defaultEngineSetup.tank_profile.co2,
-            ...raw.engineSetup?.tank_profile?.co2
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.tank_profile?.co2
           }
         },
         water_source_profile: {
           ...defaultEngineSetup.water_source_profile,
-          ...raw.engineSetup?.water_source_profile
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.water_source_profile,
+          weekly_water_change_percent_target: wcValue ?? defaultEngineSetup.water_source_profile.weekly_water_change_percent_target
         },
         biology_profile: {
           ...defaultEngineSetup.biology_profile,
-          ...raw.engineSetup?.biology_profile,
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.biology_profile,
           plants: {
             ...defaultEngineSetup.biology_profile.plants,
-            ...raw.engineSetup?.biology_profile?.plants
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.biology_profile?.plants
           },
           livestock_plan: {
             ...defaultEngineSetup.biology_profile.livestock_plan,
-            ...raw.engineSetup?.biology_profile?.livestock_plan
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.biology_profile?.livestock_plan
+          },
+          livestock_traits: {
+            ...defaultEngineSetup.biology_profile.livestock_traits,
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.biology_profile?.livestock_traits
           }
+        },
+        testing: {
+          ...defaultEngineSetup.testing,
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.testing
         },
         product_stack: {
           ...defaultEngineSetup.product_stack,
-          ...raw.engineSetup?.product_stack,
+          ...(safeEngineSetup as AquariumState['engineSetup'])?.product_stack,
           ammonia_source: {
             ...defaultEngineSetup.product_stack.ammonia_source,
-            ...raw.engineSetup?.product_stack?.ammonia_source
+            ...(safeEngineSetup as AquariumState['engineSetup'])?.product_stack?.ammonia_source
           },
           user_products: (() => {
-            const stored = raw.engineSetup?.product_stack?.user_products;
+            const stored = (safeEngineSetup as AquariumState['engineSetup'])?.product_stack?.user_products;
             if (!Array.isArray(stored)) return defaultEngineSetup.product_stack.user_products;
             return defaultEngineSetup.product_stack.user_products.map(defaultProduct => {
               const match = stored.find(item => item.role === defaultProduct.role);
@@ -510,20 +538,48 @@ const App: React.FC = () => {
     }
   }, [aquarium.engineSetup]);
 
+  const templatePlan = useMemo(() => {
+    try {
+      return generatePhasesFromTemplates({
+        setup: aquarium.engineSetup,
+        productCatalog,
+        enginePackage,
+        phaseTemplates,
+        userTargets: aquarium.targets
+      });
+    } catch (error) {
+      console.error('Failed to generate template phases', error);
+      return null;
+    }
+  }, [aquarium.engineSetup, aquarium.targets]);
+
   const manualPhases = useMemo(() => {
+    if (templatePlan?.phases?.length) {
+      return templatePlan.phases.map(phase => ({
+        id: phase.phase_id,
+        name: phase.phase_name,
+        instructions: phase.instruction_atoms.map(atom => atom.text),
+        expected: phase.expected_behavior_atoms || [],
+        tasks: phase.task_atoms || [],
+        exitChecks: [],
+        objectives: [],
+        icon: '🫧'
+      }));
+    }
     if (protocolPlan?.phases?.length) {
       return protocolPlan.phases.map(phase => ({
         id: phase.phase_id,
         name: phase.phase_name,
         instructions: phase.instruction_atoms.map(atom => atom.text),
         expected: phase.expected_behavior_atoms || [],
+        tasks: [],
         exitChecks: phase.exit_checks || [],
         objectives: (phase.objective_ids || []).map(formatDisplayValue),
         icon: '🫧'
       }));
     }
     return PHASES;
-  }, [protocolPlan]);
+  }, [protocolPlan, templatePlan]);
 
   const handleToggleTask = (id: string) => {
     setAquarium(prev => ({
@@ -796,7 +852,7 @@ const App: React.FC = () => {
     );
     const co2Enabled = aquarium.engineSetup.tank_profile.co2.enabled;
     const photoperiodInitial = aquarium.engineSetup.user_preferences.photoperiod_hours_initial;
-    const waterChangePercent = aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0];
+    const waterChangePercent = aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target;
 
     if (tapKh === null || tapKh === undefined) {
       issues.push({
@@ -1021,18 +1077,26 @@ const App: React.FC = () => {
   };
 
   const generateProtocolTasks = () => {
-    if (!protocolPlan?.phases?.length) return;
+    const planPhases = templatePlan?.phases?.length ? templatePlan.phases : protocolPlan?.phases;
+    if (!planPhases?.length) return;
     const tasks: Task[] = [];
-    protocolPlan.phases.forEach((phase) => {
+    const normalizeCadence = (cadence: string) => {
+      if (cadence === 'one_time') return 'one-time';
+      if (cadence === 'daily' || cadence === 'weekly' || cadence === 'monthly') return cadence;
+      return 'one-time';
+    };
+    planPhases.forEach((phase) => {
       const phaseId = phase.phase_id;
-      (phase.task_atoms || []).forEach((taskAtom) => {
+      const taskAtoms = phase.task_atoms || [];
+      taskAtoms.forEach((taskAtom) => {
         if (!taskAtom?.cadence || !taskAtom.text) return;
+        const frequency = normalizeCadence(taskAtom.cadence);
         tasks.push({
           id: `${phaseId}_${taskAtom.cadence}_${tasks.length}`,
-          phaseId: taskAtom.cadence === 'one_time' ? (phaseId as PhaseId) : undefined,
-          startPhaseId: taskAtom.cadence !== 'one_time' ? (phaseId as PhaseId) : undefined,
-          endPhaseId: taskAtom.cadence !== 'one_time' && taskAtom.until_phase_id ? (taskAtom.until_phase_id as PhaseId) : undefined,
-          frequency: taskAtom.cadence === 'one_time' ? 'one-time' : taskAtom.cadence,
+          phaseId: frequency === 'one-time' ? (phaseId as PhaseId) : undefined,
+          startPhaseId: frequency !== 'one-time' ? (phaseId as PhaseId) : undefined,
+          endPhaseId: frequency !== 'one-time' && taskAtom.until_phase_id ? (taskAtom.until_phase_id as PhaseId) : undefined,
+          frequency,
           title: taskAtom.text,
           completed: false
         });
@@ -1042,7 +1106,7 @@ const App: React.FC = () => {
     setAquarium(prev => ({
       ...prev,
       tasks,
-      currentPhase: (protocolPlan.phases?.[0]?.phase_id as PhaseId) || prev.currentPhase
+      currentPhase: (planPhases?.[0]?.phase_id as PhaseId) || prev.currentPhase
     }));
     setActiveTab('roadmap');
   };
@@ -1368,7 +1432,7 @@ const App: React.FC = () => {
                
                <div className="space-y-3">
                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Instructions</h4>
-                 <ul className="space-y-2">
+                 <ul className="space-y-2 manual-list">
                    {manualPhases.find(p => p.id === aquarium.currentPhase)?.instructions.map((ins, i) => (
                      <li key={i} className="text-xs text-slate-300 leading-relaxed flex gap-2">
                        <span className="text-slate-400 font-bold">•</span> {ins}
@@ -1379,7 +1443,7 @@ const App: React.FC = () => {
 
                <div className="pt-4 border-t border-slate-800 space-y-3">
                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Expected Normal Behavior</h4>
-                 <ul className="space-y-2">
+                 <ul className="space-y-2 manual-list">
                    {manualPhases.find(p => p.id === aquarium.currentPhase)?.expected.map((exp, i) => (
                      <li key={i} className="text-xs text-slate-400 italic flex gap-2">
                        <span className="text-slate-600 shrink-0">→</span> {exp}
@@ -1572,6 +1636,38 @@ const App: React.FC = () => {
                       </select>
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Hardscape</label>
+                      <select
+                        value={aquarium.engineSetup.tank_profile.hardscape.type}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          tank_profile: {
+                            ...prev.tank_profile,
+                            hardscape: { ...prev.tank_profile.hardscape, type: e.target.value as EngineSetup['tank_profile']['hardscape']['type'] }
+                          }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="wood">Wood</option>
+                        <option value="stone">Stone</option>
+                        <option value="mixed">Mixed</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>CO2 Enabled</label>
+                      <button
+                        onClick={() => updateEngineSetup(prev => ({
+                          ...prev,
+                          tank_profile: { ...prev.tank_profile, co2: { ...prev.tank_profile.co2, enabled: !prev.tank_profile.co2.enabled } }
+                        }))}
+                        className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.tank_profile.co2.enabled ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                      >
+                        {aquarium.engineSetup.tank_profile.co2.enabled ? 'On' : 'Off'}
+                      </button>
+                    </div>
+                  </div>
 
                   {showTankAdvanced && (
                     <div className="space-y-3">
@@ -1606,18 +1702,6 @@ const App: React.FC = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <label className={setupLabelClasses}>CO2 Enabled</label>
-                          <button
-                            onClick={() => updateEngineSetup(prev => ({
-                              ...prev,
-                              tank_profile: { ...prev.tank_profile, co2: { ...prev.tank_profile.co2, enabled: !prev.tank_profile.co2.enabled } }
-                            }))}
-                            className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.tank_profile.co2.enabled ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
-                          >
-                            {aquarium.engineSetup.tank_profile.co2.enabled ? 'On' : 'Off'}
-                          </button>
-                        </div>
-                        <div className="space-y-1.5">
                           <label className={setupLabelClasses}>CO2 Injection</label>
                           <select
                             value={aquarium.engineSetup.tank_profile.co2.injection_type}
@@ -1634,6 +1718,18 @@ const App: React.FC = () => {
                             <option value="inline">Inline</option>
                             <option value="reactor">Reactor</option>
                           </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={setupLabelClasses}>Heater Installed</label>
+                          <button
+                            onClick={() => updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: { ...prev.tank_profile, heater_installed: !prev.tank_profile.heater_installed }
+                            }))}
+                            className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.tank_profile.heater_installed ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                          >
+                            {aquarium.engineSetup.tank_profile.heater_installed ? 'On' : 'Off'}
+                          </button>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -1763,15 +1859,12 @@ const App: React.FC = () => {
                     <label className={setupLabelClasses}>Water Change %</label>
                     <input
                       type="number"
-                      value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0]}
+                      value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target}
                       onChange={e => updateEngineSetup(prev => ({
                         ...prev,
                         water_source_profile: {
                           ...prev.water_source_profile,
-                          weekly_water_change_percent_target: [
-                            parseNumber(e.target.value, 30),
-                            parseNumber(e.target.value, 30)
-                          ]
+                          weekly_water_change_percent_target: parseNumber(e.target.value, 30)
                         }
                       }))}
                       className={setupInputClasses}
@@ -1779,21 +1872,36 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 {showWaterAdvanced && (
-                  <div className="space-y-1.5">
-                    <label className={setupLabelClasses}>Disinfectant</label>
-                    <select
-                      value={aquarium.engineSetup.water_source_profile.disinfectant}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        water_source_profile: { ...prev.water_source_profile, disinfectant: e.target.value as EngineSetup['water_source_profile']['disinfectant'] }
-                      }))}
-                      className={`${setupInputClasses} appearance-none`}
-                    >
-                      <option value="unknown">Unknown</option>
-                      <option value="none">None</option>
-                      <option value="chlorine">Chlorine</option>
-                      <option value="chloramine">Chloramine</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Tap Ammonia (ppm)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={aquarium.engineSetup.water_source_profile.tap_ammonia_ppm}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: { ...prev.water_source_profile, tap_ammonia_ppm: parseNumber(e.target.value, 0) }
+                        }))}
+                        className={setupInputClasses}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Disinfectant</label>
+                      <select
+                        value={aquarium.engineSetup.water_source_profile.disinfectant}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: { ...prev.water_source_profile, disinfectant: e.target.value as EngineSetup['water_source_profile']['disinfectant'] }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="unknown">Unknown</option>
+                        <option value="none">None</option>
+                        <option value="chlorine">Chlorine</option>
+                        <option value="chloramine">Chloramine</option>
+                      </select>
+                    </div>
                   </div>
                 )}
 
@@ -2036,24 +2144,64 @@ const App: React.FC = () => {
                   )}
                 </div>
                 {showBiologyAdvanced && (
-                  <div className="space-y-1.5">
-                    <label className={setupLabelClasses}>Plant Demand</label>
-                    <select
-                      value={aquarium.engineSetup.biology_profile.plants.demand_class}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        biology_profile: {
-                          ...prev.biology_profile,
-                          plants: { ...prev.biology_profile.plants, demand_class: e.target.value as EngineSetup['biology_profile']['plants']['demand_class'] }
-                        }
-                      }))}
-                      className={`${setupInputClasses} appearance-none`}
-                    >
-                      <option value="auto">Auto</option>
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Plant Demand</label>
+                      <select
+                        value={aquarium.engineSetup.biology_profile.plants.demand_class}
+                        onChange={e => updateEngineSetup(prev => ({
+                          ...prev,
+                          biology_profile: {
+                            ...prev.biology_profile,
+                            plants: { ...prev.biology_profile.plants, demand_class: e.target.value as EngineSetup['biology_profile']['plants']['demand_class'] }
+                          }
+                        }))}
+                        className={`${setupInputClasses} appearance-none`}
+                      >
+                        <option value="auto">Auto</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className={setupLabelClasses}>Sensitive Livestock</label>
+                        <button
+                          onClick={() => updateEngineSetup(prev => ({
+                            ...prev,
+                            biology_profile: {
+                              ...prev.biology_profile,
+                              livestock_traits: {
+                                ...prev.biology_profile.livestock_traits,
+                                is_sensitive: !prev.biology_profile.livestock_traits.is_sensitive
+                              }
+                            }
+                          }))}
+                          className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.biology_profile.livestock_traits.is_sensitive ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                        >
+                          {aquarium.engineSetup.biology_profile.livestock_traits.is_sensitive ? 'Yes' : 'No'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className={setupLabelClasses}>Digging Livestock</label>
+                        <button
+                          onClick={() => updateEngineSetup(prev => ({
+                            ...prev,
+                            biology_profile: {
+                              ...prev.biology_profile,
+                              livestock_traits: {
+                                ...prev.biology_profile.livestock_traits,
+                                has_diggers: !prev.biology_profile.livestock_traits.has_diggers
+                              }
+                            }
+                          }))}
+                          className={`w-full py-3 rounded-2xl border text-xs font-bold ${aquarium.engineSetup.biology_profile.livestock_traits.has_diggers ? 'bg-slate-100 text-slate-950 border-slate-100' : 'bg-slate-800 text-slate-400 border-slate-700'}`}
+                        >
+                          {aquarium.engineSetup.biology_profile.livestock_traits.has_diggers ? 'Yes' : 'No'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2404,6 +2552,41 @@ const App: React.FC = () => {
                     );
                   })}
                 </div>
+
+                <div className="border border-slate-800 rounded-3xl p-4 space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white">Testing Kits</p>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">availability</p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { key: 'can_test_ammonia', label: 'Ammonia' },
+                      { key: 'can_test_nitrite', label: 'Nitrite' },
+                      { key: 'can_test_nitrate', label: 'Nitrate' }
+                    ].map(item => {
+                      const enabled = aquarium.engineSetup.testing[item.key];
+                      return (
+                        <button
+                          key={item.key}
+                          onClick={() => updateEngineSetup(prev => ({
+                            ...prev,
+                            testing: {
+                              ...prev.testing,
+                              [item.key]: !prev.testing[item.key]
+                            }
+                          }))}
+                          className={`py-3 rounded-2xl border text-[10px] font-bold uppercase tracking-wide ${
+                            enabled
+                              ? 'bg-slate-100 text-slate-950 border-slate-100'
+                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -2578,15 +2761,15 @@ const App: React.FC = () => {
                         <label className={setupLabelClasses}>Water Change %</label>
                         <input
                           type="number"
-                          value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target[0]}
+                          value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target}
                           onChange={e => updateEngineSetup(prev => ({
                             ...prev,
                             water_source_profile: {
                               ...prev.water_source_profile,
-                              weekly_water_change_percent_target: [
-                                parseNumber(e.target.value, prev.water_source_profile.weekly_water_change_percent_target[0]),
-                                parseNumber(e.target.value, prev.water_source_profile.weekly_water_change_percent_target[0])
-                              ]
+                              weekly_water_change_percent_target: parseNumber(
+                                e.target.value,
+                                prev.water_source_profile.weekly_water_change_percent_target
+                              )
                             }
                           }))}
                           className={setupInputClasses}
