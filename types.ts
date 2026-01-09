@@ -20,7 +20,7 @@ export type PhaseId =
   | 'stock'
   | 'maintenance';
 
-export type TaskFrequency = 'daily' | 'weekly' | 'monthly' | 'one-time';
+export type TaskFrequency = 'daily' | 'weekly' | 'interval' | 'monthly' | 'one-time';
 
 export interface ParameterRange {
   min: number;
@@ -48,6 +48,7 @@ export interface Task {
   startPhaseId?: PhaseId; // For recurring tasks: visible from this phase onwards
   endPhaseId?: PhaseId; // For recurring tasks: hidden after this phase
   frequency: TaskFrequency;
+  everyDays?: number;
   title: string;
   completed: boolean;
 }
@@ -140,13 +141,17 @@ export interface EngineSetup {
     };
     selected_product_ids: string[];
     user_products: Array<{
-      role: 'gh_remineralizer' | 'kh_buffer' | 'bacteria_starter' | 'fertilizer_micros' | 'ammonia_source' | 'detoxifier_conditioner' | 'water_clarifier' | 'water_quality_support';
+      role: 'gh_remineralizer' | 'kh_buffer' | 'gh_kh_remineralizer' | 'bacteria_starter' | 'fertilizer_micros' | 'ammonia_source' | 'detoxifier_conditioner' | 'water_clarifier' | 'water_quality_support';
       enabled: boolean;
       name: string;
       dose_amount: number;
       dose_unit: 'mL' | 'g' | 'drops';
       per_volume_l: number;
       effect_value: number;
+      per_volume_l_gh?: number;
+      effect_value_gh?: number;
+      per_volume_l_kh?: number;
+      effect_value_kh?: number;
       bicarbonate?: boolean;
       ammonia_solution_percent?: number;
       pure_ammonia?: boolean;
@@ -156,6 +161,9 @@ export interface EngineSetup {
     can_test_ammonia: boolean;
     can_test_nitrite: boolean;
     can_test_nitrate: boolean;
+    can_test_ph: boolean;
+    can_test_gh: boolean;
+    can_test_kh: boolean;
   };
 }
 

@@ -36,8 +36,9 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder }
   };
 
   const groups: { label: string; icon: React.ReactNode; frequency: TaskFrequency; color: string }[] = [
-    { label: 'Phase Objectives', icon: <CheckCircle2 className="w-3.5 h-3.5" />, frequency: 'one-time', color: 'text-slate-300' },
+    { label: 'At Start', icon: <CheckCircle2 className="w-3.5 h-3.5" />, frequency: 'one-time', color: 'text-slate-300' },
     { label: 'Daily Routine', icon: <RotateCcw className="w-3.5 h-3.5" />, frequency: 'daily', color: 'text-slate-400' },
+    { label: 'Interval Routine', icon: <RotateCcw className="w-3.5 h-3.5" />, frequency: 'interval', color: 'text-slate-500' },
     { label: 'Weekly Maintenance', icon: <Calendar className="w-3.5 h-3.5" />, frequency: 'weekly', color: 'text-slate-500' },
     { label: 'Monthly Deep Clean', icon: <Clock className="w-3.5 h-3.5" />, frequency: 'monthly', color: 'text-slate-600' },
   ];
@@ -73,7 +74,7 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder }
                 )}
               </div>
               <span className={`text-[13px] font-medium leading-tight transition-all ${task.completed ? 'line-through text-slate-600' : 'text-slate-300'}`}>
-                {task.title}
+                {task.title}{task.frequency === 'interval' && task.everyDays ? ` (every ${task.everyDays} days)` : ''}
               </span>
             </div>
           ))}

@@ -1,0 +1,890 @@
+{
+  "atom_library": {
+    "i_intro_dark_start": {
+      "type": "instruction",
+      "text_template": "You are doing a 'Dark Start'. By keeping lights OFF and plants OUT, we prevent algae while the filter matures. It requires patience but guarantees a cleaner start."
+    },
+    "i_intro_dark_cycling": {
+      "type": "instruction",
+      "text_template": "The tank is now cycling in the dark. There is nothing to look at, but invisible work is happening. Do not be tempted to turn on lights."
+    },
+    "i_intro_fish_in": {
+      "type": "instruction",
+      "text_template": "You are cycling with fish ('Fish-in'). This requires daily attention. You are the safety net for your fish until the bacteria grow."
+    },
+    "i_intro_fish_in_minimal": {
+      "type": "instruction",
+      "text_template": "You are cycling with fish ('Fish-in') using a 'Minimal Light' start. This reduces stress on the fish and prevents algae during the unstable early weeks."
+    },
+    "i_intro_plant_assisted_silent": {
+      "type": "instruction",
+      "text_template": "We are using 'Silent Cycling'. By planting heavily from Day 1, the plants will consume the ammonia directly."
+    },
+    "i_intro_plant_assisted_co2": {
+      "type": "instruction",
+      "text_template": "We are using 'Silent Cycling' with immediate but very cautious CO2 injection. By planting heavily and providing carbon, plants will consume ammonia directly."
+    },
+    "i_intro_routine_forever": {
+      "type": "instruction",
+      "text_template": "Welcome to the 'Forever' phase. Consistency is key. Regular maintenance prevents 'Old Tank Syndrome' and keeps algae away."
+    },
+    "i_sub_rinse_inert": {
+      "type": "instruction",
+      "text_template": "Rinse your Inert substrate (sand/gravel) thoroughly in a bucket until the water runs clear. Dust is the enemy of clear water.",
+      "conditions": [
+        "setup.substrate_type == 'inert'"
+      ]
+    },
+    "i_sub_no_rinse_aqua": {
+      "type": "instruction",
+      "text_template": "Handle your Aquasoil gently. Do NOT rinse it. Rinsing active soil breaks down the nutrient pellets and turns your tank into a mud bath.",
+      "conditions": [
+        "setup.substrate_type == 'aquasoil'"
+      ]
+    },
+    "i_hard_rinse_stone": {
+      "type": "instruction",
+      "text_template": "Rinse your stones to remove loose dust before placing them.",
+      "conditions": [
+        "setup.hardscape_type == 'stone' || setup.hardscape_type == 'mixed'"
+      ]
+    },
+    "i_hard_soak_wood": {
+      "type": "instruction",
+      "text_template": "Soak your driftwood, glue it to rocks, or weigh it down. Dry wood floats!",
+      "conditions": [
+        "setup.hardscape_type == 'wood' || setup.hardscape_type == 'mixed'"
+      ]
+    },
+    "e_hardscape_tannins_normal": {
+      "type": "expected_behaviour",
+      "text_template": "Don't panic if the water looks a little tea-colored. It's natural tannins from the wood.",
+      "conditions": [
+        "setup.hardscape_type == 'wood' || setup.hardscape_type == 'mixed'"
+      ]
+    },
+    "i_plant_dense_advice": {
+      "type": "instruction",
+      "text_template": "Plant as densely as possible. The more plant mass you have, the safer your tank will be."
+    },
+    "i_plant_epiphytes_advice": {
+      "type": "instruction",
+      "text_template": "Planting Epiphytes (Anubias/Buce): Glue or tie them to hardscape. If you bury the rhizome in the substrate, they will rot.",
+      "conditions": [
+        "plants.has_epiphytes == true"
+      ]
+    },
+    "t_plant_epiphytes": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Epiphytes.",
+      "conditions": [
+        "plants.has_epiphytes == true"
+      ]
+    },
+    "i_plant_stems_advice": {
+      "type": "instruction",
+      "text_template": "Planting Stems: Trim the bottom inch off and remove lower leaves. Plant in small bunches to encourage new root growth.",
+      "conditions": [
+        "plants.has_stems == true"
+      ]
+    },
+    "t_plant_stems": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Stems.",
+      "conditions": [
+        "plants.has_stems == true"
+      ]
+    },
+    "t_plant_root_tabs": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Insert root tabs deep into the substrate beneath your heavy root feeders.",
+      "conditions": [
+        "plants.has_root_feeders == true"
+      ]
+    },
+    "t_maint_trim_plants": {
+      "type": "task",
+      "cadence": "as_needed",
+      "text_template": "Trim and remove any melting leaves/stems.",
+      "conditions": []
+    },
+    "i_water_fill_prep_bag": {
+      "type": "instruction",
+      "text_template": "Time to fill! Place a plastic bag or plate on the substrate and pour water onto **that** to prevent clouding."
+    },
+    "i_water_chlorine_check": {
+      "type": "instruction",
+      "text_template": "Since you have chlorine/chloramine, we must treat the full tank volume. If using a hose, add the conditioner to the tank *before* filling.",
+      "conditions": [
+        "source_water.has_chlorine == true",
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "t_water_dose_conditioner_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{doses.detoxifier_conditioner.fullfill_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}}.",
+      "conditions": [
+        "source_water.has_chlorine == true",
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "t_water_dose_ghkh_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dissolve {{doses.gh_kh_remineralizer.fullfill_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} before filling.",
+      "conditions": [
+        "products.gh_kh_remineralizer.selected == true"
+      ]
+    },
+    "t_water_dose_gh_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dissolve {{doses.gh_remineralizer.fullfill_dose_amount}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} before filling.",
+      "conditions": [
+        "products.gh_remineralizer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_water_dose_kh_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dissolve {{doses.kh_buffer.fullfill_dose_amount}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} before filling.",
+      "conditions": [
+        "products.kh_buffer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_water_fill_tank": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Fill the tank with water.",
+      "conditions": []
+    },
+    "e_water_cloudy_normal": {
+      "type": "expected_behaviour",
+      "text_template": "Cloudy water is normal during startup due to substrate dust and microscopic air bubbles.",
+      "conditions": []
+    },
+    "t_water_drain_90": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Drain the tank almost fully (90%) to remove accumulated Nitrates.",
+      "conditions": []
+    },
+    "i_water_drain_90_intro": {
+      "type": "instruction",
+      "text_template": "Drain the tank down to about 90% to remove built-up waste before planting.",
+      "conditions": []
+    },
+    "t_water_top_off": {
+      "type": "task",
+      "cadence": "as_needed",
+      "text_template": "Top off evaporated water with freshwater.",
+      "conditions": []
+    },
+    "t_water_top_off_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Top off evaporated water with freshwater.",
+      "conditions": []
+    },
+    "t_water_top_off_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Top off evaporated water with freshwater.",
+      "conditions": []
+    },
+    "t_equip_filter_on": {
+      "type": "instruction",
+      "text_template": "Run the filter 24/7. Oxygen is vital for the bacteria."
+    },
+    "t_equip_heater_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on heater (aim for 24-26°C).",
+      "conditions": [
+        "setup.heater_installed == true"
+      ]
+    },
+    "i_equip_heater_adjust_target": {
+      "type": "instruction",
+      "text_template": "Reset your heater to your target temperature ({{targets.temperature_target_c}}°C). We no longer need the elevated incubation temperature.",
+      "conditions": [
+        "setup.heater_installed == true"
+      ]
+    },
+    "t_equip_heater_adjust_target": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Set heater to {{targets.temperature_target_c}}°C.",
+      "conditions": [
+        "setup.heater_installed == true"
+      ]
+    },
+    "i_chem_baseline_note": {
+      "type": "instruction",
+      "text_template": "Measure your baseline pH, GH, and KH so we know your starting water chemistry.",
+      "conditions": []
+    },
+    "i_equip_lights_dark_rule": {
+      "type": "instruction",
+      "text_template": "Verify that all light sources are disabled. Light is the enemy of the Dark Start.",
+      "conditions": [
+        "modifiers.includes('light:off')"
+      ]
+    },
+    "t_equip_lights_check_off": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Confirm: Lights Unplugged/OFF.",
+      "conditions": [
+        "modifiers.includes('light:off')"
+      ]
+    },
+    "t_equip_lights_set_start": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Set light timer to {{setup.photoperiod_hours_initial}} hours.",
+      "conditions": [
+        "!modifiers.includes('light:off')",
+        "!modifiers.includes('light:minimal')"
+      ]
+    },
+    "t_equip_lights_set_minimal": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Set light timer to minimal (4-6 hours).",
+      "conditions": [
+        "modifiers.includes('light:minimal')"
+      ]
+    },
+    "t_equip_lights_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Ramp Up: Increase light timer by 30 mins this week. Target: {{setup.photoperiod_hours_post_cycle}} hours.",
+      "conditions": [
+        "modifiers.includes('light:ramp')"
+      ]
+    },
+    "t_co2_check_off": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Confirm: CO2 Unplugged/OFF.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "modifiers.includes('co2:wait')"
+      ]
+    },
+    "i_co2_intro_stress": {
+      "type": "instruction",
+      "text_template": "Keep CO2 OFF initially. Your fish are already stressed by the move; adding CO2 now adds suffocation risk.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "modifiers.includes('co2:wait')"
+      ]
+    },
+    "i_co2_intro_wait_strategy": {
+      "type": "instruction",
+      "text_template": "Keep CO2 OFF for now. We want the plants to adapt to the water chemistry before we boost their metabolism.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "modifiers.includes('co2:wait')"
+      ]
+    },
+    "i_co2_intro_very_low": {
+      "type": "instruction",
+      "text_template": "Since you are running CO2 from the start, we must be careful not to suffocate beneficial biology while oxygen is low. Set timer to turn ON 1 hour before lights.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "modifiers.includes('co2:cautious')"
+      ]
+    },
+    "i_co2_target_very_low": {
+      "type": "instruction",
+      "text_template": "Set CO2 **very low** (1 bubble / 5 seconds). The drop checker should be **Blue** or **Dark Green** initially. Do NOT aim for Lime Green yet.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "modifiers.includes('co2:cautious')"
+      ]
+    },
+    "i_co2_target_dark_green": {
+      "type": "instruction",
+      "text_template": "Start CO2 (1 bubble / 3 secs). Check drop checker after 2-3 hours. Aim for **Dark Green** (Safe).",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "!modifiers.includes('co2:wait')",
+        "!modifiers.includes('co2:cautious')"
+      ]
+    },
+    "i_co2_target_lime": {
+      "type": "instruction",
+      "text_template": "Slowly increase CO2 bubble rate. Aim for **Lime Green** (Optimal). Watch fish for gasping.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "!modifiers.includes('co2:wait')",
+        "!modifiers.includes('co2:cautious')"
+      ]
+    },
+    "i_co2_timing_on_off": {
+      "type": "instruction",
+      "text_template": "Set CO2 timer: ON 1 hour before lights and OFF 1 hour before lights out.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "!modifiers.includes('co2:wait')"
+      ]
+    },
+    "t_co2_turn_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on CO2 system.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "!modifiers.includes('co2:wait')"
+      ]
+    },
+    "t_co2_maint_monthly": {
+      "type": "task",
+      "cadence": "monthly",
+      "text_template": "CO2 Maintenance: Change drop checker fluid and clean diffuser.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "t_chem_test_ammonia": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Measure and log Ammonia.",
+      "conditions": [
+        "setup.can_test_ammonia == true"
+      ]
+    },
+    "t_chem_test_ammonia_24h": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Measure and log Ammonia after 24 hours.",
+      "conditions": [
+        "setup.can_test_ammonia == true"
+      ]
+    },
+    "t_chem_test_ammonia_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Measure and log Ammonia.",
+      "conditions": [
+        "setup.can_test_ammonia == true"
+      ]
+    },
+    "t_chem_test_nitrite": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Measure and log Nitrite.",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "t_chem_test_nitrite_24h": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Measure and log Nitrite after 24 hours.",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "t_chem_test_nitrite_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Measure and log Nitrite.",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "t_chem_test_nitrates": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Measure and log Nitrates.",
+      "conditions": [
+        "setup.can_test_nitrate == true"
+      ]
+    },
+    "i_chem_test_nitrate_progress": {
+      "type": "instruction",
+      "text_template": "Check Nitrates once a week. If Nitrates are rising, it confirms your bacteria are successfully converting the toxic Nitrite.",
+      "conditions": [
+        "setup.can_test_nitrate == true"
+      ]
+    },
+    "i_cycle_inert_dose_intro": {
+      "type": "instruction",
+      "text_template": "Inert substrate requires manual ammonia dosing to start the cycle.",
+      "conditions": [
+        "setup.substrate_type == 'inert'",
+        "products.ammonia_source.selected == true"
+      ]
+    },
+    "t_cycle_dose_ammonia_initial": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.",
+      "conditions": [
+        "products.ammonia_source.selected == true"
+      ]
+    },
+    "i_cycle_aquasoil_warning": {
+      "type": "instruction",
+      "text_template": "Your Aquasoil is likely releasing high amounts of ammonia already. We must test before dosing to avoid overdosing the tank.",
+      "conditions": [
+        "setup.substrate_type == 'aquasoil'"
+      ]
+    },
+    "i_cycle_nitrite_clear_signal": {
+      "type": "instruction",
+      "text_template": "The Goal: We are waiting for the day when you test and see 0 ppm Ammonia AND 0 ppm Nitrite. When that happens, your bacteria are ready for the final 24-hour challenge."
+    },
+    "i_chem_test_nitrite_watch": {
+      "type": "instruction",
+      "text_template": "Start checking Nitrite. It will likely be 0 ppm for a while, but as soon as it registers on the test (turns purple), we have officially entered the next phase.",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "t_cycle_dose_ammonia_conditional": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Only if Ammonia is 0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.",
+      "conditions": [
+        "products.ammonia_source.selected == true"
+      ]
+    },
+    "t_cycle_dose_ammonia_conditional_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Only if Ammonia is 0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.",
+      "conditions": [
+        "products.ammonia_source.selected == true"
+      ]
+    },
+    "t_cycle_dose_bacteria_daily": {
+      "type": "task",
+      "cadence": "daily",
+      "text_template": "Add {{products.bacteria_starter.dose_text}} of {{products.bacteria_starter.display_name}}.",
+      "conditions": [
+        "products.bacteria_starter.selected == true"
+      ]
+    },
+    "t_cycle_dose_bacteria_one_time": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{products.bacteria_starter.display_name}} (Check label for 'New Tank' dose).",
+      "conditions": [
+        "products.bacteria_starter.selected == true"
+      ]
+    },
+    "t_maint_wc_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Perform a {{derived.weekly_water_change_percent_range}}% water change.",
+      "conditions": []
+    },
+    "t_maint_wc_emergency": {
+      "type": "task",
+      "cadence": "as_needed",
+      "text_template": "EMERGENCY: If Ammonia/Nitrite > 0.5ppm, perform a {{targets.emergency_water_change_percent_range}}% water change.",
+      "conditions": []
+    },
+    "t_maint_prep_conditioner": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Add {{doses.detoxifier_conditioner.wc_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} to the bucket.",
+      "conditions": [
+        "source_water.has_chlorine == true",
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "t_maint_prep_gh": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dissolve {{doses.gh_remineralizer.gh_remineralizer_g_wc_range}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in the bucket.",
+      "conditions": [
+        "products.gh_remineralizer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_maint_prep_kh": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dissolve {{doses.kh_buffer.kh_buffer_g_wc_range}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in the bucket.",
+      "conditions": [
+        "products.kh_buffer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_maint_prep_ghkh": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dissolve {{doses.gh_kh_remineralizer.wc_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} in the bucket.",
+      "conditions": [
+        "products.gh_kh_remineralizer.selected == true"
+      ]
+    },
+    "t_maint_filter_monthly": {
+      "type": "task",
+      "cadence": "monthly",
+      "text_template": "Rinse filter sponges in old tank water. Never use tap water.",
+      "conditions": []
+    },
+    "t_fert_dose_start": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Start Routine: Add {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}}.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true"
+      ]
+    },
+    "t_fert_dose_start_once": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}}.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true"
+      ]
+    },
+    "t_fert_dose_maintenance": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth).",
+      "conditions": [
+        "products.fertilizer_micros.selected == true",
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "t_fert_diagnostic": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Diagnostic: If you see pale leaves or pinholes, increase dose to {{doses.fertilizer_micros.fertilizer_micros_ml_week_range}} mL.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true"
+      ]
+    },
+    "i_fish_acclimation": {
+      "type": "instruction",
+      "text_template": "To acclimate fish, turn off the light and float the sealed bag for 15 minutes to equalize temperature. Then, open the bag (or move fish to a bucket) and add a small cup of tank water every 5 minutes for 20 minutes. Finally, **net the fish out** into the tank. Never pour the store water into your aquarium.",
+      "conditions": []
+    },
+    "i_shrimp_acclimation": {
+      "type": "instruction",
+      "text_template": "Shrimp require **drip acclimation**. Place them in a container below the tank. Siphon tank water down using airline tubing, tying a knot in the tube to restrict flow to 1-2 drops per second. Let this run for 45-60 minutes (until the water volume triples) before netting them in.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "i_stock_add_in_batches": {
+      "type": "instruction",
+      "text_template": "Add fish in small batches (e.g., 6–8 at a time) and wait one week between groups. Adding everyone at once creates a massive ammonia spike that your filter cannot process instantly. Gradual stocking keeps your water safe.",
+      "conditions": []
+    },
+    "t_stock_acclimate_fish": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Acclimate fish before adding to tank.",
+      "conditions": [
+        "livestock.has_fish == true"
+      ]
+    },
+    "t_stock_acclimate_shrimp": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Drip acclimate shrimp before adding them to tank.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "i_stock_feed_light": {
+      "type": "instruction",
+      "text_template": "Feed VERY lightly—once every 2 days initially. Uneaten food turns into toxic ammonia.",
+      "conditions": []
+    },
+    "i_stock_cleanup_crew": {
+      "type": "instruction",
+      "text_template": "We start with a 'Cleaning Crew' (Snails/Shrimp/Oto). Stock light!"
+    },
+    "i_bio_fungus_expect": {
+      "type": "expected_behaviour",
+      "text_template": "You might see white fungal fuzz appear on your driftwood. This is harmless sugars releasing from the wood and will disappear on its own."
+    },
+    "i_bio_nitrite_spike_warning": {
+      "type": "instruction",
+      "text_template": "Nitrite is now spiking. This is the longest part of the cycle. Do NOT add livestock yet."
+    },
+    "i_maint_filter_no_clean_early": {
+      "type": "instruction",
+      "text_template": "Do NOT clean your filter yet. The brown sludge building up inside is the bacterial colony we are trying to grow."
+    },
+    "i_test_24h_wait_instruction": {
+      "type": "instruction",
+      "text_template": "Wait exactly 24 hours after dosing ammonia before performing the final tests. Do not test early."
+    },
+    "i_completion_test_fail_back": {
+      "type": "instruction",
+      "text_template": "If the test fails (ammonia or nitrite above 0), return to the previous phase and keep cycling for a few more days."
+    },
+    "i_chem_conditioner_bind_note": {
+      "type": "instruction",
+      "text_template": "Note: Water conditioners only 'bind' ammonia for ~24 hours to protect fish; they do not remove it. You must keep testing."
+    },
+    "i_intro_maintenance_phase": {
+      "type": "instruction",
+      "text_template": "We are now maintaining the ammonia levels while waiting for the bacteria to catch up. Keep the tank dark."
+    },
+    "i_expect_cloudy_water": {
+      "type": "expected_behaviour",
+      "text_template": "Your water may turn milky or cloudy white. Do not change the water! This is a bacterial bloom, a sign that your beneficial bacteria are multiplying rapidly."
+    },
+    "i_expect_surface_scum": {
+      "type": "expected_behaviour",
+      "text_template": "You might see an oily film or foam on the water surface. This is protein biofilm. It is harmless and will be removed when we install the skimmer or do water changes later."
+    },
+    "i_expect_ammonia_drop_speed": {
+      "type": "expected_behaviour",
+      "text_template": "Initially, ammonia will drop very slowly. As the colony grows, you will notice it dropping faster, requiring more frequent redosing. This acceleration is the goal."
+    },
+    "i_expect_slimy_walls": {
+      "type": "expected_behaviour",
+      "text_template": "The glass and heater might feel slimy to the touch. This is the bacteria colonizing surfaces. Do not scrub it off yet."
+    },
+    "i_expect_nothing_happening": {
+      "type": "expected_behaviour",
+      "text_template": "Visually, the tank looks boring and nothing seems to be happening. Trust the chemistry. The most important growth is invisible to the naked eye."
+    },
+    "i_expect_plant_transition": {
+      "type": "expected_behaviour",
+      "text_template": "You may see some plants melting or losing leaves while others grow new roots. This transition is normal as they adapt to your water. Trim melting leaves so they don't rot."
+    },
+    "i_expect_brown_diatoms": {
+      "type": "expected_behaviour",
+      "text_template": "You will likely see brown, dusty algae (Diatoms) covering your plants and hardscape. This is the ugly phase. Do not panic. It is temporary and will vanish when the tank matures."
+    },
+    "i_expect_purple_nitrite": {
+      "type": "expected_behaviour",
+      "text_template": "Your Nitrite test will likely turn bright purple immediately and stay off the charts for weeks. This is not a stall; it is just a very high peak. Keep going."
+    },
+    "i_expect_ammonia_hunger": {
+      "type": "expected_behaviour",
+      "text_template": "Your Ammonia will now drop to 0 ppm very quickly (often within 24 hours). This is great. The first half of your filter is complete. You must keep feeding it while waiting for the Nitrite to drop."
+    },
+    "i_expect_ph_crash_warning": {
+      "type": "expected_behaviour",
+      "text_template": "Cycle stall warning: If your pH drops below 6.0, the bacteria will stop working. If this happens, perform a 50% water change to restore minerals (KH) and restart the process."
+    },
+    "i_expect_detritus_buildup": {
+      "type": "expected_behaviour",
+      "text_template": "You may see brown fluff or debris settling on the bottom. This is dead bacterial biomass and is a normal byproduct of a heavy cycle. We will vacuum it out later."
+    },
+    "i_expect_fish_hiding": {
+      "type": "expected_behaviour",
+      "text_template": "Your new fish will likely hide in the back or under plants for the first 24-48 hours. This is normal instinct. Do not poke them or try to force them out.",
+      "conditions": [
+        "livestock.has_fish == true"
+      ]
+    },
+    "i_expect_fish_pale": {
+      "type": "expected_behaviour",
+      "text_template": "Fish often lose their color (go pale) due to the stress of moving. Their vibrant colors will return once they feel safe and settled.",
+      "conditions": [
+        "livestock.has_fish == true"
+      ]
+    },
+    "i_expect_fish_glass_surfing": {
+      "type": "expected_behaviour",
+      "text_template": "You may see fish swimming frantically up and down the glass (glass surfing). They are exploring the boundaries of their new world. This usually stops after a day.",
+      "conditions": [
+        "livestock.has_fish == true"
+      ]
+    },
+    "i_expect_fish_schooling_tight": {
+      "type": "expected_behaviour",
+      "text_template": "Schooling fish (tetras/rasboras/danios) will likely huddle very tightly together in a corner. This is their defense formation. They will spread out as they gain confidence.",
+      "conditions": [
+        "livestock.has_schooling == true"
+      ]
+    },
+    "i_expect_bottom_dweller_zoom": {
+      "type": "expected_behaviour",
+      "text_template": "Corydoras or loaches might dash suddenly to the surface for air and dart back down. This is normal behavior, not a sign of suffocation.",
+      "conditions": [
+        "livestock.has_bottom_dwellers == true"
+      ]
+    },
+    "i_expect_shrimp_molt": {
+      "type": "expected_behaviour",
+      "text_template": "Panic check: You might see a white, transparent ghost of a shrimp on the bottom. This is a molt (exoskeleton), not a dead shrimp. Leave it in the tank; they will eat it for calcium.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "i_expect_shrimp_hiding": {
+      "type": "expected_behaviour",
+      "text_template": "Shrimp are at the bottom of the food chain, so they are naturally paranoid. They may disappear into the hardscape or plants for days after being added.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "i_expect_shrimp_color_loss": {
+      "type": "expected_behaviour",
+      "text_template": "Red or colorful shrimp often turn pale or almost clear during transport due to stress. Their deep colors will return after a few days of settling in and feeding.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "i_expect_shrimp_zoomies": {
+      "type": "expected_behaviour",
+      "text_template": "If you see shrimp swimming frantic laps around the tank, it is usually male shrimp smelling a female who just molted. If all shrimp are doing it near the surface, check your CO2 - it might be too high.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "i_expect_shrimp_play_dead": {
+      "type": "expected_behaviour",
+      "text_template": "When first added, some shrimp may lie on their side motionless for a few minutes. Give them time; they are often just in shock from the transition.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "i_intro_cycle_verification": {
+      "type": "instruction",
+      "text_template": "The cycle seems finished. Let's verify before we unmask the tank. We need to be 100% sure the filter can handle the bioload."
+    },
+    "i_intro_fish_in_watch": {
+      "type": "instruction",
+      "text_template": "Your primary job right now is to keep toxins low. If Ammonia or Nitrite rises above 0.5ppm, the fish are suffering and need your help immediately."
+    },
+    "i_intro_fish_in_nitrite_watch": {
+      "type": "instruction",
+      "text_template": "If you are seeing consistent 0 ppm Ammonia readings, your first bacteria colony is working! Now watch for the 'Nitrite Spike'."
+    },
+    "i_intro_maturity_transition": {
+      "type": "instruction",
+      "text_template": "Your tank has been stable for a while with consistently 0 ppm Ammonia and Nitrite. It is safe to assume the cycle is established."
+    },
+    "i_intro_silent_watch": {
+      "type": "instruction",
+      "text_template": "The goal of a Silent Cycle is... silence. If the plants are healthy, you should see 0 Ammonia and 0 Nitrite continuously."
+    },
+    "i_intro_stocking_cleanup": {
+      "type": "instruction",
+      "text_template": "If your tests show 0 ppm Ammonia and Nitrite, and your plants are showing new growth, the tank is ready for the first inhabitants."
+    },
+    "i_equip_lights_on_guidance": {
+      "type": "instruction",
+      "text_template": "Turn on your lights! We start with a specific duration to prevent algae shock while the ecosystem settles.",
+      "conditions": []
+    },
+    "i_fishless_algae_warning": {
+      "type": "instruction",
+      "text_template": "Warning: High Ammonia combined with strong light often triggers algae. If you don't have many plants yet, keep your lighting duration short (6 hours max).",
+      "conditions": []
+    },
+    "i_fishless_plant_melt_warning": {
+      "type": "expected_behaviour",
+      "text_template": "Note: High ammonia (>2ppm) can sometimes melt delicate plant tissues. Monitor them closely and do a small water change if melting is severe.",
+      "conditions": [
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "i_intro_ferts_hungry": {
+      "type": "instruction",
+      "text_template": "Your plants are hungry and the substrate alone isn't enough for the water column feeders.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true"
+      ]
+    },
+    "i_intro_fishless_light": {
+      "type": "instruction",
+      "text_template": "You are performing a traditional Fishless Cycle. You will dose ammonia to build the filter, but with lights (and plants) running.",
+      "conditions": []
+    },
+    "i_stock_feed_initial": {
+      "type": "instruction",
+      "text_template": "Feed VERY lightly—once every 2 days initially. Uneaten food turns into toxic ammonia instantly.",
+      "conditions": []
+    },
+    "i_stock_feed_routine": {
+      "type": "instruction",
+      "text_template": "You can now feed daily, but only what they can eat in 30 seconds. Hungry fish are healthy fish; overfed fish create dirty water.",
+      "conditions": []
+    },
+    "i_transition_fishless_success": {
+      "type": "instruction",
+      "text_template": "Your Fishless Cycle is complete! The bacteria can process ammonia and nitrite instantly. It is time to make the tank safe for fish.",
+      "conditions": []
+    },
+    "i_stock_ds_timing": {
+      "type": "instruction",
+      "text_template": "Your filter is cycled and ready. You can add livestock immediately. However, if the water is very cloudy from planting, it is safer to wait 24 hours for the dust to settle.",
+      "conditions": []
+    },
+    "i_stock_detox_advice": {
+      "type": "instruction",
+      "text_template": "Safety tip: Use a conditioner that detoxifies ammonia/nitrite. This binds any toxins released from the soil during planting, acting as a shield for your new fish for up to 24 hours.",
+      "conditions": [
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "i_stock_detox_emergency_advice": {
+      "type": "instruction",
+      "text_template": "Your conditioner is your emergency brake. If ammonia is high, a standard dose can detoxify the water for 24 hours, keeping fish safe while you figure out the problem.",
+      "conditions": [
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "i_intro_cycle_complete": {
+      "type": "instruction",
+      "text_template": "Congratulations! Your tank is cycled and ready for the next step.",
+      "conditions": []
+    },
+    "i_transition_maturity_success": {
+      "type": "instruction",
+      "text_template": "Your ecosystem is established! Tests are stable and the water is clean. We can now optimize the tank for maximum growth.",
+      "conditions": []
+    },
+    "t_chem_test_ph": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Measure and log pH.",
+      "conditions": [
+        "setup.can_test_ph == true"
+      ]
+    },
+    "t_chem_test_ph_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Measure and log pH.",
+      "conditions": [
+        "setup.can_test_ph == true"
+      ]
+    },
+    "t_chem_test_gh": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Measure and log GH.",
+      "conditions": [
+        "setup.can_test_gh == true"
+      ]
+    },
+    "t_chem_test_kh": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Measure and log KH.",
+      "conditions": [
+        "setup.can_test_kh == true"
+      ]
+    }
+  }
+}
