@@ -1392,6 +1392,7 @@ const normalizeSetup = (setup, notes) => {
       hardscape: {
         type: setup?.tank_profile?.hardscape?.type ?? 'mixed'
       },
+      lighting_system: setup?.tank_profile?.lighting_system ?? 'basic',
       filtration: {
         filter_model: setup?.tank_profile?.filtration?.filter_model ?? '',
         rated_flow_lph: setup?.tank_profile?.filtration?.rated_flow_lph ?? 0,
@@ -1429,6 +1430,7 @@ const normalizeSetup = (setup, notes) => {
       plants: {
         categories: setup?.biology_profile?.plants?.categories ?? [],
         demand_class: setup?.biology_profile?.plants?.demand_class ?? 'auto',
+        density: setup?.biology_profile?.plants?.density ?? 'moderate',
         species: setup?.biology_profile?.plants?.species ?? []
       },
       livestock_plan: {
@@ -1466,6 +1468,131 @@ const normalizeSetup = (setup, notes) => {
   }
 
   return normalized;
+};
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const getMethodRiskDelta = (methodId, substrateType) => {
+  if (methodId === 'DS1' && substrateType === 'inert') return -0.5;
+  if (methodId === 'DS1') return -2;
+  if (methodId === 'PA1') return -1;
+  if (methodId === 'I1') return 2;
+  return 0;
+};
+
+const getMethodRiskReason = (methodId, substrateType) => {
+  if (methodId === 'DS1' && substrateType === 'inert') {
+    return 'With inert substrate, Dark Start offers only a small safety benefit and delays plant establishment.';
+  }
+  if (methodId === 'DS1') {
+    return 'The Dark Start isolates the ammonia spike in the dark, neutralizing algae risk and protecting livestock completely.';
+  }
+  if (methodId === 'PA1') {
+    return 'Heavy planting acts as a biological safety net, consuming ammonia and outcompeting algae.';
+  }
+  if (methodId === 'I1') {
+    return 'Cycling with fish introduces a significant risk of mortality or stress, even in stable tanks.';
+  }
+  return 'Standard Fishless cycling is safe for fish, though algae is still a risk if lights are too bright.';
+};
+
+const buildRiskMotivation = (baseRiskScore, methodId, substrateType) => {
+  const methodRiskDelta = getMethodRiskDelta(methodId, substrateType);
+  const finalRiskScore = clamp(baseRiskScore + methodRiskDelta, 1, 5);
+  const roundedFinalRisk = roundTo(finalRiskScore, 1);
+  const roundedBaseRisk = roundTo(baseRiskScore, 1);
+  const reason = getMethodRiskReason(methodId, substrateType);
+  if (methodRiskDelta !== 0) {
+    const directionText = methodRiskDelta > 0 ? 'increase' : 'reduce';
+    return {
+      finalRisk: roundedFinalRisk,
+      motivation: `Your setup has a Base Risk of ${roundedBaseRisk}/5. The selected method will ${directionText} the risk to ${roundedFinalRisk}/5. ${reason}`
+    };
+  }
+  return {
+    finalRisk: roundedFinalRisk,
+    motivation: `Your setup has a Base Risk of ${roundedBaseRisk}/5. The selected method keeps the Final Risk at ${roundedFinalRisk}/5. ${reason}`
+  };
+};
+
+const recommendCycleMethod = (profile) => {
+  const baseRiskScore = clamp(
+    1
+      + (profile.substrate_type === 'aquasoil' ? 2 : 0)
+      + (profile.lighting_intensity === 'high' ? 1 : 0)
+      + (profile.stocking_sensitivity === 'sensitive' ? 1 : 0)
+      + (profile.co2_system ? 0.5 : 0)
+      - (profile.plant_density === 'heavy' ? 1 : 0)
+      - (profile.lighting_intensity === 'low' ? 0.5 : 0),
+    1,
+    5
+  );
+  let spectrumMotivation = 'Your setup balances moderate growth with ecosystem stability.';
+  if (profile.substrate_type === 'inert' && profile.lighting_intensity === 'low') {
+    spectrumMotivation = 'Your setup prioritizes safety and low maintenance over rapid plant growth.';
+  } else if (profile.substrate_type === 'aquasoil' || profile.lighting_intensity === 'high' || profile.co2_system) {
+    spectrumMotivation = 'Your setup is a high energy system designed for rapid results, but it requires diligent testing to prevent crashes.';
+  }
+
+  let recommendedMethod = 'F1';
+  let methodMotivation = 'Inert soil does not leech ammonia, so a dark start is unnecessary. You can cycle with lights on to establish roots.';
+  const modifiers = [];
+
+  if (!profile.product_ammonia) {
+    recommendedMethod = 'I1';
+    methodMotivation = 'Without liquid ammonia, we cannot feed the bacteria artificially. We must carefully cycle with fish.';
+    if (profile.stocking_sensitivity === 'sensitive') {
+      methodMotivation += ' Warning: Sensitive livestock are highly risky for fish-in cycling.';
+    }
+  } else if (profile.substrate_type === 'aquasoil') {
+    recommendedMethod = 'DS1';
+    methodMotivation = 'Aquasoil leeches ammonia. Dark Start is the safest way to cycle without algae.';
+    if (profile.plant_density === 'heavy' && profile.user_priority === 'growth') {
+      recommendedMethod = 'PA1';
+      methodMotivation = 'Your heavy plant mass acts as a filter, allowing you to skip the Dark Start safely.';
+    } else if (profile.plant_density !== 'heavy' && profile.risk_tolerance === 'high') {
+      recommendedMethod = 'F1';
+      methodMotivation = "You have chosen the Hot Start. You are skipping the Dark Start to run lights immediately. This is risky: you must perform frequent water changes to remove leaching ammonia, or algae will take over.";
+      modifiers.push('maintenance:aggressive');
+    }
+  } else if (profile.substrate_type === 'inert') {
+    recommendedMethod = 'F1';
+    methodMotivation = 'Inert soil does not leech ammonia, so a Dark Start is unnecessary. You can cycle with lights on to establish roots.';
+    if (profile.plant_density === 'heavy') {
+      recommendedMethod = 'PA1';
+      methodMotivation = "With so many plants, you can perform a Silent Cycle where plants consume the ammonia directly.";
+    }
+  }
+
+  if (profile.risk_tolerance === 'high' && profile.substrate_type === 'aquasoil' && recommendedMethod === 'F1') {
+    methodMotivation = `Because you indicated a High Risk Tolerance, we have enabled the lights on path for your aquasoil tank. Be prepared for extra maintenance. ${methodMotivation}`;
+  }
+
+  const { finalRisk, motivation: riskMotivation } = buildRiskMotivation(
+    baseRiskScore,
+    recommendedMethod,
+    profile.substrate_type
+  );
+
+  if (profile.lighting_intensity === 'high' && recommendedMethod !== 'DS1') {
+    modifiers.push('lighting:minimal');
+  }
+  if (profile.co2_system && recommendedMethod === 'DS1') {
+    modifiers.push('co2:off');
+  }
+  if (profile.co2_system && recommendedMethod === 'PA1') {
+    modifiers.push('co2:cautious');
+  }
+
+  return {
+    risk_score: finalRisk,
+    base_risk_score: roundTo(baseRiskScore, 1),
+    risk_motivation: riskMotivation,
+    spectrum_motivation: spectrumMotivation,
+    recommended_method_id: recommendedMethod,
+    method_motivation: methodMotivation,
+    modifiers: Array.from(new Set(modifiers))
+  };
 };
 
 export const generatePlan = ({
@@ -1541,8 +1668,37 @@ export const generatePlan = ({
     darkDecisionContext
   );
 
-  const recommendedCyclingMode = cyclingDecisionRecommended.recommended_cycling_mode || 'fishless_ammonia';
-  const recommendedDarkStart = !!darkDecision.recommended_dark_start;
+  const lightingIntensityMap = {
+    basic: 'low',
+    dedicated: 'medium',
+    high_performance: 'high'
+  };
+  const userProfile = {
+    substrate_type: normalizedSetup.tank_profile.substrate.type,
+    plant_density: normalizedSetup.biology_profile.plants.density,
+    lighting_intensity: lightingIntensityMap[normalizedSetup.tank_profile.lighting_system] || 'medium',
+    co2_system: normalizedSetup.tank_profile.co2.enabled,
+    stocking_sensitivity: (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0
+      || normalizedSetup.biology_profile.livestock_traits.is_sensitive
+      ? 'sensitive'
+      : 'hardy',
+    product_ammonia: normalizedSetup.product_stack.ammonia_source.type !== 'none'
+      || enabledUserProducts.some((product) => product.role === 'ammonia_source'),
+    user_priority: normalizedSetup.user_preferences.goal_profile === 'stability_first'
+      ? 'stability'
+      : normalizedSetup.user_preferences.goal_profile === 'growth_first'
+        ? 'growth'
+        : 'speed',
+    risk_tolerance: normalizedSetup.user_preferences.risk_tolerance
+  };
+  const cycleRecommendation = recommendCycleMethod(userProfile);
+  const recommendedCyclingMode = cycleRecommendation.recommended_method_id === 'I1'
+    ? 'fish_in'
+    : cycleRecommendation.recommended_method_id === 'PA1'
+      ? 'plant_assisted'
+      : 'fishless_ammonia';
+  const recommendedDarkStart = cycleRecommendation.recommended_method_id === 'DS1';
+  const darkDecisionRecommended = darkDecision;
   const userSelectedDarkStart =
     darkStartPreference === 'auto' || darkStartPreference === undefined
       ? recommendedDarkStart
@@ -1551,11 +1707,24 @@ export const generatePlan = ({
     normalizedSetup.user_preferences.cycling_mode_preference !== 'auto'
       ? normalizedSetup.user_preferences.cycling_mode_preference
       : recommendedCyclingMode;
+  const selectedMethodId =
+    userSelectedCyclingMode === 'fish_in'
+      ? 'I1'
+      : userSelectedCyclingMode === 'plant_assisted'
+        ? 'PA1'
+        : userSelectedDarkStart
+          ? 'DS1'
+          : 'F1';
+  const selectedRisk = buildRiskMotivation(
+    cycleRecommendation.base_risk_score,
+    selectedMethodId,
+    normalizedSetup.tank_profile.substrate.type
+  );
 
   const overrideContext = {
     user_selected_cycling_mode: userSelectedCyclingMode,
     recommended_cycling_mode: recommendedCyclingMode,
-    risk_score_1_to_5: cyclingDecisionRecommended.risk_score_1_to_5 ?? 2
+    risk_score_1_to_5: selectedRisk.finalRisk
   };
   const requiresOverrideAcknowledgement = evaluateOverridePolicy(
     enginePackage.decision_tables['override.policy.json'],
@@ -1795,9 +1964,15 @@ export const generatePlan = ({
       user_selected_cycling_mode: userSelectedCyclingMode,
       recommended_dark_start: recommendedDarkStart,
       user_selected_dark_start: userSelectedDarkStart,
-      risk_score_1_to_5: cyclingDecisionRecommended.risk_score_1_to_5 ?? 2,
+      risk_score_1_to_5: selectedRisk.finalRisk,
       reason_codes: cyclingDecisionRecommended.reason_codes || [],
-      dark_start_reason_codes: darkDecision.reason_codes || [],
+      dark_start_reason_codes: darkDecisionRecommended.reason_codes || [],
+      spectrum_motivation: cycleRecommendation.spectrum_motivation,
+      risk_motivation: selectedRisk.motivation,
+      method_motivation: cycleRecommendation.method_motivation,
+      recommended_method_id: cycleRecommendation.recommended_method_id,
+      recommended_modifiers: cycleRecommendation.modifiers,
+      base_risk_score: cycleRecommendation.base_risk_score,
       requires_override_acknowledgement: requiresOverrideAcknowledgement,
       override_acknowledged: overrideAcknowledged,
       blocked: requiresOverrideAcknowledgement && !overrideAcknowledged

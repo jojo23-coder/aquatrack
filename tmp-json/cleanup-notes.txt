@@ -1,0 +1,32 @@
+Cleanup candidates to revisit
+
+UI inputs removed (defaults still in data/engine):
+- tank_profile.filtration.flow_class (default: medium)
+- tank_profile.substrate.sand_cap_cm (default: 2.0)
+- tank_profile.co2.injection_type (default: diffuser)
+- tank_profile.co2.surface_agitation (default: gentle_ripple)
+- tank_profile.co2.target_ph_drop (default: 1.0; input hidden)
+- tank_profile.estimated_net_multiplier (default: 0.85; input hidden)
+- tank_profile.temperature_target_c (input removed; heater uses water targets)
+- Tank Type selector (TankType in app state still exists for now)
+
+Warnings removed/disabled:
+- CO2 drop is low warning (relied on target_ph_drop input)
+
+Code/data possibly removable if we decide to fully drop them later:
+- TankType in types/state and any downstream usage (if we drop tank type entirely)
+- tank_profile.temperature_target_c in data/schema/engine outputs (if always driven by water targets)
+- target_ph_drop logic in protocol discrepancies (already removed warning; input still stored)
+- flow_class/sand_cap/injection_type/surface_agitation fields in types + schema defaults
+
+Notes:
+- Explicit net volume remains supported; net multiplier stays as hidden default.
+- Water targets already include temperature; consider using those as sole source if cleaning up tank_profile.temperature_target_c.
+
+Added for cleanup tracking:
+- Biology UI toggles removed: plant demand selection, sensitive livestock toggle (now derived from catalog).
+- Plant demand now auto-derived from selected plant groups (light/co2 requirements).
+- Biology UI toggle removed: digging livestock toggle (now derived from catalog).
+- Preferences UI: removed Cycling Mode and Dark Start selectors (now only controlled in Protocol section).
+- Preferences UI: hid Protocol Preferences pack toggles (not used yet).
+- Protocol UI: removed duplicate Photoperiod Start/Post controls from Maintenance Protocol panel.
