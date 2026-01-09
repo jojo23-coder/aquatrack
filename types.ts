@@ -95,6 +95,7 @@ export interface EngineSetup {
     hardscape: {
       type: 'wood' | 'stone' | 'mixed';
     };
+    lighting_system: 'basic' | 'dedicated' | 'high_performance';
     filtration: {
       filter_model?: string;
       rated_flow_lph?: number;
@@ -122,6 +123,7 @@ export interface EngineSetup {
     plants: {
       categories: Array<'moss' | 'epiphytes' | 'stems' | 'floaters' | 'root_feeders'>;
       demand_class: 'low' | 'medium' | 'high' | 'auto';
+      density: 'none' | 'sparse' | 'moderate' | 'heavy';
       species: string[];
     };
     livestock_plan: {
