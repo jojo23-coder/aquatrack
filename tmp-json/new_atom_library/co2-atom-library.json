@@ -1,0 +1,113 @@
+{
+  "atom_library": {
+    "i_co2_adjust_safe_before_stocking": {
+      "type": "instruction",
+      "text_template": "IMPORTANT: Dial back your CO2 injection. We need the drop checker to read a solid **Lime Green** (not yellow) before the fish arrive to ensure they have enough oxygen.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "i_co2_lime_green_check_before_stocking": {
+      "type": "instruction",
+      "text_template": "CO2 safety check before stocking: ensure the drop checker is **Lime Green**, not Yellow. If it is Yellow, dial it back and wait 2 hours before adding fish.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "i_co2_monitor_stability": {
+      "type": "instruction",
+      "text_template": "Stability is key. Your CO2 is already optimized (Lime Green). Monitor fish for gasping; if they are fine, do not change the settings.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "i_co2_start_high_saturation_fishless": {
+      "type": "instruction",
+      "text_template": "Since you are fishless, **Turn CO2 ON immediately**. Aim for a **Lime Green** or even **Yellow-Green** drop checker. This supercharges growth and prevents your new plants from melting.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "i_co2_strategy_off_during_cycle": {
+      "type": "instruction",
+      "text_template": "Strategy: **Keep CO2 OFF.** \n\nEven if you have a CO2 system, leave it off during the cycle. \n\n**Why?** The coming Nitrite spike makes it hard for fish to absorb oxygen. CO2 further reduces oxygen levels. Combining the two is often fatal. We will turn CO2 on only after the water is safe.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "i_co2_target_dark_green_safe": {
+      "type": "instruction",
+      "text_template": "Start CO2 (1 bubble / 3 secs). Check drop checker after 2-3 hours. Aim for **Dark Green** (Safe).",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "!modifiers.includes('co2:wait')",
+        "!modifiers.includes('co2:cautious')"
+      ]
+    },
+    "i_co2_target_yellow_green_growth": {
+      "type": "instruction",
+      "text_template": "Since there are no fish, you can run CO2 slightly higher than normal (Yellow-Green color on the drop checker). This maximizes plant growth and suppresses algae during the ammonia spikes.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "i_co2_timer_on_off": {
+      "type": "instruction",
+      "text_template": "Set CO2 timer: ON 1 hour before lights and OFF 1 hour before lights out.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "!modifiers.includes('co2:wait')"
+      ]
+    },
+    "i_co2_wait_for_fish": {
+      "type": "instruction",
+      "text_template": "Keep CO2 OFF initially. Your fish are already stressed by the move; adding CO2 now adds suffocation risk.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "modifiers.includes('co2:wait')"
+      ]
+    },
+    "t_co2_adjust_safe": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dial back CO2 to a solid Lime Green on the drop checker.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "t_co2_confirm_off": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Confirm: CO2 Unplugged/OFF.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "modifiers.includes('co2:wait')"
+      ]
+    },
+    "t_co2_maintenance_monthly": {
+      "type": "task",
+      "cadence": "monthly",
+      "text_template": "CO2 Maintenance: Change drop checker fluid and clean diffuser.",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    },
+    "t_co2_turn_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on CO2 system.",
+      "conditions": [
+        "setup.co2_enabled == true",
+        "!modifiers.includes('co2:wait')"
+      ]
+    },
+    "t_co2_turn_on_initial_setup": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on CO2 system. Set bubble rate to approx 1 bubble per second (adjust for tank size).",
+      "conditions": [
+        "setup.co2_enabled == true"
+      ]
+    }
+  }
+}

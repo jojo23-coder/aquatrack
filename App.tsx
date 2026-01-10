@@ -1279,6 +1279,9 @@ const App: React.FC = () => {
 
   const latestLog = aquarium.logs[aquarium.logs.length - 1] || {} as WaterLog;
   const currentPhDrop = latestLog.degassedPH && latestLog.pH ? (latestLog.degassedPH - latestLog.pH) : null;
+  const fmtTarget = (value: number | undefined, digits = 1) => (
+    Number.isFinite(value) ? Number(value).toFixed(digits) : '--'
+  );
 
   const getStatusColor = (id: string, value: number | undefined) => {
     if (value === undefined) return 'text-slate-400';
@@ -1316,14 +1319,14 @@ const App: React.FC = () => {
       label: 'Temp', 
       value: `${latestLog.temperature || '--'}°C`, 
       paramValue: latestLog.temperature,
-      note: "Stable temperature preferred; short excursions of ±0.5 °C are acceptable."
+      note: `Target Range: ${fmtTarget(aquarium.targets.temperature.min)}–${fmtTarget(aquarium.targets.temperature.max)}°C.\nShort excursions of ±0.5 °C are acceptable.`
     },
     { 
       id: 'pH', 
       label: 'pH', 
       value: `${latestLog.pH || '--'}`, 
       paramValue: latestLog.pH,
-      note: "CO2 ON Target: 6.4–7.0.\nCO2 OFF Target: 7.2–7.8.\nTarget Drop: ~1.0 unit (Degassed minus CO2-on). Latest pH drop: " + (currentPhDrop ? currentPhDrop.toFixed(2) : '--')
+      note: `Target Range: ${fmtTarget(aquarium.targets.pH.min, 2)}–${fmtTarget(aquarium.targets.pH.max, 2)}.\nTarget Drop: ~1.0 unit (Degassed minus CO2-on). Latest pH drop: ${currentPhDrop !== null ? currentPhDrop.toFixed(2) : '--'}`
     },
     { 
       id: 'nitrate', 
@@ -1331,7 +1334,7 @@ const App: React.FC = () => {
       subLabel: 'Nitrate',
       value: `${latestLog.nitrate ?? '--'}`, 
       paramValue: latestLog.nitrate,
-      note: "NO₃ (Nitrate) - The final product of the cycle. Recommended Range: 5.0–30.0 ppm for plants. High levels (>40 ppm) can stress shrimp."
+      note: `Recommended Range: ${fmtTarget(aquarium.targets.nitrate.min)}–${fmtTarget(aquarium.targets.nitrate.max)} ppm.`
     },
     { 
       id: 'ammonia', 
@@ -1339,7 +1342,7 @@ const App: React.FC = () => {
       subLabel: 'Ammonia',
       value: `${latestLog.ammonia ?? '--'}`, 
       paramValue: latestLog.ammonia,
-      note: "NH₃ (Ammonia) - The first stage of biological waste. Cycling: 1.5–2.0 ppm target. Post-Cycle: Must be 0."
+      note: `Max target: ${fmtTarget(aquarium.targets.ammonia, 2)} ppm (post-cycle should be 0).`
     },
     { 
       id: 'nitrite', 
@@ -1347,14 +1350,14 @@ const App: React.FC = () => {
       subLabel: 'Nitrite',
       value: `${latestLog.nitrite ?? '--'}`, 
       paramValue: latestLog.nitrite,
-      note: "NO₂ (Nitrite) - Extremely toxic middle stage. Must be 0 before adding livestock."
+      note: `Max target: ${fmtTarget(aquarium.targets.nitrite, 2)} ppm (post-cycle should be 0).`
     },
     { 
       id: 'hardness', 
       label: 'GH/KH', 
       value: `${latestLog.gh ?? '--'}/${latestLog.kh ?? '--'}`, 
       paramValue: latestLog.gh,
-      note: "GH: General Hardness (Target 5.5–6.0).\nKH: Carbonate Hardness (Target 3.0)."
+      note: `GH Target: ${fmtTarget(aquarium.targets.gh.min)}–${fmtTarget(aquarium.targets.gh.max)}.\nKH Target: ${fmtTarget(aquarium.targets.kh.min)}–${fmtTarget(aquarium.targets.kh.max)}.`
     },
   ];
 

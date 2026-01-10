@@ -841,7 +841,7 @@ const deriveCo2StartGate = ({ co2Enabled, darkStartEnabled, cyclingMode, co2Star
   if (cyclingMode === 'fishless_ammonia') return 'post_cycle_stable';
   if (cyclingMode === 'fish_in') return 'post_cycle_stable';
   if (cyclingMode === 'plant_assisted') {
-    return co2StartIntent === 'from_start' ? 'plant_assisted_very_low' : 'post_cycle_stable';
+    return 'plant_assisted_active';
   }
   return 'post_cycle_stable';
 };
@@ -896,8 +896,7 @@ const generatePhaseList = ({
 
   const photoperiodStartHours = normalizedSetup.user_preferences.photoperiod_hours_initial;
   const lightsOnDuringCycling = !(darkStartFinal && userSelectedCyclingMode !== 'fish_in');
-  const lightingMinimal = darkStartForced
-    || (lightsOnDuringCycling && photoperiodStartHours <= 6 && (userSelectedCyclingMode === 'fish_in' || userSelectedCyclingMode === 'plant_assisted'));
+  const lightingMinimal = darkStartForced;
 
   const co2StartIntent = normalizedSetup.tank_profile.co2.start_intent || 'eventual';
   const co2StartGate = deriveCo2StartGate({
@@ -958,19 +957,7 @@ const generatePhaseList = ({
   }
 
   if (userSelectedCyclingMode === 'plant_assisted') {
-    const paLighting = photoperiodStartHours <= 6;
-    const paCo2Low = co2StartGate === 'plant_assisted_very_low';
-    let pa1Seq = 100;
-    const pa1Modifiers = [];
-    if (paLighting) {
-      pa1Seq = 102;
-      pa1Modifiers.push('light:minimal');
-    }
-    if (paCo2Low) {
-      pa1Seq = paLighting ? 113 : 103;
-      pa1Modifiers.push('co2:cautious');
-    }
-    addPhase('PA1', 'planted setup', pa1Seq, withCo2Wait(pa1Modifiers));
+    addPhase('PA1', 'Plant Assisted (Silent Cycling)', 100, withCo2Wait([]));
     addPhase('PA2', 'stabilization', 200, withCo2Wait([]));
     addPhase('PA3', 'initial bioload', 300, withCo2Wait([]));
     addPhase('PA4', 'transition', 500, ['light:ramp']);
@@ -984,191 +971,6 @@ const generatePhaseList = ({
       generated_at_iso: generatedAtIso
     },
     phases: ordered
-  };
-};
-
-const generatePhasesFromTemplates = ({
-  setup,
-  productCatalog,
-  enginePackage,
-  phaseTemplates,
-  userTargets,
-  generatedAtIso = DEFAULT_GENERATED_AT_ISO
-}) => {
-  const normalizedSetup = normalizeSetup(setup, []);
-  const weeklyWcPercentRange = normalizedSetup.water_source_profile.weekly_water_change_percent_target;
-  const derivedNetVolume = deriveNetVolume(normalizedSetup.tank_profile);
-  const weeklyWcVolumeRange = deriveWeeklyWcRange(derivedNetVolume, weeklyWcPercentRange);
-  const parameterLimits = enginePackage?.parameter_limits?.['parameter_limits.generic.json'] || {};
-  const calculatorDefaults = enginePackage?.calculators?.['calculator.framework.json']?.defaults || {};
-  const calculatorConstants = enginePackage?.calculators?.['calculator.framework.json']?.constants || {};
-
-  const mapUserTargets = (targets) => {
-    if (!targets) return null;
-    return {
-      temperature_c: { target_range: [targets.temperature.min, targets.temperature.max] },
-      ph_co2_on: { target_range: [targets.pH.min, targets.pH.max] },
-      gh_dgh: { target_range: [targets.gh.min, targets.gh.max], target: (targets.gh.min + targets.gh.max) / 2 },
-      kh_dkh: { target_range: [targets.kh.min, targets.kh.max], target: (targets.kh.min + targets.kh.max) / 2 },
-      ammonia_ppm: { target: targets.ammonia },
-      nitrite_ppm: { target: targets.nitrite },
-      nitrate_ppm: { target_range: [targets.nitrate.min, targets.nitrate.max] }
-    };
-  };
-  const effectiveTargets = mapUserTargets(userTargets) || parameterLimits;
-  const targetGhRange = effectiveTargets.gh_dgh?.target_range
-    || [parameterLimits.gh_dgh?.min ?? 0, parameterLimits.gh_dgh?.max ?? 0];
-  const targetKh = effectiveTargets.kh_dkh?.target
-    ?? effectiveTargets.kh_dkh?.max
-    ?? parameterLimits.kh_dkh?.max
-    ?? 0;
-
-  const ammoniaSolutionPercent = normalizedSetup.product_stack.ammonia_source.solution_percent
-    ?? calculatorDefaults.ammonia_solution_percent;
-  const ammoniaTargetRange = calculatorDefaults.cycle_ammonia_target_ppm_range || [1.5, 2.0];
-  const ammoniaMlRange = ammoniaTargetRange.map((ppm) =>
-    calcAmmoniaMl(
-      derivedNetVolume,
-      ppm,
-      ammoniaSolutionPercent,
-      calculatorConstants.ammonia_calibration
-    )
-  );
-
-  const ghFullFillRange = calcGhGRange(
-    normalizedSetup.water_source_profile.tap_gh_dgh,
-    targetGhRange,
-    derivedNetVolume,
-    calculatorConstants.gh_remineralizer.g_per_l_per_1_dgh
-  );
-  const ghWcLow = calcGhGRange(
-    normalizedSetup.water_source_profile.tap_gh_dgh,
-    targetGhRange,
-    weeklyWcVolumeRange[0],
-    calculatorConstants.gh_remineralizer.g_per_l_per_1_dgh
-  );
-  const ghWcHigh = calcGhGRange(
-    normalizedSetup.water_source_profile.tap_gh_dgh,
-    targetGhRange,
-    weeklyWcVolumeRange[1],
-    calculatorConstants.gh_remineralizer.g_per_l_per_1_dgh
-  );
-  const ghWcRange = [ghWcLow[0], ghWcHigh[1]];
-  const khFullFillG = calcKhG(
-    normalizedSetup.water_source_profile.tap_kh_dkh ?? 0,
-    targetKh,
-    derivedNetVolume,
-    calculatorConstants.kh_buffer_rule_of_thumb.g_per_10l_per_1_dkh
-  );
-  const khWcRange = weeklyWcVolumeRange.map((volume) =>
-    calcKhG(
-      normalizedSetup.water_source_profile.tap_kh_dkh ?? 0,
-      targetKh,
-      volume,
-      calculatorConstants.kh_buffer_rule_of_thumb.g_per_10l_per_1_dkh
-    )
-  );
-  const fertilizerStartMl = calcFertilizerMlWeek(
-    derivedNetVolume,
-    calculatorDefaults.fertilizer_start_factor,
-    calculatorConstants.fertilizer_micros_label
-  );
-  const fertilizerMaintRange = calculatorDefaults.fertilizer_maint_factor_range.map((factor) =>
-    calcFertilizerMlWeek(derivedNetVolume, factor, calculatorConstants.fertilizer_micros_label)
-  );
-
-  const dosingReference = {
-    ammonia_ml_range: ammoniaMlRange.map((value) => (value === null ? null : roundTo(value, 2))),
-    gh_full_fill_g_range: ghFullFillRange.map((value) => roundTo(value, 2)),
-    gh_wc_g_range: ghWcRange.map((value) => roundTo(value, 2)),
-    kh_full_fill_g: roundTo(khFullFillG, 2),
-    kh_wc_g_range: khWcRange.map((value) => roundTo(value, 2)),
-    fertilizer_start_ml_week: roundTo(fertilizerStartMl, 2),
-    fertilizer_maint_ml_week_range: fertilizerMaintRange.map((value) => roundTo(value, 2))
-  };
-
-  const userProducts = normalizedSetup.product_stack.user_products || [];
-  const enabledUserProducts = userProducts.filter((product) => product.enabled);
-  const buildSelectedIds = (products) => {
-    const ids = [];
-    products.forEach((product) => {
-      if (product.role === 'gh_kh_remineralizer') {
-        ids.push('gh_remineralizer', 'kh_buffer');
-      } else {
-        ids.push(product.role);
-      }
-    });
-    return ids;
-  };
-  const effectiveCatalog = enabledUserProducts.length
-    ? buildCatalogFromUserProducts(enabledUserProducts)
-    : (productCatalog?.products || []);
-  const selectedIds = enabledUserProducts.length
-    ? buildSelectedIds(enabledUserProducts)
-    : (normalizedSetup.product_stack.selected_product_ids || []);
-  const roleMap = selectProductsByRole(effectiveCatalog, selectedIds, []);
-
-  const templateContext = buildTemplateContext({
-    normalizedSetup,
-    derived: {
-      net_water_volume_l: derivedNetVolume,
-      weekly_water_change_percent_range: weeklyWcPercentRange,
-      weekly_water_change_volume_l_range: weeklyWcVolumeRange
-    },
-    targets: effectiveTargets,
-    calculatorDefaults,
-    dosingReference,
-    roleMap
-  });
-
-  const phaseList = generatePhaseList({ setup, enginePackage, generatedAtIso });
-  const templates = phaseTemplates?.phase_templates || [];
-
-  const phases = phaseList.phases.map((phase) => {
-    const template = templates.find((entry) =>
-      entry.phase_id === phase.phase_id && entry.sequence_number === phase.sequence_number
-    ) || templates.find((entry) => entry.phase_id === phase.phase_id);
-    const contextWithModifiers = {
-      ...templateContext,
-      modifiers: phase.modifiers_applied || []
-    };
-    const atoms = (template?.atoms || []).filter((atom) => {
-      if (!atom.conditions || atom.conditions.length === 0) return true;
-      return atom.conditions.every((condition) => evaluateTemplateCondition(condition, contextWithModifiers));
-    });
-    const instruction_atoms = [];
-    const expected_behavior_atoms = [];
-    const task_atoms = [];
-    atoms.forEach((atom) => {
-      const text = renderMustacheLike(atom.text_template, contextWithModifiers);
-      if (atom.type === 'instruction') {
-        instruction_atoms.push({ text });
-      } else if (atom.type === 'expected_behaviour') {
-        expected_behavior_atoms.push(text);
-      } else if (atom.type === 'task') {
-        task_atoms.push({
-          text,
-          cadence: atom.cadence || 'one_time',
-          every_days: atom.every_days ?? atom.everyDays
-        });
-      }
-    });
-    return {
-      phase_id: phase.phase_id,
-      phase_name: template?.phase_name || phase.phase_name,
-      sequence_number: phase.sequence_number,
-      modifiers_applied: phase.modifiers_applied,
-      instruction_atoms,
-      expected_behavior_atoms,
-      task_atoms
-    };
-  });
-
-  return {
-    meta: {
-      generated_at_iso: generatedAtIso
-    },
-    phases
   };
 };
 
@@ -1538,6 +1340,10 @@ const recommendCycleMethod = (profile) => {
   let methodMotivation = 'Inert soil does not leech ammonia, so a dark start is unnecessary. You can cycle with lights on to establish roots.';
   const modifiers = [];
 
+  const silentCycleEligible = profile.plant_density === 'heavy'
+    && profile.co2_system
+    && profile.user_priority === 'growth';
+
   if (!profile.product_ammonia) {
     recommendedMethod = 'I1';
     methodMotivation = 'Without liquid ammonia, we cannot feed the bacteria artificially. We must carefully cycle with fish.';
@@ -1547,9 +1353,9 @@ const recommendCycleMethod = (profile) => {
   } else if (profile.substrate_type === 'aquasoil') {
     recommendedMethod = 'DS1';
     methodMotivation = 'Aquasoil leeches ammonia. Dark Start is the safest way to cycle without algae.';
-    if (profile.plant_density === 'heavy' && profile.user_priority === 'growth') {
+    if (silentCycleEligible) {
       recommendedMethod = 'PA1';
-      methodMotivation = 'Your heavy plant mass acts as a filter, allowing you to skip the Dark Start safely.';
+      methodMotivation = 'Your heavy plant mass plus CO2 enables a Silent Cycle, allowing you to skip the Dark Start safely while prioritizing growth.';
     } else if (profile.plant_density !== 'heavy' && profile.risk_tolerance === 'high') {
       recommendedMethod = 'F1';
       methodMotivation = "You have chosen the Hot Start. You are skipping the Dark Start to run lights immediately. This is risky: you must perform frequent water changes to remove leaching ammonia, or algae will take over.";
@@ -1558,9 +1364,9 @@ const recommendCycleMethod = (profile) => {
   } else if (profile.substrate_type === 'inert') {
     recommendedMethod = 'F1';
     methodMotivation = 'Inert soil does not leech ammonia, so a Dark Start is unnecessary. You can cycle with lights on to establish roots.';
-    if (profile.plant_density === 'heavy') {
+    if (silentCycleEligible) {
       recommendedMethod = 'PA1';
-      methodMotivation = "With so many plants, you can perform a Silent Cycle where plants consume the ammonia directly.";
+      methodMotivation = "With heavy planting and CO2, you can perform a Silent Cycle where plants consume the ammonia directly to prioritize growth.";
     }
   }
 
@@ -2004,6 +1810,5 @@ export {
   calcKhG,
   calcFertilizerMlWeek,
   generatePhaseList,
-  generatePhasesFromTemplates,
   generatePhasesFromPlaylists
 };

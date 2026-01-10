@@ -42,7 +42,7 @@ const WaterParameterChart: React.FC<Props> = ({ data, highlightedParam, targets 
       case 'temperature':
         return <ReferenceArea yAxisId="tertiary" y1={targets.temperature.min} y2={targets.temperature.max} fill={CHART_COLORS.temp} fillOpacity={0.1} stroke="none" />;
       case 'pH':
-        return <ReferenceArea yAxisId="tertiary" y1={targets.pH.min} y2={targets.pH.max} fill={CHART_COLORS.pH} fillOpacity={0.1} stroke="none" />;
+        return <ReferenceArea yAxisId="right" y1={targets.pH.min} y2={targets.pH.max} fill={CHART_COLORS.pH} fillOpacity={0.1} stroke="none" />;
       case 'hardness':
         return (
           <>
@@ -94,11 +94,11 @@ const WaterParameterChart: React.FC<Props> = ({ data, highlightedParam, targets 
         </div>
         <div className="flex flex-col text-center">
           <span className="text-[7px] font-black text-slate-500 uppercase tracking-tighter">Right 1</span>
-          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">dGH/dKH</span>
+          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">dGH/dKH/pH</span>
         </div>
         <div className="flex flex-col text-right">
           <span className="text-[7px] font-black text-slate-500 uppercase tracking-tighter">Right 2</span>
-          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Temp/pH</span>
+          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wide">Temp</span>
         </div>
       </div>
       
@@ -107,7 +107,7 @@ const WaterParameterChart: React.FC<Props> = ({ data, highlightedParam, targets 
         <ResponsiveContainer width="100%" height="100%">
           <LineChart 
             data={data} 
-            margin={{ top: 5, right: -10, left: -25, bottom: 20 }}
+            margin={{ top: 5, right: -10, left: -15, bottom: 20 }}
             style={{ outline: 'none' }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
@@ -137,7 +137,7 @@ const WaterParameterChart: React.FC<Props> = ({ data, highlightedParam, targets 
               style={{ pointerEvents: 'none' }}
             />
 
-            {/* Tertiary Axis: Temp, pH (0-40 scale) */}
+            {/* Tertiary Axis: Temp (0-40 scale) */}
             <YAxis 
               yAxisId="tertiary"
               orientation="right"
@@ -169,7 +169,7 @@ const WaterParameterChart: React.FC<Props> = ({ data, highlightedParam, targets 
               iconType="circle"
               iconSize={6}
               wrapperStyle={{ 
-                fontSize: '8px', 
+                fontSize: '9px', 
                 color: '#94a3b8',
                 paddingTop: '15px',
                 pointerEvents: 'none'
@@ -247,7 +247,7 @@ const WaterParameterChart: React.FC<Props> = ({ data, highlightedParam, targets 
               {...getLineStyle('temperature')}
             />
             <Line 
-              yAxisId="tertiary"
+              yAxisId="right"
               type="monotone" 
               dataKey="pH" 
               stroke={CHART_COLORS.pH} 

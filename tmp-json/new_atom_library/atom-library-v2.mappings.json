@@ -1,0 +1,361 @@
+{
+  "renames": {
+    "i_bio_fungus_expect": "e_bio_fungus_expect",
+    "i_expect_algae_diatoms": "e_expect_algae_diatoms",
+    "i_expect_cloudy_water": "e_expect_cloudy_water",
+    "i_expect_surface_scum": "e_expect_surface_scum",
+    "i_expect_ammonia_drop_speed": "e_expect_ammonia_drop_speed",
+    "i_expect_slimy_walls": "e_expect_slimy_walls",
+    "i_expect_nothing_happening": "e_expect_nothing_happening",
+    "i_expect_plant_transition": "e_expect_plant_transition",
+    "i_expect_brown_diatoms": "e_expect_brown_diatoms",
+    "i_expect_purple_nitrite": "e_expect_purple_nitrite",
+    "i_expect_ammonia_hunger": "e_expect_ammonia_hunger",
+    "i_expect_ph_crash_warning": "e_expect_ph_crash_warning",
+    "i_expect_detritus_buildup": "e_expect_detritus_buildup",
+    "i_expect_fish_hiding": "e_expect_fish_hiding",
+    "i_expect_fish_pale": "e_expect_fish_pale",
+    "i_expect_fish_glass_surfing": "e_expect_fish_glass_surfing",
+    "i_expect_fish_schooling_tight": "e_expect_fish_schooling_tight",
+    "i_expect_bottom_dweller_zoom": "e_expect_bottom_dweller_zoom",
+    "i_expect_shrimp_molt": "e_expect_shrimp_molt",
+    "i_expect_shrimp_hiding": "e_expect_shrimp_hiding",
+    "i_expect_shrimp_color_loss": "e_expect_shrimp_color_loss",
+    "i_expect_shrimp_zoomies": "e_expect_shrimp_zoomies",
+    "i_expect_shrimp_play_dead": "e_expect_shrimp_play_dead",
+    "i_fishless_plant_melt_warning": "e_fishless_plant_melt_warning",
+    "e_expect_surface_scum": "e_surface_scum",
+    "e_expect_ammonia_drop_speed": "e_ammonia_drop_speed",
+    "e_expect_slimy_walls": "e_slimy_walls",
+    "e_expect_nothing_happening": "e_nothing_happening",
+    "e_expect_plant_transition": "e_plant_transition",
+    "e_expect_purple_nitrite": "e_purple_nitrite",
+    "e_expect_ammonia_hunger": "e_ammonia_hunger",
+    "e_expect_ph_crash_warning": "e_ph_crash_warning",
+    "e_expect_detritus_buildup": "e_detritus_buildup",
+    "e_expect_shrimp_molt": "e_shrimp_molt",
+    "e_fishless_plant_melt_warning": "e_plant_melt_high_ammonia",
+    "e_diatoms_brown_algae": "e_cycle_diatoms_brown_algae",
+    "e_cloudy_water_bloom": "e_water_cloudy_bloom",
+    "e_wood_tannins_fungus": "e_hard_tannins_fungus",
+    "e_new_fish_stress": "e_stock_new_fish_stress",
+    "e_new_shrimp_stress": "e_stock_new_shrimp_stress",
+    "e_sudden_darting": "e_stock_sudden_darting",
+    "e_surface_scum": "e_water_surface_scum",
+    "e_ammonia_drop_speed": "e_cycle_ammonia_drop_speed",
+    "e_slimy_walls": "e_bio_slimy_walls",
+    "e_nothing_happening": "e_cycle_nothing_happening",
+    "e_purple_nitrite": "e_cycle_purple_nitrite",
+    "e_ammonia_hunger": "e_cycle_ammonia_hunger",
+    "e_ph_crash_warning": "e_cycle_ph_crash_warning",
+    "e_detritus_buildup": "e_bio_detritus_buildup",
+    "e_shrimp_molt": "e_stock_shrimp_molt",
+    "i_intro_dark_start": "i_intro_fishless_dark_start",
+    "i_intro_dark_cycling": "i_intro_fishless_dark_cycling",
+    "i_intro_fish_in": "i_intro_fishin_light_setup",
+    "i_intro_fish_in_minimal": "i_intro_fishin_light_setup_low",
+    "i_intro_plant_assisted_silent": "i_intro_silent_setup",
+    "i_intro_ferts_aquasoil_delay": "i_intro_silent_fert_aquasoil_delay",
+    "i_intro_ferts_inert_start": "i_intro_silent_fert_inert_start",
+    "i_intro_maintenance_phase": "i_intro_fishless_dark_ammonia_maintenance",
+    "i_intro_maintenance_phase_lights_on": "i_intro_fishless_light_ammonia_maintenance",
+    "i_intro_cycle_verification": "i_intro_fishless_dark_cycle_verification",
+    "i_intro_cycle_verification_fishless": "i_intro_fishless_light_cycle_verification",
+    "i_intro_fish_in_watch": "i_intro_fishin_light_toxin_watch",
+    "i_intro_fish_in_nitrite_watch": "i_intro_fishin_light_nitrite_watch",
+    "i_intro_silent_watch": "i_intro_silent_growth_watch",
+    "i_intro_stocking_cleanup": "i_intro_silent_ready_for_stocking",
+    "i_intro_fishless_light": "i_intro_fishless_light_cycle_setup",
+    "i_intro_cycle_complete": "i_intro_fishless_dark_cycle_complete",
+    "i_bio_nitrite_spike_warning": "i_cycle_nitrite_spike_warning",
+    "i_cycle_aquasoil_warning": "i_cycle_ammonia_aquasoil_caution",
+    "i_cycle_inert_dose_intro": "i_cycle_ammonia_dose_inert",
+    "i_cycle_nitrite_clear_signal": "i_cycle_nitrite_clear_goal",
+    "i_fishless_algae_warning": "i_cycle_algae_light_warning",
+    "t_cycle_dose_ammonia_conditional_interval": "t_cycle_ammonia_dose_when_zero",
+    "t_cycle_dose_ammonia_initial": "t_cycle_ammonia_dose_initial",
+    "t_cycle_dose_bacteria_daily": "t_cycle_bacteria_dose_daily",
+    "t_cycle_dose_bacteria_one_time": "t_cycle_bacteria_dose_once",
+    "i_chem_baseline_note": "i_chem_baseline_ph_gh_kh",
+    "t_chem_test_ammonia_daily": "t_chem_ammonia_test_daily",
+    "t_chem_test_ammonia_24h": "t_chem_ammonia_test_24h",
+    "t_chem_test_ammonia_interval": "t_chem_ammonia_test_interval",
+    "t_chem_test_nitrite_daily": "t_chem_nitrite_test_daily",
+    "t_chem_test_nitrite_24h": "t_chem_nitrite_test_24h",
+    "t_chem_test_nitrite_interval": "t_chem_nitrite_test_interval",
+    "t_chem_test_nitrates": "t_chem_nitrate_test_weekly",
+    "i_chem_test_nitrate_progress": "i_chem_nitrate_progress_check",
+    "i_chem_test_nitrite_watch": "i_chem_nitrite_watch",
+    "i_test_24h_wait_instruction": "i_chem_wait_24h_before_test",
+    "i_chem_conditioner_bind_note": "i_chem_conditioner_binding_note",
+    "t_chem_test_ph": "t_chem_ph_test_once",
+    "t_chem_test_ph_weekly": "t_chem_ph_test_weekly",
+    "t_chem_test_gh": "t_chem_gh_test_once",
+    "t_chem_test_kh": "t_chem_kh_test_once",
+    "i_co2_start_high_saturation": "i_co2_start_high_saturation_fishless",
+    "t_co2_turn_on_initial": "t_co2_turn_on_initial_setup",
+    "t_co2_check_off": "t_co2_confirm_off",
+    "i_co2_intro_stress": "i_co2_wait_for_fish",
+    "i_co2_target_dark_green": "i_co2_target_dark_green_safe",
+    "i_co2_target_yellow_growth": "i_co2_target_yellow_green_growth",
+    "i_co2_timing_on_off": "i_co2_timer_on_off",
+    "i_co2_adjust_safe": "i_co2_adjust_safe_before_stocking",
+    "t_co2_maint_monthly": "t_co2_maintenance_monthly",
+    "i_equip_lights_dark_rule": "i_light_dark_rule",
+    "t_equip_lights_check_off": "t_light_confirm_off",
+    "t_equip_lights_set_start": "t_light_set_initial_timer",
+    "t_equip_lights_set_6h": "t_light_set_6h",
+    "t_equip_lights_set_minimal": "t_light_set_minimal",
+    "t_equip_lights_ramp_weekly": "t_light_ramp_weekly",
+    "i_light_ramp_weekly_advice": "i_light_ramp_advice_weekly",
+    "i_equip_lights_on_guidance": "i_light_turn_on_guidance",
+    "i_equip_light_strategy_ramp": "i_light_ramp_strategy",
+    "t_equip_filter_on": "i_equip_filter_on",
+    "i_equip_heater_adjust_target": "i_equip_heater_target_reset",
+    "t_equip_heater_adjust_target": "t_equip_heater_set_target",
+    "i_plant_assisted_light_on": "i_plant_light_on_6h",
+    "i_plant_dense_advice": "i_plant_dense_planting_advice",
+    "t_plant_epiphytes": "t_plant_epiphytes_attach",
+    "i_plant_prep_wool_removal": "i_plant_prep_remove_wool",
+    "i_plant_mist_warning": "i_plant_mist_during_setup",
+    "t_plant_stems": "t_plant_stems_plant",
+    "t_plant_root_tabs": "t_plant_root_tabs_insert",
+    "i_plant_light_on_6h": "i_light_on_6h_for_plants",
+    "t_fert_dose_start_half": "t_fert_start_half_dose_weekly",
+    "t_fert_dose_start_half_once": "t_fert_dose_half_once",
+    "t_fert_dose_maintenance": "t_fert_dose_maintenance_weekly",
+    "t_fert_dose_full_transition": "t_fert_dose_full_weekly_transition",
+    "i_fert_increase_if_pale": "i_fert_increase_if_pale_leaves",
+    "t_fert_start_half_dose_weekly": "i_fert_start_half_dose_weekly",
+    "i_stock_co2_safety_check": "i_stock_co2_lime_green_check",
+    "t_stock_detox_daily": "t_stock_detoxifier_dose_daily",
+    "t_stock_bind_nitrite_daily": "t_stock_detoxifier_bind_nitrite_daily",
+    "i_fish_acclimation": "i_stock_fish_acclimation_guide",
+    "i_shrimp_acclimation": "i_stock_shrimp_acclimation_guide",
+    "i_stock_add_in_batches": "i_stock_add_in_batches_weekly",
+    "i_stock_shrimp_warning": "i_stock_shrimp_wait_warning",
+    "i_stock_shrimp_warning_dark_start": "i_stock_shrimp_wait_warning_dark_start",
+    "t_stock_acclimate_fish": "t_stock_fish_acclimate",
+    "t_stock_acclimate_shrimp": "t_stock_shrimp_acclimate",
+    "i_stock_cleanup_crew": "i_stock_cleanup_crew_start_light",
+    "i_stock_behavior_gasping": "i_stock_fish_gasping_emergency",
+    "i_stock_feed_initial": "i_stock_feed_initial_light",
+    "i_stock_feed_routine": "i_stock_feed_every_other_day_guidance",
+    "i_stock_feed_routine_long_haul": "i_stock_feed_every_other_day_long_haul",
+    "i_stock_co2_lime_green_check": "i_co2_lime_green_check_before_stocking",
+    "t_substrate_rinse_inert": "t_sub_rinse_inert",
+    "i_sub_no_rinse_aqua": "i_sub_no_rinse_aquasoil",
+    "t_substrate_place_slope": "t_sub_place_slope",
+    "i_hard_rinse_stone": "i_hard_rinse_stones",
+    "i_hard_soak_wood": "i_hard_soak_driftwood",
+    "i_hardscape_composition_tips": "i_hard_composition_tips",
+    "t_hardscape_finalize": "t_hard_finalize_layout",
+    "t_maint_trim_plants": "t_maint_trim_melting_plants",
+    "t_maint_prep_conditioner": "t_maint_prep_conditioner_weekly",
+    "t_maint_wc_conditional_nitrite_daily": "t_maint_wc_nitrite_daily",
+    "t_maint_prep_gh": "t_maint_prep_gh_weekly",
+    "t_maint_prep_kh": "t_maint_prep_kh_weekly",
+    "t_maint_prep_ghkh": "t_maint_prep_ghkh_weekly",
+    "t_maint_filter_monthly": "t_maint_filter_clean_monthly",
+    "i_maint_filter_no_clean_early": "i_maint_filter_do_not_clean_early",
+    "i_maint_wc_conditional_nitrite": "i_maint_wc_nitrite_rule",
+    "i_water_fill_prep_bag": "i_water_fill_prep_bag_or_plate",
+    "i_water_chlorine_check": "i_water_chlorine_treat_full_volume",
+    "t_water_dose_conditioner_fill": "t_water_conditioner_dose_full_fill",
+    "t_water_dose_ghkh_fill": "t_water_ghkh_dose_full_fill",
+    "t_water_dose_gh_fill": "t_water_gh_dose_full_fill",
+    "t_water_dose_kh_fill": "t_water_kh_dose_full_fill",
+    "i_transition_fishless_success": "i_intro_fishless_light_transition_success",
+    "i_transition_maturity_success": "i_intro_transition_maturity",
+    "i_completion_test_fail_back": "i_chem_completion_test_fail_back",
+    "i_equip_co2_strategy_off": "i_co2_strategy_off_during_cycle",
+    "i_transition_co2_monitor": "i_co2_monitor_stability"
+  },
+  "merges": [
+    {
+      "into": "e_diatoms_brown_algae",
+      "from": [
+        "e_expect_algae_diatoms",
+        "e_expect_brown_diatoms"
+      ]
+    },
+    {
+      "into": "e_cloudy_water_bloom",
+      "from": [
+        "e_water_cloudy_normal",
+        "e_expect_cloudy_water"
+      ]
+    },
+    {
+      "into": "e_wood_tannins_fungus",
+      "from": [
+        "e_hardscape_tannins_normal",
+        "e_bio_fungus_expect"
+      ]
+    },
+    {
+      "into": "e_new_fish_stress",
+      "from": [
+        "e_expect_fish_hiding",
+        "e_expect_fish_pale",
+        "e_expect_fish_glass_surfing",
+        "e_expect_fish_schooling_tight"
+      ]
+    },
+    {
+      "into": "e_new_shrimp_stress",
+      "from": [
+        "e_expect_shrimp_hiding",
+        "e_expect_shrimp_color_loss",
+        "e_expect_shrimp_play_dead"
+      ]
+    },
+    {
+      "into": "e_sudden_darting",
+      "from": [
+        "e_expect_bottom_dweller_zoom",
+        "e_expect_shrimp_zoomies"
+      ]
+    },
+    {
+      "into": "i_light_ramp_strategy",
+      "from": [
+        "i_light_ramp_advice_weekly",
+        "i_light_ramp_strategy"
+      ]
+    },
+    {
+      "into": "t_light_set_6h",
+      "from": [
+        "t_light_set_initial_timer",
+        "t_light_set_minimal",
+        "t_light_set_6h"
+      ]
+    },
+    {
+      "into": "i_stock_shrimp_wait_warning",
+      "from": [
+        "i_stock_shrimp_wait_warning",
+        "i_stock_shrimp_wait_warning_dark_start"
+      ]
+    },
+    {
+      "into": "t_stock_detoxifier_dose_daily",
+      "from": [
+        "t_stock_detoxifier_dose_daily",
+        "t_stock_detoxifier_bind_nitrite_daily"
+      ]
+    },
+    {
+      "into": "i_stock_detox_advice",
+      "from": [
+        "i_stock_detox_advice",
+        "i_stock_detox_emergency_advice"
+      ]
+    },
+    {
+      "into": "i_stock_feed_every_other_day_guidance",
+      "from": [
+        "i_stock_feed_every_other_day_guidance",
+        "i_stock_feed_initial_light"
+      ]
+    },
+    {
+      "into": "i_maint_wc_nitrite_rule",
+      "from": [
+        "i_maint_wc_nitrite_rule",
+        "i_maint_wc_emergency"
+      ]
+    }
+  ],
+  "allowed_categories": [
+    "e_bio",
+    "e_cycle",
+    "e_hard",
+    "e_plant",
+    "e_stock",
+    "e_water",
+    "i_chem",
+    "i_co2",
+    "i_cycle",
+    "i_equip",
+    "i_fert",
+    "i_hard",
+    "i_light",
+    "i_maint",
+    "i_plant",
+    "i_stock",
+    "i_sub",
+    "i_water",
+    "t_chem",
+    "t_co2",
+    "t_cycle",
+    "t_equip",
+    "t_fert",
+    "t_hard",
+    "t_light",
+    "t_maint",
+    "t_plant",
+    "t_stock",
+    "t_sub",
+    "t_water"
+  ],
+  "allowed_intro_categories": [
+    "i_intro_fishin_dark",
+    "i_intro_fishin_light",
+    "i_intro_fishless_dark",
+    "i_intro_fishless_light",
+    "i_intro_silent",
+    "i_intro_transition"
+  ],
+  "moves": [
+    {
+      "from": "plants-atom-library.json",
+      "to": "lighting-atom-library.json",
+      "id": "i_plant_light_on_6h",
+      "new_id": "i_light_on_6h_for_plants"
+    },
+    {
+      "from": "stocking-atom-library.json",
+      "to": "co2-atom-library.json",
+      "id": "i_stock_co2_lime_green_check",
+      "new_id": "i_co2_lime_green_check_before_stocking"
+    },
+    {
+      "from": "missing-from-playlists-atom-library.json",
+      "to": "intro-atom-library.json",
+      "id": "i_transition_fishless_success",
+      "new_id": "i_intro_fishless_light_transition_success"
+    },
+    {
+      "from": "missing-from-playlists-atom-library.json",
+      "to": "intro-atom-library.json",
+      "id": "i_transition_maturity_success",
+      "new_id": "i_intro_transition_maturity"
+    },
+    {
+      "from": "missing-from-playlists-atom-library.json",
+      "to": "water-chem-atom-library.json",
+      "id": "i_completion_test_fail_back",
+      "new_id": "i_chem_completion_test_fail_back"
+    },
+    {
+      "from": "missing-from-playlists-atom-library.json",
+      "to": "co2-atom-library.json",
+      "id": "i_equip_co2_strategy_off",
+      "new_id": "i_co2_strategy_off_during_cycle"
+    },
+    {
+      "from": "missing-from-playlists-atom-library.json",
+      "to": "co2-atom-library.json",
+      "id": "i_transition_co2_monitor",
+      "new_id": "i_co2_monitor_stability"
+    }
+  ],
+  "notes": [
+    {
+      "id": "i_fert_start_half_dose_weekly",
+      "note": "Converted from a task; verify playlist references and cadence expectations later."
+    }
+  ]
+}

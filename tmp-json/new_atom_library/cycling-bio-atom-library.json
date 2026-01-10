@@ -1,0 +1,65 @@
+{
+  "atom_library": {
+    "i_cycle_nitrite_spike_warning": {
+      "type": "instruction",
+      "text_template": "Nitrite is now spiking. This is the longest part of the cycle. Do NOT add livestock yet."
+    },
+    "i_cycle_ammonia_aquasoil_caution": {
+      "type": "instruction",
+      "text_template": "Your Aquasoil is likely releasing high amounts of ammonia already. We must test before dosing to avoid overdosing the tank.",
+      "conditions": [
+        "setup.substrate_type == 'aquasoil'"
+      ]
+    },
+    "i_cycle_ammonia_dose_inert": {
+      "type": "instruction",
+      "text_template": "Inert substrate requires manual ammonia dosing to start the cycle.",
+      "conditions": [
+        "setup.substrate_type == 'inert'",
+        "products.ammonia_source.selected == true"
+      ]
+    },
+    "i_cycle_nitrite_clear_goal": {
+      "type": "instruction",
+      "text_template": "The Goal: We are waiting for the day when you test and see 0 ppm Ammonia AND 0 ppm Nitrite. When that happens, your bacteria are ready for the final 24-hour challenge."
+    },
+    "i_cycle_algae_light_warning": {
+      "type": "instruction",
+      "text_template": "Warning: High Ammonia combined with strong light often triggers algae. If you don't have many plants yet, keep your lighting duration short (6 hours max).",
+      "conditions": []
+    },
+    "t_cycle_ammonia_dose_when_zero": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Only if Ammonia is 0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.",
+      "conditions": [
+        "products.ammonia_source.selected == true"
+      ]
+    },
+    "t_cycle_ammonia_dose_initial": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}.",
+      "conditions": [
+        "products.ammonia_source.selected == true"
+      ]
+    },
+    "t_cycle_bacteria_dose_daily": {
+      "type": "task",
+      "cadence": "daily",
+      "text_template": "Add {{products.bacteria_starter.dose_text}} of {{products.bacteria_starter.display_name}}.",
+      "conditions": [
+        "products.bacteria_starter.selected == true"
+      ]
+    },
+    "t_cycle_bacteria_dose_once": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{products.bacteria_starter.display_name}} (Check label for 'New Tank' dose).",
+      "conditions": [
+        "products.bacteria_starter.selected == true"
+      ]
+    }
+  }
+}

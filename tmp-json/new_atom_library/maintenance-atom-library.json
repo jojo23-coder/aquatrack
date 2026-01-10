@@ -1,0 +1,104 @@
+{
+  "atom_library": {
+    "i_maint_filter_do_not_clean_early": {
+      "type": "instruction",
+      "text_template": "Do NOT clean your filter yet. The brown sludge building up inside is the bacterial colony we are trying to grow."
+    },
+    "i_maint_wc_inert_emergency": {
+      "type": "instruction",
+      "text_template": "Emergency Water Change: Only change water if Ammonia > 1.0ppm.",
+      "conditions": [
+        "setup.substrate_type != 'aquasoil'"
+      ]
+    },
+    "i_maint_wc_nitrite_rule": {
+      "type": "instruction",
+      "text_template": "Rule: If Ammonia or Nitrite is above 0.5 ppm, perform a 50% water change immediately.",
+      "conditions": [
+        "livestock.has_fish == true || livestock.has_shrimp == true"
+      ]
+    },
+    "i_maint_wc_reset": {
+      "type": "instruction",
+      "text_template": "Perform a massive **70–80% Water Change**. \n\n**Why?** Your Nitrate levels are likely very high from the cycling process. We need to 'reset' the water to safe levels (Nitrate < 30ppm) before the fish arrive.",
+      "conditions": []
+    },
+    "t_maint_filter_clean_monthly": {
+      "type": "task",
+      "cadence": "monthly",
+      "text_template": "Rinse filter sponges in old tank water. Never use tap water.",
+      "conditions": []
+    },
+    "t_maint_prep_conditioner_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Add {{doses.detoxifier_conditioner.wc_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} to the bucket.",
+      "conditions": [
+        "source_water.has_chlorine == true",
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "t_maint_prep_gh_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dissolve {{doses.gh_remineralizer.gh_remineralizer_g_wc_range}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in the bucket.",
+      "conditions": [
+        "products.gh_remineralizer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_maint_prep_ghkh_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dissolve {{doses.gh_kh_remineralizer.wc_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} in the bucket.",
+      "conditions": [
+        "products.gh_kh_remineralizer.selected == true"
+      ]
+    },
+    "t_maint_prep_kh_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dissolve {{doses.kh_buffer.kh_buffer_g_wc_range}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in the bucket.",
+      "conditions": [
+        "products.kh_buffer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_maint_trim_melting_plants": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Trim and remove any melting leaves/stems.",
+      "conditions": []
+    },
+    "t_maint_wc_aquasoil_frequent": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Perform a 30-50% water change. Remove excess ammonia leaching from the new soil to prevent algae.",
+      "conditions": [
+        "setup.substrate_type == 'aquasoil'"
+      ]
+    },
+    "t_maint_wc_nitrite_daily": {
+      "type": "task",
+      "cadence": "daily",
+      "text_template": "Conditional: If Nitrite is **> 0.5 ppm**, perform a 50% water change immediately.",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "t_maint_wc_reset": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Drain and refill 70–80% of the tank water.",
+      "conditions": []
+    },
+    "t_maint_wc_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Perform a {{derived.weekly_water_change_percent_range}}% water change.",
+      "conditions": []
+    }
+  }
+}

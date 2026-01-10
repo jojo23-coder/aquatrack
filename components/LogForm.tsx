@@ -95,7 +95,7 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
   };
 
   const labelClasses = "text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1 block";
-  const inputClasses = "w-full p-3.5 bg-slate-800 border border-slate-700 rounded-2xl text-base text-slate-100 placeholder-slate-600 focus:ring-2 focus:ring-slate-400 outline-none transition-all appearance-none";
+  const inputClasses = "w-full p-3 bg-slate-800 border border-slate-700 rounded-2xl text-sm text-slate-100 placeholder-slate-600 focus:ring-2 focus:ring-slate-400 outline-none transition-all appearance-none";
 
   const phDrop = (() => {
     const degassed = parseFloat(formData.degassedPH);
@@ -237,7 +237,7 @@ const LogForm: React.FC<Props> = ({ onAdd, initialData }) => {
         <textarea 
           value={formData.notes}
           onChange={e => setFormData({...formData, notes: e.target.value})}
-          className={`${inputClasses} min-h-[80px] resize-none`}
+          className={`${inputClasses} min-h-[110px] resize-none !rounded-md`}
           placeholder="Feeding, behavior, etc."
         />
       </div>
