@@ -396,14 +396,6 @@ const App: React.FC = () => {
     },
     engineSetup: {
       ...defaultEngineSetup,
-      protocol_preferences: {
-        cycling: false,
-        maintenance: false,
-        stocking: false,
-        plant_care: false,
-        alerts: false,
-        emergency: false
-      },
       protocol_overrides: {
         cycling: false,
         dark_start: false,
