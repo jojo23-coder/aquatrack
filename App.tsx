@@ -774,6 +774,55 @@ const App: React.FC = () => {
 
   const formatCsvList = (values: string[]) => values.join(', ');
 
+  const sanitizeDecimalInput = (value: string) => {
+    const normalized = value.replace(/,/g, '.').replace(/\s+/g, '');
+    let cleaned = '';
+    let hasDot = false;
+    for (const char of normalized) {
+      if (char >= '0' && char <= '9') {
+        cleaned += char;
+        continue;
+      }
+      if (char === '.' && !hasDot) {
+        cleaned += char;
+        hasDot = true;
+      }
+    }
+    return cleaned;
+  };
+
+  const [setupDrafts, setSetupDrafts] = useState<Record<string, string>>({});
+
+  const getSetupDraftValue = (key: string, fallback: number | string | undefined) => {
+    if (Object.prototype.hasOwnProperty.call(setupDrafts, key)) {
+      return setupDrafts[key];
+    }
+    return fallback === undefined || fallback === null ? '' : String(fallback);
+  };
+
+  const commitSetupDraftNumber = (
+    key: string,
+    rawValue: string,
+    onCommit: (value: number) => void
+  ) => {
+    const cleaned = sanitizeDecimalInput(rawValue);
+    setSetupDrafts(prev => ({ ...prev, [key]: cleaned }));
+    if (cleaned === '') return;
+    const parsed = parseFloat(cleaned);
+    if (!Number.isNaN(parsed)) {
+      onCommit(parsed);
+    }
+  };
+
+  const clearSetupDraft = (key: string) => {
+    setSetupDrafts(prev => {
+      if (!Object.prototype.hasOwnProperty.call(prev, key)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
   const parseNumber = (value: string, fallback = 0) => {
     const normalized = value.replace(',', '.').trim();
     const parsed = parseFloat(normalized);
@@ -1713,16 +1762,24 @@ const App: React.FC = () => {
                     <div className="space-y-1.5">
                       <label className={setupLabelClasses}>Gross Volume (L)</label>
                       <input
-                        type="number"
-                        value={aquarium.engineSetup.tank_profile.tank_volume_l_gross}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          tank_profile: { ...prev.tank_profile, tank_volume_l_gross: parseNumber(e.target.value) }
-                        }))}
-                        onBlur={e => setAquarium(prev => ({
-                          ...prev,
-                          tankSize: parseNumber(e.target.value, prev.tankSize)
-                        }))}
+                        type="text"
+                        inputMode="decimal"
+                        value={getSetupDraftValue('tank_volume_l_gross', aquarium.engineSetup.tank_profile.tank_volume_l_gross)}
+                        onChange={e => commitSetupDraftNumber('tank_volume_l_gross', e.target.value, (value) => {
+                          updateEngineSetup(prev => ({
+                            ...prev,
+                            tank_profile: { ...prev.tank_profile, tank_volume_l_gross: value }
+                          }));
+                        })}
+                        onBlur={() => {
+                          const draftValue = setupDrafts.tank_volume_l_gross;
+                          const parsed = draftValue ? parseFloat(draftValue) : aquarium.engineSetup.tank_profile.tank_volume_l_gross;
+                          setAquarium(prev => ({
+                            ...prev,
+                            tankSize: Number.isNaN(parsed) ? prev.tankSize : parsed
+                          }));
+                          clearSetupDraft('tank_volume_l_gross');
+                        }}
                         className={setupInputClasses}
                       />
                     </div>
@@ -1745,12 +1802,28 @@ const App: React.FC = () => {
                     <div className="space-y-1.5">
                       <label className={setupLabelClasses}>Net Water Volume (L)</label>
                       <input
-                        type="number"
-                        value={aquarium.engineSetup.tank_profile.net_water_volume_l ?? ''}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          tank_profile: { ...prev.tank_profile, net_water_volume_l: parseOptionalNumber(e.target.value) ?? undefined }
-                        }))}
+                        type="text"
+                        inputMode="decimal"
+                        value={getSetupDraftValue('net_water_volume_l', aquarium.engineSetup.tank_profile.net_water_volume_l)}
+                        onChange={e => {
+                          const cleaned = sanitizeDecimalInput(e.target.value);
+                          setSetupDrafts(prev => ({ ...prev, net_water_volume_l: cleaned }));
+                          if (cleaned === '') {
+                            updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: { ...prev.tank_profile, net_water_volume_l: undefined }
+                            }));
+                            return;
+                          }
+                          const parsed = parseFloat(cleaned);
+                          if (!Number.isNaN(parsed)) {
+                            updateEngineSetup(prev => ({
+                              ...prev,
+                              tank_profile: { ...prev.tank_profile, net_water_volume_l: parsed }
+                            }));
+                          }
+                        }}
+                        onBlur={() => clearSetupDraft('net_water_volume_l')}
                         className={setupInputClasses}
                       />
                     </div>
@@ -1849,24 +1922,32 @@ const App: React.FC = () => {
                   <div className="space-y-1.5">
                     <label className={setupLabelClasses}>Tap pH</label>
                     <input
-                      type="number" step="0.1"
-                      value={aquarium.engineSetup.water_source_profile.tap_ph}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        water_source_profile: { ...prev.water_source_profile, tap_ph: parseNumber(e.target.value, 7) }
-                      }))}
+                      type="text"
+                      inputMode="decimal"
+                      value={getSetupDraftValue('tap_ph', aquarium.engineSetup.water_source_profile.tap_ph)}
+                      onChange={e => commitSetupDraftNumber('tap_ph', e.target.value, (value) => {
+                        updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: { ...prev.water_source_profile, tap_ph: value }
+                        }));
+                      })}
+                      onBlur={() => clearSetupDraft('tap_ph')}
                       className={setupInputClasses}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className={setupLabelClasses}>Tap GH (dGH)</label>
                     <input
-                      type="number" step="0.1"
-                      value={aquarium.engineSetup.water_source_profile.tap_gh_dgh}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        water_source_profile: { ...prev.water_source_profile, tap_gh_dgh: parseNumber(e.target.value, 0) }
-                      }))}
+                      type="text"
+                      inputMode="decimal"
+                      value={getSetupDraftValue('tap_gh_dgh', aquarium.engineSetup.water_source_profile.tap_gh_dgh)}
+                      onChange={e => commitSetupDraftNumber('tap_gh_dgh', e.target.value, (value) => {
+                        updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: { ...prev.water_source_profile, tap_gh_dgh: value }
+                        }));
+                      })}
+                      onBlur={() => clearSetupDraft('tap_gh_dgh')}
                       className={setupInputClasses}
                     />
                   </div>
@@ -1875,27 +1956,35 @@ const App: React.FC = () => {
                   <div className="space-y-1.5">
                     <label className={setupLabelClasses}>Tap KH (dKH)</label>
                     <input
-                      type="number" step="0.1"
-                      value={aquarium.engineSetup.water_source_profile.tap_kh_dkh}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        water_source_profile: { ...prev.water_source_profile, tap_kh_dkh: parseNumber(e.target.value, 2) }
-                      }))}
+                      type="text"
+                      inputMode="decimal"
+                      value={getSetupDraftValue('tap_kh_dkh', aquarium.engineSetup.water_source_profile.tap_kh_dkh)}
+                      onChange={e => commitSetupDraftNumber('tap_kh_dkh', e.target.value, (value) => {
+                        updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: { ...prev.water_source_profile, tap_kh_dkh: value }
+                        }));
+                      })}
+                      onBlur={() => clearSetupDraft('tap_kh_dkh')}
                       className={setupInputClasses}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className={setupLabelClasses}>Water Change %</label>
                     <input
-                      type="number"
-                      value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target}
-                      onChange={e => updateEngineSetup(prev => ({
-                        ...prev,
-                        water_source_profile: {
-                          ...prev.water_source_profile,
-                          weekly_water_change_percent_target: parseNumber(e.target.value, 30)
-                        }
-                      }))}
+                      type="text"
+                      inputMode="decimal"
+                      value={getSetupDraftValue('weekly_wc_percent', aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target)}
+                      onChange={e => commitSetupDraftNumber('weekly_wc_percent', e.target.value, (value) => {
+                        updateEngineSetup(prev => ({
+                          ...prev,
+                          water_source_profile: {
+                            ...prev.water_source_profile,
+                            weekly_water_change_percent_target: value
+                          }
+                        }));
+                      })}
+                      onBlur={() => clearSetupDraft('weekly_wc_percent')}
                       className={setupInputClasses}
                     />
                   </div>
@@ -1904,13 +1993,16 @@ const App: React.FC = () => {
                     <div className="space-y-1.5">
                       <label className={setupLabelClasses}>Tap Ammonia (ppm)</label>
                       <input
-                        type="number"
-                        step="0.1"
-                        value={aquarium.engineSetup.water_source_profile.tap_ammonia_ppm}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          water_source_profile: { ...prev.water_source_profile, tap_ammonia_ppm: parseNumber(e.target.value, 0) }
-                        }))}
+                        type="text"
+                        inputMode="decimal"
+                        value={getSetupDraftValue('tap_ammonia_ppm', aquarium.engineSetup.water_source_profile.tap_ammonia_ppm)}
+                        onChange={e => commitSetupDraftNumber('tap_ammonia_ppm', e.target.value, (value) => {
+                          updateEngineSetup(prev => ({
+                            ...prev,
+                            water_source_profile: { ...prev.water_source_profile, tap_ammonia_ppm: value }
+                          }));
+                        })}
+                        onBlur={() => clearSetupDraft('tap_ammonia_ppm')}
                         className={setupInputClasses}
                       />
                     </div>
@@ -1948,10 +2040,13 @@ const App: React.FC = () => {
                       <div key={target.id} className="space-y-1">
                         <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">{target.label}</label>
                         <input
-                          type="number"
-                          step={target.step}
-                          value={getTargetCenter(aquarium.targets[target.key as keyof typeof aquarium.targets] as ParameterRange)}
-                          onChange={e => updateTargetCenter(target.key as keyof typeof targetSpreads, parseNumber(e.target.value))}
+                          type="text"
+                          inputMode="decimal"
+                          value={getSetupDraftValue(`target_${target.key}`, getTargetCenter(aquarium.targets[target.key as keyof typeof aquarium.targets] as ParameterRange))}
+                          onChange={e => commitSetupDraftNumber(`target_${target.key}`, e.target.value, (value) => {
+                            updateTargetCenter(target.key as keyof typeof targetSpreads, value);
+                          })}
+                          onBlur={() => clearSetupDraft(`target_${target.key}`)}
                           className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
                         />
                         <span className="text-[9px] text-slate-500 ml-1">
@@ -1965,18 +2060,26 @@ const App: React.FC = () => {
                     <div>
                       <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Ammonia Max</label>
                       <input
-                        type="number" step="0.01"
-                        value={aquarium.targets.ammonia}
-                        onChange={e => updateTarget('ammonia', 'val', parseNumber(e.target.value))}
+                        type="text"
+                        inputMode="decimal"
+                        value={getSetupDraftValue('target_ammonia', aquarium.targets.ammonia)}
+                        onChange={e => commitSetupDraftNumber('target_ammonia', e.target.value, (value) => {
+                          updateTarget('ammonia', 'val', value);
+                        })}
+                        onBlur={() => clearSetupDraft('target_ammonia')}
                         className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
                       />
                     </div>
                     <div>
                       <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Nitrite Max</label>
                       <input
-                        type="number" step="0.01"
-                        value={aquarium.targets.nitrite}
-                        onChange={e => updateTarget('nitrite', 'val', parseNumber(e.target.value))}
+                        type="text"
+                        inputMode="decimal"
+                        value={getSetupDraftValue('target_nitrite', aquarium.targets.nitrite)}
+                        onChange={e => commitSetupDraftNumber('target_nitrite', e.target.value, (value) => {
+                          updateTarget('nitrite', 'val', value);
+                        })}
+                        onBlur={() => clearSetupDraft('target_nitrite')}
                         className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
                       />
                     </div>
@@ -2249,24 +2352,32 @@ const App: React.FC = () => {
                       <div className="space-y-1.5">
                         <label className={setupLabelClasses}>Photoperiod Start</label>
                         <input
-                          type="number" step="0.5"
-                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_initial}
-                          onChange={e => updateEngineSetup(prev => ({
-                            ...prev,
-                            user_preferences: { ...prev.user_preferences, photoperiod_hours_initial: parseNumber(e.target.value, 6) }
-                          }))}
+                          type="text"
+                          inputMode="decimal"
+                          value={getSetupDraftValue('photoperiod_hours_initial', aquarium.engineSetup.user_preferences.photoperiod_hours_initial)}
+                          onChange={e => commitSetupDraftNumber('photoperiod_hours_initial', e.target.value, (value) => {
+                            updateEngineSetup(prev => ({
+                              ...prev,
+                              user_preferences: { ...prev.user_preferences, photoperiod_hours_initial: value }
+                            }));
+                          })}
+                          onBlur={() => clearSetupDraft('photoperiod_hours_initial')}
                           className={setupInputClasses}
                         />
                       </div>
                       <div className="space-y-1.5">
                         <label className={setupLabelClasses}>Photoperiod Post</label>
                         <input
-                          type="number" step="0.5"
-                          value={aquarium.engineSetup.user_preferences.photoperiod_hours_post_cycle}
-                          onChange={e => updateEngineSetup(prev => ({
-                            ...prev,
-                            user_preferences: { ...prev.user_preferences, photoperiod_hours_post_cycle: parseNumber(e.target.value, 8) }
-                          }))}
+                          type="text"
+                          inputMode="decimal"
+                          value={getSetupDraftValue('photoperiod_hours_post_cycle', aquarium.engineSetup.user_preferences.photoperiod_hours_post_cycle)}
+                          onChange={e => commitSetupDraftNumber('photoperiod_hours_post_cycle', e.target.value, (value) => {
+                            updateEngineSetup(prev => ({
+                              ...prev,
+                              user_preferences: { ...prev.user_preferences, photoperiod_hours_post_cycle: value }
+                            }));
+                          })}
+                          onBlur={() => clearSetupDraft('photoperiod_hours_post_cycle')}
                           className={setupInputClasses}
                         />
                       </div>
@@ -2377,9 +2488,13 @@ const App: React.FC = () => {
                                   <div className="space-y-1.5">
                                     <label className={setupLabelClasses}>Dose</label>
                                     <input
-                                      type="number"
-                                      value={product.dose_amount}
-                                      onChange={e => updateProduct(def.role, current => ({ ...current, dose_amount: parseNumber(e.target.value, 0) }))}
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={getSetupDraftValue(`product_${def.role}_dose_amount`, product.dose_amount)}
+                                      onChange={e => commitSetupDraftNumber(`product_${def.role}_dose_amount`, e.target.value, (value) => {
+                                        updateProduct(def.role, current => ({ ...current, dose_amount: value }));
+                                      })}
+                                      onBlur={() => clearSetupDraft(`product_${def.role}_dose_amount`)}
                                       className={setupInputClasses}
                                     />
                                   </div>
@@ -2400,18 +2515,26 @@ const App: React.FC = () => {
                                   <div className="space-y-1.5">
                                     <label className={setupLabelClasses}>Per L (GH)</label>
                                     <input
-                                      type="number"
-                                      value={product.per_volume_l_gh ?? 0}
-                                      onChange={e => updateProduct(def.role, current => ({ ...current, per_volume_l_gh: parseNumber(e.target.value, 0) }))}
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={getSetupDraftValue(`product_${def.role}_per_volume_l_gh`, product.per_volume_l_gh ?? 0)}
+                                      onChange={e => commitSetupDraftNumber(`product_${def.role}_per_volume_l_gh`, e.target.value, (value) => {
+                                        updateProduct(def.role, current => ({ ...current, per_volume_l_gh: value }));
+                                      })}
+                                      onBlur={() => clearSetupDraft(`product_${def.role}_per_volume_l_gh`)}
                                       className={setupInputClasses}
                                     />
                                   </div>
                                   <div className="space-y-1.5">
                                     <label className={setupLabelClasses}>Δ GH</label>
                                     <input
-                                      type="number"
-                                      value={product.effect_value_gh ?? 0}
-                                      onChange={e => updateProduct(def.role, current => ({ ...current, effect_value_gh: parseNumber(e.target.value, 0) }))}
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={getSetupDraftValue(`product_${def.role}_effect_value_gh`, product.effect_value_gh ?? 0)}
+                                      onChange={e => commitSetupDraftNumber(`product_${def.role}_effect_value_gh`, e.target.value, (value) => {
+                                        updateProduct(def.role, current => ({ ...current, effect_value_gh: value }));
+                                      })}
+                                      onBlur={() => clearSetupDraft(`product_${def.role}_effect_value_gh`)}
                                       className={setupInputClasses}
                                     />
                                   </div>
@@ -2420,18 +2543,26 @@ const App: React.FC = () => {
                                   <div className="space-y-1.5">
                                     <label className={setupLabelClasses}>Per L (KH)</label>
                                     <input
-                                      type="number"
-                                      value={product.per_volume_l_kh ?? 0}
-                                      onChange={e => updateProduct(def.role, current => ({ ...current, per_volume_l_kh: parseNumber(e.target.value, 0) }))}
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={getSetupDraftValue(`product_${def.role}_per_volume_l_kh`, product.per_volume_l_kh ?? 0)}
+                                      onChange={e => commitSetupDraftNumber(`product_${def.role}_per_volume_l_kh`, e.target.value, (value) => {
+                                        updateProduct(def.role, current => ({ ...current, per_volume_l_kh: value }));
+                                      })}
+                                      onBlur={() => clearSetupDraft(`product_${def.role}_per_volume_l_kh`)}
                                       className={setupInputClasses}
                                     />
                                   </div>
                                   <div className="space-y-1.5">
                                     <label className={setupLabelClasses}>Δ KH</label>
                                     <input
-                                      type="number"
-                                      value={product.effect_value_kh ?? 0}
-                                      onChange={e => updateProduct(def.role, current => ({ ...current, effect_value_kh: parseNumber(e.target.value, 0) }))}
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={getSetupDraftValue(`product_${def.role}_effect_value_kh`, product.effect_value_kh ?? 0)}
+                                      onChange={e => commitSetupDraftNumber(`product_${def.role}_effect_value_kh`, e.target.value, (value) => {
+                                        updateProduct(def.role, current => ({ ...current, effect_value_kh: value }));
+                                      })}
+                                      onBlur={() => clearSetupDraft(`product_${def.role}_effect_value_kh`)}
                                       className={setupInputClasses}
                                     />
                                   </div>
@@ -2508,9 +2639,13 @@ const App: React.FC = () => {
                               <div className="space-y-1.5">
                                 <label className={setupLabelClasses}>Concentration %</label>
                                 <input
-                                  type="number" step="0.1"
-                                  value={product.ammonia_solution_percent ?? 10}
-                                  onChange={e => updateProduct(def.role, current => ({ ...current, ammonia_solution_percent: parseNumber(e.target.value, 10) }))}
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={getSetupDraftValue(`product_${def.role}_ammonia_solution_percent`, product.ammonia_solution_percent ?? 10)}
+                                  onChange={e => commitSetupDraftNumber(`product_${def.role}_ammonia_solution_percent`, e.target.value, (value) => {
+                                    updateProduct(def.role, current => ({ ...current, ammonia_solution_percent: value }));
+                                  })}
+                                  onBlur={() => clearSetupDraft(`product_${def.role}_ammonia_solution_percent`)}
                                   className={setupInputClasses}
                                 />
                                 <p className="text-[11px] text-slate-400">
@@ -2528,9 +2663,13 @@ const App: React.FC = () => {
                                 <div className="space-y-1.5">
                                   <label className={setupLabelClasses}>Dose</label>
                                   <input
-                                    type="number"
-                                    value={product.dose_amount}
-                                    onChange={e => updateProduct(def.role, current => ({ ...current, dose_amount: parseNumber(e.target.value, 0) }))}
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={getSetupDraftValue(`product_${def.role}_dose_amount`, product.dose_amount)}
+                                    onChange={e => commitSetupDraftNumber(`product_${def.role}_dose_amount`, e.target.value, (value) => {
+                                      updateProduct(def.role, current => ({ ...current, dose_amount: value }));
+                                    })}
+                                    onBlur={() => clearSetupDraft(`product_${def.role}_dose_amount`)}
                                     className={setupInputClasses}
                                   />
                                 </div>
@@ -2549,19 +2688,27 @@ const App: React.FC = () => {
                                 <div className="space-y-1.5">
                                   <label className={setupLabelClasses}>Per L</label>
                                   <input
-                                    type="number"
-                                    value={product.per_volume_l}
-                                    onChange={e => updateProduct(def.role, current => ({ ...current, per_volume_l: parseNumber(e.target.value, 0) }))}
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={getSetupDraftValue(`product_${def.role}_per_volume_l`, product.per_volume_l)}
+                                    onChange={e => commitSetupDraftNumber(`product_${def.role}_per_volume_l`, e.target.value, (value) => {
+                                      updateProduct(def.role, current => ({ ...current, per_volume_l: value }));
+                                    })}
+                                    onBlur={() => clearSetupDraft(`product_${def.role}_per_volume_l`)}
                                     className={setupInputClasses}
                                   />
                                 </div>
                                 {hasEffect && (
                                   <div className="space-y-1.5">
-                                    <label className={setupLabelClasses}>{def.effectLabel}</label>
-                                    <input
-                                      type="number"
-                                      value={product.effect_value}
-                                      onChange={e => updateProduct(def.role, current => ({ ...current, effect_value: parseNumber(e.target.value, 0) }))}
+                                  <label className={setupLabelClasses}>{def.effectLabel}</label>
+                                  <input
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={getSetupDraftValue(`product_${def.role}_effect_value`, product.effect_value)}
+                                      onChange={e => commitSetupDraftNumber(`product_${def.role}_effect_value`, e.target.value, (value) => {
+                                        updateProduct(def.role, current => ({ ...current, effect_value: value }));
+                                      })}
+                                      onBlur={() => clearSetupDraft(`product_${def.role}_effect_value`)}
                                       className={setupInputClasses}
                                     />
                                   </div>
@@ -2797,18 +2944,19 @@ const App: React.FC = () => {
                       <div className="space-y-1.5">
                         <label className={setupLabelClasses}>Water Change %</label>
                         <input
-                          type="number"
-                          value={aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target}
-                          onChange={e => updateEngineSetup(prev => ({
-                            ...prev,
-                            water_source_profile: {
-                              ...prev.water_source_profile,
-                              weekly_water_change_percent_target: parseNumber(
-                                e.target.value,
-                                prev.water_source_profile.weekly_water_change_percent_target
-                              )
-                            }
-                          }))}
+                          type="text"
+                          inputMode="decimal"
+                          value={getSetupDraftValue('weekly_wc_percent_protocol', aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target)}
+                          onChange={e => commitSetupDraftNumber('weekly_wc_percent_protocol', e.target.value, (value) => {
+                            updateEngineSetup(prev => ({
+                              ...prev,
+                              water_source_profile: {
+                                ...prev.water_source_profile,
+                                weekly_water_change_percent_target: value
+                              }
+                            }));
+                          })}
+                          onBlur={() => clearSetupDraft('weekly_wc_percent_protocol')}
                           className={setupInputClasses}
                         />
                       </div>
@@ -2912,10 +3060,20 @@ const App: React.FC = () => {
                           <Calendar className="w-2.5 h-2.5" /> Monthly Day (1-28)
                         </label>
                         <input 
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           min="1" max="28"
-                          value={aquarium.reminderSettings.monthlyDay}
-                          onChange={e => updateReminder('monthlyDay', parseInt(e.target.value) || 1)}
+                          value={getSetupDraftValue('monthly_day', aquarium.reminderSettings.monthlyDay)}
+                          onChange={e => {
+                            const cleaned = sanitizeDecimalInput(e.target.value);
+                            setSetupDrafts(prev => ({ ...prev, monthly_day: cleaned }));
+                            if (!cleaned) return;
+                            const parsed = parseInt(cleaned, 10);
+                            if (!Number.isNaN(parsed)) {
+                              updateReminder('monthlyDay', parsed);
+                            }
+                          }}
+                          onBlur={() => clearSetupDraft('monthly_day')}
                           className={`${reminderInputClasses} text-center`}
                         />
                       </div>
