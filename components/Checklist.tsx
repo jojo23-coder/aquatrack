@@ -123,9 +123,9 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, onTaskClick,
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className={`text-[13px] font-medium leading-tight transition-all ${schedule.isCompletedForPeriod ? 'line-through text-slate-600' : 'text-slate-300'}`}>
-                          {task.title}{task.frequency === 'interval' && task.everyDays ? ` (every ${task.everyDays} days)` : ''}
-                        </span>
+                      <span className={`text-[13px] font-medium leading-tight transition-all ${schedule.isCompletedForPeriod ? 'line-through text-slate-600' : 'text-slate-300'}`}>
+                        {task.title}
+                      </span>
                         {isReadOnly && task.logDerived && (
                           <span className="text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
                             Historical

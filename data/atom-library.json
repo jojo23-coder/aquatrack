@@ -599,10 +599,7 @@
     "t_light_ramp_weekly": {
       "type": "task",
       "cadence": "weekly",
-      "text_template": "Increase Light Intensity by 5–10% every week.",
-      "conditions": [
-        "modifiers.includes('light:ramp')"
-      ]
+      "text_template": "Increase Light Intensity by 5–10% every week."
     },
     "i_maint_filter_do_not_clean_early": {
       "type": "instruction",
@@ -1070,6 +1067,10 @@
     "i_intro_duration_14_days": {
       "type": "instruction",
       "text_template": "This phase usually runs for about 14 days. Keep the weekly rhythm steady and patient."
+    },
+    "i_intro_duration_28_days": {
+      "type": "instruction",
+      "text_template": "This phase usually runs for about 28 days. Ramp slowly and keep the weekly rhythm steady."
     },
     "i_intro_duration_indefinite": {
       "type": "instruction",
