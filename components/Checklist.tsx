@@ -2,15 +2,19 @@ import React from 'react';
 import { Task, PhaseId, TaskFrequency } from '../types';
 import { PHASES } from '../constants';
 import { Calendar, Clock, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { CadenceContext, formatDateKeyForDisplay, getTaskSchedule } from '../services/cadence';
 
 interface Props {
   tasks: Task[];
   activePhase: PhaseId;
   onToggle: (id: string) => void;
   phaseOrder?: PhaseId[];
+  cadenceContext: CadenceContext;
+  isReadOnly?: boolean;
+  nowOverride?: Date | null;
 }
 
-const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder }) => {
+const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder, cadenceContext, isReadOnly = false, nowOverride = null }) => {
   // Helper to determine if a task is available in the current phase
   const isTaskAvailable = (task: Task) => {
     if (task.frequency === 'one-time') {
@@ -43,8 +47,34 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder }
     { label: 'Monthly Deep Clean', icon: <Clock className="w-3.5 h-3.5" />, frequency: 'monthly', color: 'text-slate-600' },
   ];
 
+  const getCountdownLabel = (daysUntilDue: number | null, status: string) => {
+    if (daysUntilDue === null) return '';
+    if (status === 'overdue') return `${Math.abs(daysUntilDue)}d overdue`;
+    if (daysUntilDue === 0) return 'today';
+    if (daysUntilDue > 0) return `in ${daysUntilDue}d`;
+    return `${Math.abs(daysUntilDue)}d overdue`;
+  };
+
+  const getStatusLabel = (task: Task, dueDateKey: string | null, status: string) => {
+    if (status === 'overdue') return 'Overdue';
+    if (status === 'due') return 'Due today';
+    if (status === 'completed' && task.frequency === 'one-time') return 'Completed';
+    if (dueDateKey) {
+      return `Next due ${formatDateKeyForDisplay(dueDateKey, cadenceContext.timezone)}`;
+    }
+    return 'Next due';
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === 'overdue') return 'text-rose-400';
+    if (status === 'due') return 'text-amber-300';
+    if (status === 'completed') return 'text-emerald-300';
+    return 'text-slate-400';
+  };
+
   const renderTaskSection = (label: string, icon: React.ReactNode, frequency: TaskFrequency, color: string) => {
     const filteredTasks = tasks.filter(t => t.frequency === frequency && isTaskAvailable(t));
+    const now = nowOverride || new Date();
 
     if (filteredTasks.length === 0) return null;
 
@@ -61,21 +91,43 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder }
           {filteredTasks.map(task => (
             <div 
               key={task.id}
-              onClick={() => onToggle(task.id)}
-              className="flex items-center p-4 cursor-pointer active:bg-slate-800 transition-colors group"
+              onClick={() => {
+                if (!isReadOnly) onToggle(task.id);
+              }}
+              className={`flex items-center p-4 transition-colors group ${
+                isReadOnly ? 'cursor-not-allowed opacity-60' : 'cursor-pointer active:bg-slate-800'
+              }`}
             >
-              <div className={`w-5 h-5 rounded-full border-2 mr-4 flex items-center justify-center transition-all shrink-0 ${
-                task.completed ? 'bg-slate-100 border-slate-100 shadow-[0_0_8px_rgba(255,255,255,0.1)]' : 'border-slate-700 group-hover:border-slate-500'
-              }`}>
-                {task.completed && (
-                  <svg className="w-3.5 h-3.5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <span className={`text-[13px] font-medium leading-tight transition-all ${task.completed ? 'line-through text-slate-600' : 'text-slate-300'}`}>
-                {task.title}{task.frequency === 'interval' && task.everyDays ? ` (every ${task.everyDays} days)` : ''}
-              </span>
+              {(() => {
+                const schedule = getTaskSchedule(task, cadenceContext, now);
+                const statusLabel = getStatusLabel(task, schedule.dueDateKey, schedule.status);
+                const countdownLabel = (task.frequency === 'one-time' && schedule.status === 'completed')
+                  ? ''
+                  : getCountdownLabel(schedule.daysUntilDue, schedule.status);
+                const statusColor = getStatusColor(schedule.status);
+                return (
+                  <>
+                    <div className={`w-5 h-5 rounded-full border-2 mr-4 flex items-center justify-center transition-all shrink-0 ${
+                      schedule.isCompletedForPeriod ? 'bg-slate-100 border-slate-100 shadow-[0_0_8px_rgba(255,255,255,0.1)]' : 'border-slate-700 group-hover:border-slate-500'
+                    }`}>
+                      {schedule.isCompletedForPeriod && (
+                        <svg className="w-3.5 h-3.5 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <span className={`text-[13px] font-medium leading-tight transition-all ${schedule.isCompletedForPeriod ? 'line-through text-slate-600' : 'text-slate-300'}`}>
+                        {task.title}{task.frequency === 'interval' && task.everyDays ? ` (every ${task.everyDays} days)` : ''}
+                      </span>
+                      <div className={`text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between ${statusColor}`}>
+                        <span>{statusLabel}</span>
+                        {countdownLabel && <span className="text-[9px] font-medium text-slate-500">{countdownLabel}</span>}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>

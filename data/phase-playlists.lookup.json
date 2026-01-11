@@ -5,6 +5,7 @@
     "phase_name": "Fishless Setup (Traditional)",
     "sequence": [
       "i_intro_fishless_light_cycle_setup",
+      "i_intro_duration_1_day",
       "t_sub_rinse_inert",
       "i_sub_no_rinse_aquasoil",
       "t_sub_place_slope",
@@ -40,7 +41,8 @@
       "t_chem_ph_test_once",
       "t_chem_gh_test_once",
       "t_chem_kh_test_once"
-    ]
+    ],
+    "duration_days": 1
   },
   {
     "key": "F2@200",
@@ -48,6 +50,7 @@
     "phase_name": "Ammonia Phase (Fishless)",
     "sequence": [
       "i_intro_fishless_light_ammonia_maintenance",
+      "i_intro_duration_7_days",
       "i_fert_start_half_dose_weekly",
       "e_plant_melt_high_ammonia",
       "i_chem_nitrite_watch",
@@ -61,13 +64,15 @@
       "t_cycle_ammonia_dose_when_zero",
       "t_maint_trim_melting_plants",
       "t_water_top_off_interval"
-    ]
+    ],
+    "duration_days": 7
   },
   {
     "key": "F3@300",
     "phase_id": "F3",
     "phase_name": "Nitrite Phase (Fishless)",
     "sequence": [
+      "i_intro_duration_14_days",
       "i_cycle_nitrite_spike_warning",
       "i_cycle_nitrite_clear_goal",
       "e_cycle_purple_nitrite",
@@ -89,7 +94,8 @@
       "t_fert_dose_half_weekly",
       "t_maint_trim_melting_plants",
       "t_water_top_off_interval"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "F4@400",
@@ -97,12 +103,14 @@
     "phase_name": "Completion Test (Fishless)",
     "sequence": [
       "i_intro_fishless_light_cycle_verification",
+      "i_intro_duration_1_day",
       "t_cycle_ammonia_dose_initial",
       "i_chem_wait_24h_before_test",
       "t_chem_ammonia_test_24h",
       "t_chem_nitrite_test_24h",
       "i_chem_completion_test_fail_back"
-    ]
+    ],
+    "duration_days": 1
   },
   {
     "key": "F5@500",
@@ -110,6 +118,7 @@
     "phase_name": "Fishless Transition: Stocking",
     "sequence": [
       "i_intro_fishless_light_transition_success",
+      "i_intro_duration_14_days",
       "i_maint_wc_reset",
       "t_maint_wc_reset",
       "i_water_fill_prep_bag_or_plate",
@@ -128,7 +137,8 @@
       "i_stock_shrimp_acclimation_guide",
       "t_stock_fish_acclimate",
       "t_stock_shrimp_acclimate"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "DS1@101",
@@ -136,6 +146,7 @@
     "phase_name": "Dark Start Setup",
     "sequence": [
       "i_intro_fishless_dark_start",
+      "i_intro_duration_1_day",
       "t_sub_rinse_inert",
       "i_sub_no_rinse_aquasoil",
       "t_sub_place_slope",
@@ -162,7 +173,8 @@
       "t_chem_ph_test_once",
       "t_chem_gh_test_once",
       "t_chem_kh_test_once"
-    ]
+    ],
+    "duration_days": 1
   },
   {
     "key": "DS2@201",
@@ -170,6 +182,7 @@
     "phase_name": "Dark Start Cycling",
     "sequence": [
       "i_intro_fishless_dark_cycling",
+      "i_intro_duration_7_days",
       "e_hard_tannins_fungus",
       "i_cycle_ammonia_dose_inert",
       "t_cycle_ammonia_dose_initial",
@@ -177,7 +190,8 @@
       "t_chem_ammonia_test_interval",
       "t_cycle_ammonia_dose_when_zero",
       "t_cycle_bacteria_dose_daily"
-    ]
+    ],
+    "duration_days": 7
   },
   {
     "key": "F2@210",
@@ -185,6 +199,7 @@
     "phase_name": "Ammonia Maintenance (Dark Start)",
     "sequence": [
       "i_intro_fishless_dark_ammonia_maintenance",
+      "i_intro_duration_7_days",
       "e_water_cloudy_bloom",
       "e_water_surface_scum",
       "e_cycle_ammonia_drop_speed",
@@ -195,13 +210,15 @@
       "t_chem_nitrite_test_interval",
       "t_cycle_ammonia_dose_when_zero",
       "t_water_top_off_interval"
-    ]
+    ],
+    "duration_days": 7
   },
   {
     "key": "F3@310",
     "phase_id": "F3",
     "phase_name": "Nitrite Phase (Dark Start)",
     "sequence": [
+      "i_intro_duration_14_days",
       "i_cycle_nitrite_spike_warning",
       "i_maint_filter_do_not_clean_early",
       "i_cycle_nitrite_clear_goal",
@@ -222,7 +239,8 @@
       "t_maint_wc_weekly",
       "i_light_dark_rule",
       "t_water_top_off_interval"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "F4@410",
@@ -230,12 +248,14 @@
     "phase_name": "Completion Test (Dark Start)",
     "sequence": [
       "i_intro_fishless_dark_cycle_verification",
+      "i_intro_duration_1_day",
       "t_cycle_ammonia_dose_initial",
       "i_chem_wait_24h_before_test",
       "t_chem_ammonia_test_24h",
       "t_chem_nitrite_test_24h",
       "i_chem_completion_test_fail_back"
-    ]
+    ],
+    "duration_days": 1
   },
   {
     "key": "DS3@501",
@@ -243,6 +263,7 @@
     "phase_name": "Dark Start Exit: The Awakening",
     "sequence": [
       "i_intro_fishless_dark_cycle_complete",
+      "i_intro_duration_1_day",
       "i_water_drain_90_intro",
       "t_water_drain_90",
       "i_plant_epiphytes_advice",
@@ -284,7 +305,8 @@
       "e_stock_new_shrimp_stress",
       "e_stock_sudden_darting",
       "e_stock_new_shrimp_stress"
-    ]
+    ],
+    "duration_days": 1
   },
   {
     "key": "I1@100",
@@ -292,6 +314,7 @@
     "phase_name": "Fish-in Setup",
     "sequence": [
       "i_intro_fishin_light_setup",
+      "i_intro_duration_1_day",
       "t_sub_rinse_inert",
       "i_sub_no_rinse_aquasoil",
       "t_sub_place_slope",
@@ -343,7 +366,8 @@
       "t_chem_ph_test_once",
       "t_chem_gh_test_once",
       "t_chem_kh_test_once"
-    ]
+    ],
+    "duration_days": 1
   },
   {
     "key": "I1@102",
@@ -351,6 +375,7 @@
     "phase_name": "Fish-in Setup (Low Light)",
     "sequence": [
       "i_intro_fishin_light_setup_low",
+      "i_intro_duration_1_day",
       "t_sub_rinse_inert",
       "i_sub_no_rinse_aquasoil",
       "t_sub_place_slope",
@@ -402,7 +427,8 @@
       "t_chem_ph_test_once",
       "t_chem_gh_test_once",
       "t_chem_kh_test_once"
-    ]
+    ],
+    "duration_days": 1
   },
   {
     "key": "I2@200",
@@ -410,6 +436,7 @@
     "phase_name": "Fish-in Stabilization",
     "sequence": [
       "i_intro_fishin_light_toxin_watch",
+      "i_intro_duration_7_days",
       "e_hard_tannins_fungus",
       "e_plant_transition",
       "t_chem_ammonia_test_daily",
@@ -423,7 +450,8 @@
       "t_maint_trim_melting_plants",
       "t_water_top_off_interval",
       "i_maint_wc_nitrite_rule"
-    ]
+    ],
+    "duration_days": 7
   },
   {
     "key": "I3@300",
@@ -431,6 +459,7 @@
     "phase_name": "Fish-in Biofilter Build",
     "sequence": [
       "i_intro_fishin_light_nitrite_watch",
+      "i_intro_duration_14_days",
       "t_chem_nitrite_test_daily",
       "t_chem_ammonia_test_daily",
       "t_stock_detoxifier_dose_daily",
@@ -448,7 +477,8 @@
       "t_fert_dose_maintenance_weekly",
       "e_cycle_diatoms_brown_algae",
       "i_maint_filter_do_not_clean_early"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "I4@500",
@@ -456,6 +486,7 @@
     "phase_name": "Fish-in Transition: Maturity",
     "sequence": [
       "i_intro_transition_maturity",
+      "i_intro_duration_14_days",
       "t_light_ramp_weekly",
       "i_co2_target_dark_green_safe",
       "t_co2_turn_on",
@@ -472,7 +503,8 @@
       "t_fert_dose_full_weekly_transition",
       "t_stock_fish_acclimate",
       "t_stock_shrimp_acclimate"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "PA1@100",
@@ -480,6 +512,7 @@
     "phase_name": "Plant Assisted: Setup",
     "sequence": [
       "i_intro_silent_setup",
+      "i_intro_duration_14_days",
       "t_sub_rinse_inert",
       "i_sub_no_rinse_aquasoil",
       "t_sub_place_slope",
@@ -514,7 +547,8 @@
       "t_chem_kh_test_once",
       "e_water_cloudy_bloom",
       "e_hard_tannins_fungus"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "PA2@200",
@@ -522,6 +556,7 @@
     "phase_name": "Silent Cycle: The Growth Watch",
     "sequence": [
       "i_intro_silent_growth_watch",
+      "i_intro_duration_14_days",
       "e_hard_tannins_fungus",
       "e_plant_transition",
       "i_maint_filter_do_not_clean_early",
@@ -537,7 +572,8 @@
       "t_maint_trim_melting_plants",
       "t_maint_wc_aquasoil_frequent",
       "i_maint_wc_inert_emergency"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "PA3@300",
@@ -545,6 +581,7 @@
     "phase_name": "Plant-assisted Stocking",
     "sequence": [
       "i_intro_silent_ready_for_stocking",
+      "i_intro_duration_14_days",
       "i_stock_cleanup_crew_start_light",
       "i_stock_add_in_batches_weekly",
       "i_co2_lime_green_check_before_stocking",
@@ -572,7 +609,8 @@
       "e_stock_new_shrimp_stress",
       "e_stock_sudden_darting",
       "e_stock_new_shrimp_stress"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "PA4@500",
@@ -580,6 +618,7 @@
     "phase_name": "Plant-assisted Transition",
     "sequence": [
       "i_intro_transition_maturity",
+      "i_intro_duration_14_days",
       "i_light_ramp_strategy",
       "t_light_ramp_weekly",
       "i_co2_monitor_stability",
@@ -609,7 +648,8 @@
       "e_stock_new_shrimp_stress",
       "e_stock_sudden_darting",
       "e_stock_new_shrimp_stress"
-    ]
+    ],
+    "duration_days": 14
   },
   {
     "key": "R1@600",
@@ -617,6 +657,7 @@
     "phase_name": "Routine: The Long Haul",
     "sequence": [
       "i_intro_routine_forever",
+      "i_intro_duration_indefinite",
       "i_stock_feed_every_other_day_long_haul",
       "t_maint_prep_conditioner_weekly",
       "t_maint_prep_gh_weekly",
@@ -629,6 +670,7 @@
       "t_co2_maintenance_monthly",
       "t_water_top_off_interval",
       "t_stock_feed_every_other_day"
-    ]
+    ],
+    "duration_days": null
   }
 ]

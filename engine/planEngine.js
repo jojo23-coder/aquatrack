@@ -1155,6 +1155,7 @@ const generatePhasesFromPlaylists = ({
     return {
       phase_id: phase.phase_id,
       phase_name: playlist?.phase_name || phase.phase_name,
+      duration_days: playlist?.duration_days ?? null,
       sequence_number: phase.sequence_number,
       modifiers_applied: phase.modifiers_applied,
       instruction_atoms,

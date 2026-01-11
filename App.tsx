@@ -12,10 +12,12 @@ import protocolRuleset from './data/protocol.ruleset.json';
 import atomLibrary from './data/atom-library.json';
 import phasePlaylists from './data/phase-playlists.lookup.json';
 import { generatePlan, generatePhasesFromPlaylists } from './engine/planEngine';
+import { formatZonedTimestamp, getDefaultTimeZone, getTaskSchedule, getZonedDateKey, normalizeDateKey } from './services/cadence';
 
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
 
 const STORAGE_KEY = 'aquatrack_v1_data';
+const DEFAULT_TIME_ZONE = getDefaultTimeZone();
 
 const fishSpeciesIndex = new Map();
 const shrimpSpeciesIndex = new Map();
@@ -153,6 +155,7 @@ const App: React.FC = () => {
   const [editingLog, setEditingLog] = useState<WaterLog | null>(null);
   const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
   const [showPhasePicker, setShowPhasePicker] = useState(false);
+  const [manualPhaseId, setManualPhaseId] = useState<PhaseId | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>('default');
   const [showTankSwitcher, setShowTankSwitcher] = useState(false);
   const [showDeleteTankModal, setShowDeleteTankModal] = useState(false);
@@ -160,6 +163,19 @@ const App: React.FC = () => {
   const [selectedFishToAdd, setSelectedFishToAdd] = useState(fishOptions[0] || '');
   const [selectedShrimpToAdd, setSelectedShrimpToAdd] = useState(shrimpOptions[0] || '');
   const [selectedPlantToAdd, setSelectedPlantToAdd] = useState(plantOptions[0] || '');
+
+  const debugNow = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('debugDate');
+    if (!raw) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      const parsed = new Date(`${raw}T12:00:00`);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, []);
 
   const defaultEngineSetup: EngineSetup = {
     user_preferences: {
@@ -346,88 +362,128 @@ const App: React.FC = () => {
 
   const createTankId = () => `tank_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
-  const createSeedTank = (): AquariumState => ({
-    id: createTankId(),
-    tankName: "Lava Rock 6L",
-    tankSize: 6,
-    tankType: TankType.PLANTED,
-    startDate: new Date().toISOString().split('T')[0],
-    logs: MOCK_LOGS,
-    tasks: INITIAL_TASKS,
-    currentPhase: 'phase_1_initial_start_day_0',
-    reminderSettings: {
-      enabled: false,
-      dailyTime: "09:00",
-      weeklyDay: 1, // Monday
-      monthlyDay: 1
-    },
-    engineSetup: {
-      ...defaultEngineSetup,
-      tank_profile: {
-        ...defaultEngineSetup.tank_profile,
-        tank_volume_l_gross: 6
-      }
-    },
-    targets: {
-      temperature: { min: 22.0, max: 24.0 },
-      pH: { min: 6.4, max: 7.8 },
-      ammonia: 0.0,
-      nitrite: 0.0,
-      nitrate: { min: 5.0, max: 30.0 },
-      gh: { min: 5.0, max: 7.0 },
-      kh: { min: 2.0, max: 4.0 }
-    }
-  });
-
-  const createEmptyTank = (): AquariumState => ({
-    id: createTankId(),
-    tankName: "New Tank",
-    tankSize: 6,
-    tankType: TankType.PLANTED,
-    startDate: new Date().toISOString().split('T')[0],
-    logs: [],
-    tasks: [],
-    currentPhase: 'phase_1_initial_start_day_0',
-    reminderSettings: {
-      enabled: false,
-      dailyTime: "09:00",
-      weeklyDay: 1, // Monday
-      monthlyDay: 1
-    },
-    engineSetup: {
-      ...defaultEngineSetup,
-      protocol_overrides: {
-        cycling: false,
-        dark_start: false,
-        maintenance: false
+  const createSeedTank = (): AquariumState => {
+    const timezone = DEFAULT_TIME_ZONE;
+    const startDate = getZonedDateKey(new Date(), timezone);
+    const phaseStartDates = { ['phase_1_initial_start_day_0' as PhaseId]: startDate };
+    return {
+      id: createTankId(),
+      tankName: "Lava Rock 6L",
+      tankSize: 6,
+      tankType: TankType.PLANTED,
+      startDate,
+      timezone,
+      phaseStartDates,
+      logs: MOCK_LOGS,
+      tasks: INITIAL_TASKS,
+      currentPhase: 'phase_1_initial_start_day_0',
+      reminderSettings: {
+        enabled: false,
+        dailyTime: "09:00",
+        weeklyDay: 1, // Monday
+        monthlyDay: 1
       },
-      tank_profile: {
-        ...defaultEngineSetup.tank_profile,
-        tank_volume_l_gross: 6
+      engineSetup: {
+        ...defaultEngineSetup,
+        tank_profile: {
+          ...defaultEngineSetup.tank_profile,
+          tank_volume_l_gross: 6
+        }
+      },
+      targets: {
+        temperature: { min: 22.0, max: 24.0 },
+        pH: { min: 6.4, max: 7.8 },
+        ammonia: 0.0,
+        nitrite: 0.0,
+        nitrate: { min: 5.0, max: 30.0 },
+        gh: { min: 5.0, max: 7.0 },
+        kh: { min: 2.0, max: 4.0 }
       }
-    },
-    targets: {
-      temperature: { min: 22.0, max: 24.0 },
-      pH: { min: 6.4, max: 7.8 },
-      ammonia: 0.0,
-      nitrite: 0.0,
-      nitrate: { min: 5.0, max: 30.0 },
-      gh: { min: 5.0, max: 7.0 },
-      kh: { min: 2.0, max: 4.0 }
-    }
-  });
+    };
+  };
+
+  const createEmptyTank = (): AquariumState => {
+    const timezone = DEFAULT_TIME_ZONE;
+    const startDate = getZonedDateKey(new Date(), timezone);
+    const phaseStartDates = { ['phase_1_initial_start_day_0' as PhaseId]: startDate };
+    return {
+      id: createTankId(),
+      tankName: "New Tank",
+      tankSize: 6,
+      tankType: TankType.PLANTED,
+      startDate,
+      timezone,
+      phaseStartDates,
+      logs: [],
+      tasks: [],
+      currentPhase: 'phase_1_initial_start_day_0',
+      reminderSettings: {
+        enabled: false,
+        dailyTime: "09:00",
+        weeklyDay: 1, // Monday
+        monthlyDay: 1
+      },
+      engineSetup: {
+        ...defaultEngineSetup,
+        protocol_overrides: {
+          cycling: false,
+          dark_start: false,
+          maintenance: false
+        },
+        tank_profile: {
+          ...defaultEngineSetup.tank_profile,
+          tank_volume_l_gross: 6
+        }
+      },
+      targets: {
+        temperature: { min: 22.0, max: 24.0 },
+        pH: { min: 6.4, max: 7.8 },
+        ammonia: 0.0,
+        nitrite: 0.0,
+        nitrate: { min: 5.0, max: 30.0 },
+        gh: { min: 5.0, max: 7.0 },
+        kh: { min: 2.0, max: 4.0 }
+      }
+    };
+  };
 
   const hydrateTank = (raw: Partial<AquariumState> = {}): AquariumState => {
     const base = createSeedTank();
+    const timezone = raw.timezone || base.timezone || DEFAULT_TIME_ZONE;
+    const startDate = raw.startDate || base.startDate;
+    const normalizedStartDate = normalizeDateKey(startDate, timezone);
+    const phaseStartDates: Partial<Record<PhaseId, string>> = {
+      ...base.phaseStartDates,
+      ...(raw.phaseStartDates || {})
+    };
+    const normalizedPhaseStartDates: Partial<Record<PhaseId, string>> = {};
+    Object.entries(phaseStartDates).forEach(([phaseId, dateValue]) => {
+      if (typeof dateValue === 'string') {
+        normalizedPhaseStartDates[phaseId as PhaseId] = normalizeDateKey(dateValue, timezone);
+      }
+    });
+    const currentPhase = (raw.currentPhase || base.currentPhase) as PhaseId;
+    if (!normalizedPhaseStartDates[currentPhase]) {
+      normalizedPhaseStartDates[currentPhase] = normalizedStartDate;
+    }
     const safeEngineSetup = (raw.engineSetup && typeof raw.engineSetup === 'object') ? raw.engineSetup : {};
     const rawWaterProfile = (safeEngineSetup as AquariumState['engineSetup'])?.water_source_profile;
     const wcValue = Array.isArray(rawWaterProfile?.weekly_water_change_percent_target)
       ? rawWaterProfile?.weekly_water_change_percent_target?.[0]
       : rawWaterProfile?.weekly_water_change_percent_target;
+    const normalizedTasks = (raw.tasks || base.tasks).map(task => {
+      if (task.lastCompletedAt || !task.completed) return task;
+      return { ...task, lastCompletedAt: `${normalizedStartDate}T00:00:00` };
+    });
     return {
       ...base,
       ...raw,
       id: raw.id || base.id,
+      startDate: normalizedStartDate,
+      timezone,
+      phaseStartDates: normalizedPhaseStartDates,
+      tasks: normalizedTasks,
+      currentPhase,
       reminderSettings: { ...base.reminderSettings, ...raw.reminderSettings },
       engineSetup: {
         ...defaultEngineSetup,
@@ -653,6 +709,7 @@ const App: React.FC = () => {
       return playlistPlan.phases.map(phase => ({
         id: phase.phase_id,
         name: phase.phase_name,
+        durationDays: phase.duration_days ?? null,
         instructions: phase.instruction_atoms.map(atom => atom.text),
         expected: phase.expected_behavior_atoms || [],
         tasks: phase.task_atoms || [],
@@ -665,6 +722,7 @@ const App: React.FC = () => {
       return protocolPlan.phases.map(phase => ({
         id: phase.phase_id,
         name: phase.phase_name,
+        durationDays: undefined,
         instructions: phase.instruction_atoms.map(atom => atom.text),
         expected: phase.expected_behavior_atoms || [],
         tasks: [],
@@ -673,13 +731,108 @@ const App: React.FC = () => {
         icon: '🫧'
       }));
     }
-    return PHASES;
+    return PHASES.map(phase => ({ ...phase, durationDays: undefined }));
   }, [protocolPlan, playlistPlan]);
+
+  const phaseOrder = useMemo(
+    () => manualPhases.map(phase => phase.id as PhaseId),
+    [manualPhases]
+  );
+  const manualViewPhaseId = manualPhaseId || aquarium.currentPhase;
+  const isManualViewActive = manualViewPhaseId === aquarium.currentPhase;
+
+  useEffect(() => {
+    if (manualPhaseId && !phaseOrder.includes(manualPhaseId)) {
+      setManualPhaseId(null);
+    }
+  }, [manualPhaseId, phaseOrder]);
+
+  const getPhaseStatus = (phaseId: PhaseId) => {
+    const currentIndex = phaseOrder.indexOf(aquarium.currentPhase);
+    const phaseIndex = phaseOrder.indexOf(phaseId);
+    if (currentIndex === -1 || phaseIndex === -1) return 'active';
+    if (phaseIndex < currentIndex) return 'done';
+    if (phaseIndex > currentIndex) return 'not-yet';
+    return 'active';
+  };
+
+  const getDaysBetweenKeys = (fromKey: string, toKey: string) => {
+    const [fy, fm, fd] = fromKey.split('-').map(Number);
+    const [ty, tm, td] = toKey.split('-').map(Number);
+    const from = Date.UTC(fy, fm - 1, fd, 12, 0, 0);
+    const to = Date.UTC(ty, tm - 1, td, 12, 0, 0);
+    return Math.round((to - from) / (24 * 60 * 60 * 1000));
+  };
+
+  const getPhaseCountdown = (phaseId: PhaseId, durationDays: number | null | undefined, now: Date) => {
+    if (durationDays === undefined) return null;
+    if (durationDays === null) {
+      const startKey = aquarium.phaseStartDates?.[phaseId];
+      if (!startKey) return null;
+      return {
+        label: 'Ongoing',
+        detail: 'No fixed end date'
+      };
+    }
+    const startKey = aquarium.phaseStartDates?.[phaseId];
+    if (!startKey) return null;
+    const todayKey = getZonedDateKey(now, aquarium.timezone || DEFAULT_TIME_ZONE);
+    const elapsed = getDaysBetweenKeys(startKey, todayKey);
+    const dayNumber = Math.max(1, elapsed + 1);
+    const cappedDay = Math.min(dayNumber, durationDays);
+    const remaining = durationDays - dayNumber;
+    const remainingLabel = remaining > 1
+      ? `${remaining} days left`
+      : remaining === 1
+        ? '1 day left'
+        : remaining === 0
+          ? 'Last day'
+          : `${Math.abs(remaining)} days past`;
+    return {
+      label: `Day ${cappedDay} of ${durationDays}`,
+      detail: remainingLabel
+    };
+  };
+
+  const buildCadenceContext = (state: AquariumState) => ({
+    startDate: state.startDate,
+    timezone: state.timezone || DEFAULT_TIME_ZONE,
+    phaseStartDates: state.phaseStartDates || {},
+    reminderSettings: state.reminderSettings,
+    activePhase: state.currentPhase
+  });
+
+  const setPhase = (phaseId: PhaseId) => {
+    setAquarium(prev => {
+      const timeZone = prev.timezone || DEFAULT_TIME_ZONE;
+      const phaseStartKey = getZonedDateKey(debugNow || new Date(), timeZone);
+      return {
+        ...prev,
+        currentPhase: phaseId,
+        phaseStartDates: {
+          ...prev.phaseStartDates,
+          [phaseId]: prev.phaseStartDates?.[phaseId] || phaseStartKey
+        }
+      };
+    });
+    setManualPhaseId(phaseId);
+  };
 
   const handleToggleTask = (id: string) => {
     setAquarium(prev => ({
       ...prev,
-      tasks: prev.tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t)
+      tasks: prev.tasks.map(task => {
+        if (task.id !== id) return task;
+        const context = buildCadenceContext(prev);
+        const now = debugNow || new Date();
+        const schedule = getTaskSchedule(task, context, now);
+        const nextCompleted = !schedule.isCompletedForPeriod;
+        return {
+          ...task,
+          completed: nextCompleted,
+          lastCompletedAt: nextCompleted ? formatZonedTimestamp(now, context.timezone) : undefined
+        };
+      })
     }));
   };
 
@@ -1024,6 +1177,18 @@ const App: React.FC = () => {
     return PHASES.find(p => p.id === aquarium.currentPhase) || PHASES[0];
   }, [aquarium.currentPhase, manualPhases]);
 
+  const activePhaseCountdown = getPhaseCountdown(
+    aquarium.currentPhase,
+    (activePhaseData as { durationDays?: number | null })?.durationDays,
+    debugNow || new Date()
+  );
+
+  const manualPhaseData = useMemo(() => {
+    const fromManual = manualPhases.find(p => p.id === manualViewPhaseId);
+    if (fromManual) return fromManual;
+    return PHASES.find(p => p.id === manualViewPhaseId) || PHASES[0];
+  }, [manualPhases, manualViewPhaseId]);
+
   const protocolDiscrepancies = useMemo(() => {
     const issues: Array<{ title: string; detail: string }> = [];
     const fmt = (value: number) => Number.isFinite(value) ? value.toFixed(1) : '--';
@@ -1343,10 +1508,16 @@ const App: React.FC = () => {
       });
     });
 
+    const firstPhaseId = (planPhases?.[0]?.phase_id as PhaseId) || aquarium.currentPhase;
+    const phaseStartKey = getZonedDateKey(new Date(), aquarium.timezone || DEFAULT_TIME_ZONE);
     setAquarium(prev => ({
       ...prev,
       tasks,
-      currentPhase: (planPhases?.[0]?.phase_id as PhaseId) || prev.currentPhase
+      currentPhase: firstPhaseId,
+      phaseStartDates: {
+        ...prev.phaseStartDates,
+        [firstPhaseId]: prev.phaseStartDates?.[firstPhaseId] || phaseStartKey
+      }
     }));
     setActiveTab('roadmap');
   };
@@ -1546,6 +1717,11 @@ const App: React.FC = () => {
                      <div>
                        <h3 className="font-bold text-white text-sm">{activePhaseData.name.split(' (')[0]}</h3>
                        <p className="text-[10px] text-slate-400">Current Phase Guidance</p>
+                       {activePhaseCountdown && (
+                         <p className="text-[9px] font-semibold uppercase tracking-widest text-slate-500 mt-1">
+                           {activePhaseCountdown.label} • {activePhaseCountdown.detail}
+                         </p>
+                       )}
                      </div>
                    </div>
                    <button 
@@ -1646,37 +1822,74 @@ const App: React.FC = () => {
           </div>
         );
       case 'roadmap':
+        const manualPhaseCountdown = getPhaseCountdown(
+          manualPhaseData.id as PhaseId,
+          manualPhaseData.durationDays,
+          debugNow || new Date()
+        );
+        const manualPhaseStatus = getPhaseStatus(manualPhaseData.id as PhaseId);
         return (
           <div className="px-4 space-y-6 pb-24 animate-in fade-in duration-300 pt-4">
              <h1 className="text-3xl font-extrabold text-white">Manual</h1>
              
              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-               {manualPhases.map(phase => (
-                 <button 
-                  key={phase.id}
-                  onClick={() => setAquarium(prev => ({...prev, currentPhase: phase.id as PhaseId}))}
-                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shrink-0 border flex items-center gap-2 ${
-                    aquarium.currentPhase === phase.id 
-                    ? 'bg-slate-100 border-slate-100 text-slate-950 shadow-lg shadow-white/5' 
-                    : 'bg-slate-900 border-slate-800 text-slate-500'
-                  }`}
-                 >
-                   {phase.name.split(' — ')[0]}
-                   {aquarium.currentPhase === phase.id && <div className="w-1.5 h-1.5 bg-slate-950 rounded-full animate-pulse" />}
-                 </button>
-               ))}
+               {manualPhases.map(phase => {
+                 const status = getPhaseStatus(phase.id as PhaseId);
+                 const statusLabel = status === 'done' ? 'DONE' : status === 'not-yet' ? 'NOT YET' : '';
+                 return (
+                   <button 
+                    key={phase.id}
+                    onClick={() => setManualPhaseId(phase.id as PhaseId)}
+                    className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shrink-0 border flex items-center gap-2 ${
+                      manualViewPhaseId === phase.id 
+                      ? 'bg-slate-100 border-slate-100 text-slate-950 shadow-lg shadow-white/5' 
+                      : 'bg-slate-900 border-slate-800 text-slate-500'
+                    }`}
+                   >
+                     {phase.name.split(' — ')[0]}
+                     {statusLabel && (
+                       <span className={`text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full ${
+                         status === 'done' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                       }`}>
+                         {statusLabel}
+                       </span>
+                     )}
+                     {manualViewPhaseId === phase.id && <div className="w-1.5 h-1.5 bg-slate-950 rounded-full animate-pulse" />}
+                   </button>
+                 );
+               })}
              </div>
 
              <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-5 space-y-4">
                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                 <span className="text-lg">{manualPhases.find(p => p.id === aquarium.currentPhase)?.icon}</span> 
-                 {manualPhases.find(p => p.id === aquarium.currentPhase)?.name}
+                 <span className="text-lg">{manualPhaseData.icon}</span> 
+                 {manualPhaseData.name}
                </h3>
+               {manualPhaseCountdown && (
+                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                   <span>{manualPhaseCountdown.label}</span>
+                   <span className="text-slate-600">•</span>
+                   <span>{manualPhaseCountdown.detail}</span>
+                 </div>
+               )}
+               {!isManualViewActive && (
+                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                   {manualPhaseStatus === 'done' ? 'DONE' : 'NOT YET'}
+                 </div>
+               )}
+               {!isManualViewActive && (
+                 <button
+                   onClick={() => setPhase(manualPhaseData.id as PhaseId)}
+                   className="w-full py-2.5 text-xs font-bold rounded-2xl bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 active:scale-[0.98]"
+                 >
+                   Set Active Phase
+                 </button>
+               )}
                
                <div className="space-y-3">
                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Instructions</h4>
                  <ul className="space-y-2 manual-list">
-                   {manualPhases.find(p => p.id === aquarium.currentPhase)?.instructions.map((ins, i) => (
+                   {manualPhaseData.instructions.map((ins, i) => (
                      <li key={i} className="text-xs text-slate-300 leading-relaxed flex gap-2">
                        <span className="text-slate-400 font-bold">•</span>
                        <span>{renderBoldText(ins)}</span>
@@ -1688,7 +1901,7 @@ const App: React.FC = () => {
                <div className="pt-4 border-t border-slate-800 space-y-3">
                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Expected Normal Behavior</h4>
                  <ul className="space-y-2 manual-list">
-                   {manualPhases.find(p => p.id === aquarium.currentPhase)?.expected.map((exp, i) => (
+                   {manualPhaseData.expected.map((exp, i) => (
                      <li key={i} className="text-xs text-slate-400 italic flex gap-2">
                        <span className="text-slate-600 shrink-0">→</span>
                        <span>{renderBoldText(exp)}</span>
@@ -1697,11 +1910,11 @@ const App: React.FC = () => {
                  </ul>
                </div>
 
-               {manualPhases.find(p => p.id === aquarium.currentPhase)?.exitChecks?.length > 0 && (
+               {manualPhaseData.exitChecks?.length > 0 && (
                  <div className="pt-4 border-t border-slate-800 space-y-3">
                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Phase Complete When</h4>
                    <ul className="space-y-2">
-                     {manualPhases.find(p => p.id === aquarium.currentPhase)?.exitChecks.map((check, i) => (
+                     {manualPhaseData.exitChecks.map((check, i) => (
                        <li key={i} className="text-xs text-slate-300 leading-relaxed flex gap-2">
                          <span className="text-slate-400 font-bold">•</span> {check}
                        </li>
@@ -1713,9 +1926,12 @@ const App: React.FC = () => {
 
              <Checklist 
               tasks={aquarium.tasks} 
-              activePhase={aquarium.currentPhase} 
+              activePhase={manualViewPhaseId} 
               onToggle={handleToggleTask}
-              phaseOrder={manualPhases.map(phase => phase.id as PhaseId)}
+              phaseOrder={phaseOrder}
+              cadenceContext={buildCadenceContext(aquarium)}
+              isReadOnly={!isManualViewActive}
+              nowOverride={debugNow}
              />
           </div>
         );
@@ -3084,12 +3300,12 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-500 uppercase flex items-center gap-1.5 ml-1.5">
-                          <Calendar className="w-2.5 h-2.5" /> Monthly Day (1-28)
+                          <Calendar className="w-2.5 h-2.5" /> Monthly Day (1-31)
                         </label>
                         <input 
                           type="text"
                           inputMode="numeric"
-                          min="1" max="28"
+                          min="1" max="31"
                           value={getSetupDraftValue('monthly_day', aquarium.reminderSettings.monthlyDay)}
                           onChange={e => {
                             const cleaned = sanitizeDecimalInput(e.target.value);
@@ -3204,35 +3420,48 @@ const App: React.FC = () => {
             <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-6" />
             <h3 className="text-xl font-black text-white mb-6 text-center">Switch Phase</h3>
             <div className="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-1">
-              {manualPhases.map(phase => (
-                <button 
-                  key={phase.id}
-                  onClick={() => {
-                    setAquarium(prev => ({...prev, currentPhase: phase.id as PhaseId}));
-                    setShowPhasePicker(false);
-                  }}
-                  className={`p-5 rounded-[24px] border text-left flex items-center gap-4 transition-all active:scale-95 ${
-                    aquarium.currentPhase === phase.id 
-                      ? 'bg-slate-100 border-slate-100 shadow-lg shadow-white/5' 
-                      : 'bg-slate-800/40 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <span className="text-2xl grayscale-[0.5] group-hover:grayscale-0">{phase.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-bold ${aquarium.currentPhase === phase.id ? 'text-slate-950' : 'text-white'}`}>
-                      {phase.name.split(' — ')[1] || phase.name}
-                    </p>
-                    <p className={`text-[10px] font-medium truncate ${aquarium.currentPhase === phase.id ? 'text-slate-700' : 'text-slate-500'}`}>
-                      {phase.objectives?.[0] || 'Protocol phase'}
-                    </p>
-                  </div>
-                  {aquarium.currentPhase === phase.id && (
-                    <div className="bg-slate-950 p-1 rounded-full">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+              {manualPhases.map(phase => {
+                const status = getPhaseStatus(phase.id as PhaseId);
+                const statusLabel = status === 'done' ? 'DONE' : status === 'not-yet' ? 'NOT YET' : '';
+                return (
+                  <button 
+                    key={phase.id}
+                    onClick={() => {
+                      setPhase(phase.id as PhaseId);
+                      setShowPhasePicker(false);
+                    }}
+                    className={`p-5 rounded-[24px] border text-left flex items-center gap-4 transition-all active:scale-95 ${
+                      aquarium.currentPhase === phase.id 
+                        ? 'bg-slate-100 border-slate-100 shadow-lg shadow-white/5' 
+                        : 'bg-slate-800/40 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className="text-2xl grayscale-[0.5] group-hover:grayscale-0">{phase.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-bold ${aquarium.currentPhase === phase.id ? 'text-slate-950' : 'text-white'}`}>
+                        {phase.name.split(' — ')[1] || phase.name}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-[10px] font-medium truncate ${aquarium.currentPhase === phase.id ? 'text-slate-700' : 'text-slate-500'}`}>
+                          {phase.objectives?.[0] || 'Protocol phase'}
+                        </p>
+                        {statusLabel && (
+                          <span className={`text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full ${
+                            status === 'done' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-slate-700 text-slate-300'
+                          }`}>
+                            {statusLabel}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </button>
-              ))}
+                    {aquarium.currentPhase === phase.id && (
+                      <div className="bg-slate-950 p-1 rounded-full">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             <button 
               onClick={() => setShowPhasePicker(false)}

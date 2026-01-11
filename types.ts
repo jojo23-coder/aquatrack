@@ -51,13 +51,14 @@ export interface Task {
   everyDays?: number;
   title: string;
   completed: boolean;
+  lastCompletedAt?: string;
 }
 
 export interface ReminderSettings {
   enabled: boolean;
   dailyTime: string;
   weeklyDay: number; // 0-6 (Sun-Sat)
-  monthlyDay: number; // 1-28
+  monthlyDay: number; // 1-31
 }
 
 export interface EngineSetup {
@@ -175,6 +176,8 @@ export interface AquariumState {
   tankSize: number;
   tankType: TankType;
   startDate: string;
+  timezone: string;
+  phaseStartDates: Partial<Record<PhaseId, string>>;
   logs: WaterLog[];
   tasks: Task[];
   currentPhase: PhaseId;

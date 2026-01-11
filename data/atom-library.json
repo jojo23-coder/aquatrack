@@ -487,8 +487,7 @@
     },
     "i_light_ramp_strategy": {
       "type": "instruction",
-      "text_template": "Strategy: **Start Lights Low.** We will set your lights to **50–60%** intensity initially. Your plants are currently in transplant shock and growing roots, not leaves. If you blast them with 100% light now, they can't use it, but **Algae** can. We will ramp up the power slowly over the next 6 weeks. Increase intensity a little each week; if algae appears, pause the ramp until the tank stabilizes."
-      ,
+      "text_template": "Strategy: **Start Lights Low.** We will set your lights to **50–60%** intensity initially. Your plants are currently in transplant shock and growing roots, not leaves. If you blast them with 100% light now, they can't use it, but **Algae** can. We will ramp up the power slowly over the next 6 weeks. Increase intensity a little each week; if algae appears, pause the ramp until the tank stabilizes.",
       "conditions": [
         "setup.lighting_system == 'high_performance'"
       ]
@@ -959,6 +958,22 @@
       "conditions": [
         "setup.can_test_ph == true"
       ]
+    },
+    "i_intro_duration_1_day": {
+      "type": "instruction",
+      "text_template": "This phase is short and focused. Plan for about 1 day."
+    },
+    "i_intro_duration_7_days": {
+      "type": "instruction",
+      "text_template": "This phase typically runs for about 7 days. Stay consistent and let the routine do the work."
+    },
+    "i_intro_duration_14_days": {
+      "type": "instruction",
+      "text_template": "This phase usually runs for about 14 days. Keep the weekly rhythm steady and patient."
+    },
+    "i_intro_duration_indefinite": {
+      "type": "instruction",
+      "text_template": "This is the long-haul routine. It continues indefinitely as your steady maintenance phase."
     }
   }
 }
