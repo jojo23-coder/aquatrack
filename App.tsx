@@ -188,32 +188,6 @@ const isTaskAvailableInPhase = (task: Task, activePhase: PhaseId, orderedPhases:
   return activeIndex >= startIndex;
 };
 
-const cyclingReasonDescriptions: Record<string, string> = {
-  DEFAULT_SAFE: 'Default safe recommendation when no risk flags are present.',
-  SHRIMP_PLANNED: 'Shrimp planned: favor a stable, low-risk cycle.',
-  LOW_RISK_TOLERANCE: 'Low risk tolerance selected.',
-  KH_UNKNOWN_OR_LOW: 'Tap KH is unknown or low, so predictability is prioritized.',
-  PREDICTABILITY_PRIORITY: 'Favoring the most predictable cycling path.',
-  NO_AMMONIA_SOURCE: 'No ammonia source available for fishless cycling.',
-  USER_ACCEPTS_RISK: 'High risk tolerance allows fish-in cycling.',
-  USER_SELECTED_HIGHER_RISK: 'User selected a higher-risk cycling mode.'
-};
-
-const darkStartReasonDescriptions: Record<string, string> = {
-  USER_SELECTED: 'You explicitly selected Dark Start.',
-  AQUASOIL_ALGAE_RISK: 'Aquasoil increases early algae risk; dark start helps.',
-  HIGH_LIGHT_RISK: 'High initial light and growth-first goals increase algae risk.',
-  DEFAULT: 'Default recommendation based on setup inputs (typically inert substrate and lower algae risk).'
-};
-
-const formatReasonList = (codes?: string[], mapping?: Record<string, string>) => {
-  if (!codes || !codes.length) return 'No specific reasons available.';
-  return codes
-    .map((code) => mapping?.[code] || code)
-    .map((text) => `- ${text}`)
-    .join('\n');
-};
-
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [highlightedParam, setHighlightedParam] = useState<string | null>(null);
@@ -238,6 +212,7 @@ const App: React.FC = () => {
   const activePhaseButtonRef = useRef<HTMLButtonElement | null>(null);
   const selectedPhaseButtonRef = useRef<HTMLButtonElement | null>(null);
   const activePhasePickerRef = useRef<HTMLButtonElement | null>(null);
+  const activeSetupButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const debugNow = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -255,7 +230,6 @@ const App: React.FC = () => {
   const defaultEngineSetup: EngineSetup = {
     user_preferences: {
       cycling_mode_preference: 'auto',
-      dark_start: 'auto',
       risk_tolerance: 'low',
       goal_profile: 'stability_first',
       photoperiod_hours_initial: 6,
@@ -272,7 +246,6 @@ const App: React.FC = () => {
     },
     protocol_overrides: {
       cycling: false,
-      dark_start: false,
       maintenance: false
     },
     tank_profile: {
@@ -333,6 +306,7 @@ const App: React.FC = () => {
         type: 'pure_ammonia',
         solution_percent: 10
       },
+      remineralizer_mode: 'combo',
       selected_product_ids: [],
       user_products: [
         {
@@ -502,7 +476,6 @@ const App: React.FC = () => {
         ...defaultEngineSetup,
         protocol_overrides: {
           cycling: false,
-          dark_start: false,
           maintenance: false
         },
         tank_profile: {
@@ -745,8 +718,7 @@ const App: React.FC = () => {
         ...aquarium.engineSetup,
         user_preferences: {
           ...aquarium.engineSetup.user_preferences,
-          cycling_mode_preference: 'auto',
-          dark_start: 'auto'
+          cycling_mode_preference: 'auto'
         }
       };
       return generatePlan({
@@ -860,6 +832,19 @@ const App: React.FC = () => {
     return () => cancelAnimationFrame(handle);
   }, [showPhasePicker, manualViewPhaseId, manualPhases.length]);
 
+  useEffect(() => {
+    if (activeTab !== 'settings') return;
+    if (!activeSetupButtonRef.current) return;
+    const handle = requestAnimationFrame(() => {
+      activeSetupButtonRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [activeTab, activeSetupSection]);
+
   const getPhaseStatus = (phaseId: PhaseId) => {
     const currentIndex = phaseOrder.indexOf(aquarium.currentPhase);
     const phaseIndex = phaseOrder.indexOf(phaseId);
@@ -963,6 +948,11 @@ const App: React.FC = () => {
         };
       })
     }));
+  };
+
+  const openManual = () => {
+    setManualPhaseId(null);
+    setActiveTab('roadmap');
   };
 
   const handleTaskClick = (task: Task) => {
@@ -1105,8 +1095,7 @@ const App: React.FC = () => {
     }
     if (entryTaskContext) {
       setEntryTaskContext(null);
-      setManualPhaseId(null);
-      setActiveTab('roadmap');
+      openManual();
     } else {
       setActiveTab('dashboard');
     }
@@ -1487,7 +1476,7 @@ const App: React.FC = () => {
       aquarium.engineSetup.user_preferences.cycling_mode_preference === 'auto'
         ? protocolPlan?.selection?.recommended_cycling_mode
         : aquarium.engineSetup.user_preferences.cycling_mode_preference;
-    if (effectiveCyclingMode === 'fishless_ammonia') {
+    if (effectiveCyclingMode === 'fishless_ammonia' || effectiveCyclingMode === 'dark_start') {
       const ammoniaEnabled = aquarium.engineSetup.product_stack.user_products.some(
         (product) => product.role === 'ammonia_source' && product.enabled
       );
@@ -1503,7 +1492,7 @@ const App: React.FC = () => {
       (product) => product.role === 'bacteria_starter' && product.enabled
     );
     if (!bacteriaEnabled) {
-      if (effectiveCyclingMode === 'fishless_ammonia') {
+      if (effectiveCyclingMode === 'fishless_ammonia' || effectiveCyclingMode === 'dark_start') {
         issues.push({
           title: 'Bacteria starter recommended',
           detail: 'Fishless cycling is much faster with a bacteria starter. Without it, cycling can take significantly longer.'
@@ -1610,17 +1599,6 @@ const App: React.FC = () => {
       });
     }
 
-    if (typeof recommendedProtocolPlan?.selection?.recommended_dark_start === 'boolean'
-      && aquarium.engineSetup.user_preferences.dark_start !== 'auto'
-      && aquarium.engineSetup.user_preferences.dark_start !== recommendedProtocolPlan.selection.recommended_dark_start) {
-      issues.push({
-        title: 'Dark start override',
-        detail: recommendedProtocolPlan.selection.recommended_dark_start
-          ? 'Dark start is recommended to reduce early algae risk. Turning it off may increase algae blooms.'
-          : 'Dark start is not recommended for this setup. Enabling it may slow early plant adaptation.'
-      });
-    }
-
     if (recommendedProtocolPlan?.selection?.recommended_cycling_mode
       && aquarium.engineSetup.user_preferences.cycling_mode_preference !== 'auto'
       && aquarium.engineSetup.user_preferences.cycling_mode_preference !== recommendedProtocolPlan.selection.recommended_cycling_mode) {
@@ -1697,31 +1675,12 @@ const App: React.FC = () => {
     }));
   };
 
-  const setGhKhCombo = (enabled: boolean) => {
-    const comboTemplate = defaultEngineSetup.product_stack.user_products.find(
-      (product) => product.role === 'gh_kh_remineralizer'
-    );
+  const setGhKhMode = (mode: 'combo' | 'separate') => {
     updateEngineSetup(prev => ({
       ...prev,
       product_stack: {
         ...prev.product_stack,
-        user_products: (() => {
-          let foundCombo = false;
-          const updated = prev.product_stack.user_products.map(product => {
-            if (product.role === 'gh_kh_remineralizer') {
-              foundCombo = true;
-              return { ...product, enabled };
-            }
-            if (product.role === 'gh_remineralizer' || product.role === 'kh_buffer') {
-              return { ...product, enabled: enabled ? false : product.enabled };
-            }
-            return product;
-          });
-          if (!foundCombo && comboTemplate) {
-            updated.push({ ...comboTemplate, enabled });
-          }
-          return updated;
-        })()
+        remineralizer_mode: mode
       }
     }));
   };
@@ -1781,7 +1740,7 @@ const App: React.FC = () => {
         [firstPhaseId]: prev.phaseStartDates?.[firstPhaseId] || phaseStartKey
       }
     }));
-    setActiveTab('roadmap');
+    openManual();
   };
 
   const latestLog = aquarium.logs[aquarium.logs.length - 1] || {} as WaterLog;
@@ -2016,7 +1975,7 @@ const App: React.FC = () => {
 
                  <div className="grid grid-cols-2 gap-2">
                    <button 
-                    onClick={() => setActiveTab('roadmap')}
+                    onClick={openManual}
                     className="py-3 bg-slate-800 text-slate-300 font-bold rounded-2xl text-xs flex items-center justify-center gap-2 border border-slate-700 active:scale-95"
                    >
                      Full Manual
@@ -2260,6 +2219,10 @@ const App: React.FC = () => {
           { id: 'alerts', label: 'Alerts' },
           { id: 'data', label: 'Data' }
         ] as const;
+        const remineralizerMode = aquarium.engineSetup.product_stack.remineralizer_mode
+          ?? (aquarium.engineSetup.product_stack.user_products.some(
+            (product) => (product.role === 'gh_remineralizer' || product.role === 'kh_buffer') && product.enabled
+          ) ? 'separate' : 'combo');
         const protocolPreferenceItems = [
           { key: 'cycling', label: 'Cycling' },
           { key: 'maintenance', label: 'Maintenance' },
@@ -2277,6 +2240,7 @@ const App: React.FC = () => {
               {setupSections.map(section => (
                 <button
                   key={section.id}
+                  ref={activeSetupSection === section.id ? activeSetupButtonRef : null}
                   onClick={() => setActiveSetupSection(section.id)}
                   className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shrink-0 border ${
                     activeSetupSection === section.id
@@ -2953,11 +2917,9 @@ const App: React.FC = () => {
                       <span>Remineralizer Mode</span>
                       <div className="grid grid-cols-2 gap-1 bg-slate-950/40 p-1 rounded-full border border-slate-800">
                         <button
-                          onClick={() => setGhKhCombo(true)}
+                          onClick={() => setGhKhMode('combo')}
                           className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                            aquarium.engineSetup.product_stack.user_products.some(
-                              (product) => product.role === 'gh_kh_remineralizer' && product.enabled
-                            )
+                            remineralizerMode === 'combo'
                               ? 'bg-slate-100 text-slate-950'
                               : 'text-slate-400'
                           }`}
@@ -2965,13 +2927,11 @@ const App: React.FC = () => {
                           GH/KH
                         </button>
                         <button
-                          onClick={() => setGhKhCombo(false)}
+                          onClick={() => setGhKhMode('separate')}
                           className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                            aquarium.engineSetup.product_stack.user_products.some(
-                              (product) => product.role === 'gh_kh_remineralizer' && product.enabled
-                            )
-                              ? 'text-slate-400'
-                              : 'bg-slate-100 text-slate-950'
+                            remineralizerMode === 'separate'
+                              ? 'bg-slate-100 text-slate-950'
+                              : 'text-slate-400'
                           }`}
                         >
                           GH + KH
@@ -2981,10 +2941,7 @@ const App: React.FC = () => {
                     <p className="text-[10px] text-slate-500">Choose either the combo remineralizer or separate GH + KH products.</p>
                   </div>
                   {productDefinitions.filter(def => {
-                    const comboEnabled = aquarium.engineSetup.product_stack.user_products.some(
-                      (product) => product.role === 'gh_kh_remineralizer' && product.enabled
-                    );
-                    if (comboEnabled) {
+                    if (remineralizerMode === 'combo') {
                       return def.role !== 'gh_remineralizer' && def.role !== 'kh_buffer';
                     }
                     return def.role !== 'gh_kh_remineralizer';
@@ -3401,6 +3358,7 @@ const App: React.FC = () => {
                       >
                         <option value="auto">Auto (Recommended)</option>
                         <option value="fishless_ammonia">Fishless Ammonia</option>
+                        <option value="dark_start">Dark Start</option>
                         <option value="fish_in">Fish-in</option>
                         <option value="plant_assisted">Plant Assisted</option>
                       </select>
@@ -3411,78 +3369,6 @@ const App: React.FC = () => {
                       && aquarium.engineSetup.user_preferences.cycling_mode_preference !== recommendedProtocolPlan.selection.recommended_cycling_mode && (
                       <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-2xl text-[10px] text-amber-300">
                         Deviating from the recommended cycling mode can increase risk. Monitor ammonia and nitrite closely in the first weeks.
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {aquarium.engineSetup.protocol_preferences.cycling && (
-                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Dark Start</h4>
-                    </div>
-                    <div className="space-y-2 text-[11px] text-slate-400">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <span className="text-slate-500">Recommended</span>
-                          <button
-                            onClick={() => setInfoModal({
-                              title: 'Dark Start Recommendation',
-                              content: formatReasonList(recommendedProtocolPlan?.selection?.dark_start_reason_codes, darkStartReasonDescriptions)
-                            })}
-                            className="p-1 text-slate-500 hover:text-slate-300 transition-colors"
-                            aria-label="Why this dark start recommendation"
-                          >
-                            <Info className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                        <span className="text-slate-200 font-semibold">{recommendedProtocolPlan?.selection?.recommended_dark_start ? 'Enabled' : 'Off'}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500">Current</span>
-                        <span className="text-slate-200 font-semibold">
-                          {aquarium.engineSetup.user_preferences.dark_start === 'auto'
-                            ? `Auto (${recommendedProtocolPlan?.selection?.recommended_dark_start ? 'Enabled' : 'Off'})`
-                            : aquarium.engineSetup.user_preferences.dark_start
-                              ? 'Enabled'
-                              : 'Off'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className={setupLabelClasses}>Dark Start</label>
-                      <select
-                        value={
-                          aquarium.engineSetup.user_preferences.dark_start === 'auto'
-                            ? 'auto'
-                            : aquarium.engineSetup.user_preferences.dark_start
-                              ? 'true'
-                              : 'false'
-                        }
-                        onChange={e => {
-                          const value = e.target.value;
-                          const nextValue = value === 'auto' ? 'auto' : value === 'true';
-                          updateEngineSetup(prev => ({
-                            ...prev,
-                            user_preferences: { ...prev.user_preferences, dark_start: nextValue }
-                          }));
-                        }}
-                        className={`${setupInputClasses} appearance-none`}
-                      >
-                        <option value="auto">Auto (Recommended)</option>
-                        <option value="true">Enabled</option>
-                        <option value="false">Off</option>
-                      </select>
-                    </div>
-                    {typeof recommendedProtocolPlan?.selection?.recommended_dark_start === 'boolean'
-                      && aquarium.engineSetup.user_preferences.dark_start !== 'auto'
-                      && aquarium.engineSetup.user_preferences.dark_start !== recommendedProtocolPlan.selection.recommended_dark_start && (
-                      <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-2xl text-[10px] text-amber-300">
-                        {recommendedProtocolPlan.selection.recommended_dark_start
-                          ? 'Skipping the recommended dark start can increase algae risk in early weeks.'
-                          : aquarium.engineSetup.tank_profile.substrate.type === 'inert'
-                            ? 'Performing a Dark Start with inert soil provides small safety benefit and unnecessarily delays plant establishment and rooting.'
-                            : 'Performing a Dark Start when it is not recommended can delay plant establishment.'}
                       </div>
                     )}
                   </div>
@@ -3846,7 +3732,7 @@ const App: React.FC = () => {
             <span className="text-[9px] font-bold tracking-tight">Entry</span>
           </button>
           <button 
-            onClick={() => setActiveTab('roadmap')}
+            onClick={openManual}
             className={`flex flex-col items-center justify-center gap-1 transition-all ${activeTab === 'roadmap' ? 'text-white' : 'text-slate-500'}`}
           >
             <ClipboardList className={`w-5 h-5 ${activeTab === 'roadmap' ? 'fill-white/10' : ''}`} />

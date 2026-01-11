@@ -740,18 +740,6 @@ const matchesCondition = (when, context) => {
   if (when.substrate_in && !matchValue(context.substrate_type, when.substrate_in)) {
     return false;
   }
-  if (when.dark_start_enabled !== undefined && context.dark_start_enabled !== when.dark_start_enabled) {
-    return false;
-  }
-  if (when.recommended_dark_start !== undefined && context.recommended_dark_start !== when.recommended_dark_start) {
-    return false;
-  }
-  if (when.user_dark_start_override !== undefined && context.user_dark_start_override !== when.user_dark_start_override) {
-    return false;
-  }
-  if (when.dark_start_preference_in && !matchValue(context.dark_start_preference, when.dark_start_preference_in)) {
-    return false;
-  }
   if (when.co2_enabled !== undefined && context.co2_enabled !== when.co2_enabled) {
     return false;
   }
@@ -856,9 +844,9 @@ const buildPhasesFromRuleset = ({ ruleset, context, replacements }) => {
   return phases;
 };
 
-const deriveCo2StartGate = ({ co2Enabled, darkStartEnabled, cyclingMode, co2StartIntent }) => {
+const deriveCo2StartGate = ({ co2Enabled, cyclingMode, co2StartIntent }) => {
   if (!co2Enabled) return 'never';
-  if (darkStartEnabled && cyclingMode !== 'fish_in') return 'post_dark_start_exit';
+  if (cyclingMode === 'dark_start') return 'post_dark_start_exit';
   if (cyclingMode === 'fishless_ammonia') return 'post_cycle_stable';
   if (cyclingMode === 'fish_in') return 'post_cycle_stable';
   if (cyclingMode === 'plant_assisted') {
@@ -874,55 +862,46 @@ const generatePhaseList = ({
 }) => {
   const normalizedSetup = normalizeSetup(setup, []);
   const shrimpPlanned = (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0;
-  const tapKh = normalizedSetup.water_source_profile.tap_kh_dkh;
-  const tapKhStatus = tapKh === null || tapKh < 2 ? 'unknown_or_low' : 'ok';
   const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none';
 
-  const cyclingDecision = evaluateDecisionTable(
-    enginePackage.decision_tables['cycling_mode.decision_table.json'],
-    {
-      cycling_mode_preference: normalizedSetup.user_preferences.cycling_mode_preference,
-      shrimp_planned: shrimpPlanned,
-      risk_tolerance: normalizedSetup.user_preferences.risk_tolerance,
-      tap_kh_status: tapKhStatus,
-      ammonia_available: ammoniaAvailable
-    }
-  );
-
-  const darkDecision = evaluateDecisionTable(
-    enginePackage.decision_tables['dark_start.decision_table.json'],
-    {
-      dark_start: normalizedSetup.user_preferences.dark_start === true,
-      goal_profile: normalizedSetup.user_preferences.goal_profile,
-      high_light: normalizedSetup.user_preferences.photoperiod_hours_initial >= 8,
-      aquasoil: normalizedSetup.tank_profile.substrate.type === 'aquasoil'
-    }
-  );
-
-  const recommendedCyclingMode = cyclingDecision.recommended_cycling_mode || 'fishless_ammonia';
+  const lightingIntensityMap = {
+    basic: 'low',
+    dedicated: 'medium',
+    high_performance: 'high'
+  };
+  const userProfile = {
+    substrate_type: normalizedSetup.tank_profile.substrate.type,
+    plant_density: normalizedSetup.biology_profile.plants.density,
+    lighting_intensity: lightingIntensityMap[normalizedSetup.tank_profile.lighting_system] || 'medium',
+    co2_system: normalizedSetup.tank_profile.co2.enabled,
+    stocking_sensitivity: (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0
+      || normalizedSetup.biology_profile.livestock_traits.is_sensitive
+      ? 'sensitive'
+      : 'hardy',
+    product_ammonia: ammoniaAvailable,
+    user_priority: normalizedSetup.user_preferences.goal_profile === 'stability_first'
+      ? 'stability'
+      : normalizedSetup.user_preferences.goal_profile === 'growth_first'
+        ? 'growth'
+        : 'speed',
+    risk_tolerance: normalizedSetup.user_preferences.risk_tolerance
+  };
+  const cycleRecommendation = recommendCycleMethod(userProfile);
+  const recommendedCyclingMode = cycleRecommendation.recommended_method_id === 'I1'
+    ? 'fish_in'
+    : cycleRecommendation.recommended_method_id === 'PA1'
+      ? 'plant_assisted'
+      : cycleRecommendation.recommended_method_id === 'DS1'
+        ? 'dark_start'
+        : 'fishless_ammonia';
   const userSelectedCyclingMode =
     normalizedSetup.user_preferences.cycling_mode_preference !== 'auto'
       ? normalizedSetup.user_preferences.cycling_mode_preference
       : recommendedCyclingMode;
-  const recommendedDarkStart = !!darkDecision.recommended_dark_start;
-  const darkStartPreference = normalizedSetup.user_preferences.dark_start;
-  const darkStartEnabled =
-    darkStartPreference === 'auto' || darkStartPreference === undefined
-      ? recommendedDarkStart
-      : !!darkStartPreference;
-
-  const darkStartAllowed = userSelectedCyclingMode !== 'plant_assisted';
-  const darkStartFinal = darkStartAllowed ? darkStartEnabled : false;
-  const darkStartForced = userSelectedCyclingMode === 'fish_in' && darkStartPreference === true;
-
-  const photoperiodStartHours = normalizedSetup.user_preferences.photoperiod_hours_initial;
-  const lightsOnDuringCycling = !(darkStartFinal && userSelectedCyclingMode !== 'fish_in');
-  const lightingMinimal = darkStartForced;
 
   const co2StartIntent = normalizedSetup.tank_profile.co2.start_intent || 'eventual';
   const co2StartGate = deriveCo2StartGate({
     co2Enabled: normalizedSetup.tank_profile.co2.enabled,
-    darkStartEnabled: darkStartFinal,
     cyclingMode: userSelectedCyclingMode,
     co2StartIntent
   });
@@ -951,27 +930,24 @@ const generatePhaseList = ({
   };
 
   if (userSelectedCyclingMode === 'fishless_ammonia') {
-    if (!darkStartFinal) {
-      addPhase('F1', 'setup', 100, withCo2Wait([]));
-      addPhase('F2', 'ammonia introduction', 200, withCo2Wait([]));
-      addPhase('F3', 'nitrite dominance', 300, withCo2Wait([]));
-      addPhase('F4', 'completion test', 400, withCo2Wait([]));
-      const transitionModifiers = ['light:ramp'];
-      addPhase('F5', 'transition to planted/stocked state', 500, transitionModifiers);
-    } else {
-      addPhase('DS1', 'dark start setup', 101, withCo2Wait(['ctx:dark_start', 'light:off']));
-      addPhase('DS2', 'dark start cycling', 201, withCo2Wait(['ctx:dark_start', 'light:off']));
-      addPhase('DS3', 'dark start exit & planting', 501, ['ctx:dark_start', 'light:ramp']);
-      addPhase('F2', 'ammonia introduction', 210, withCo2Wait(['ctx:dark_start', 'light:off']));
-      addPhase('F3', 'nitrite dominance', 310, withCo2Wait(['ctx:dark_start', 'light:off']));
-      addPhase('F4', 'completion test', 410, withCo2Wait(['ctx:dark_start', 'light:off']));
-    }
+    addPhase('F1', 'setup', 100, withCo2Wait([]));
+    addPhase('F2', 'ammonia introduction', 200, withCo2Wait([]));
+    addPhase('F3', 'nitrite dominance', 300, withCo2Wait([]));
+    addPhase('F4', 'completion test', 400, withCo2Wait([]));
+    const transitionModifiers = ['light:ramp'];
+    addPhase('F5', 'transition to planted/stocked state', 500, transitionModifiers);
+  }
+
+  if (userSelectedCyclingMode === 'dark_start') {
+    addPhase('DS1', 'dark start setup', 101, withCo2Wait(['ctx:dark_start', 'light:off']));
+    addPhase('DS2', 'dark start cycling', 201, withCo2Wait(['ctx:dark_start', 'light:off']));
+    addPhase('DS3', 'dark start ammonia maintenance', 301, withCo2Wait(['ctx:dark_start', 'light:off']));
+    addPhase('DS4', 'dark start nitrite dominance', 401, withCo2Wait(['ctx:dark_start', 'light:off']));
+    addPhase('DS5', 'dark start exit & planting', 501, ['ctx:dark_start', 'light:ramp']);
   }
 
   if (userSelectedCyclingMode === 'fish_in') {
-    const i1Seq = lightingMinimal ? 102 : 100;
-    const i1Modifiers = lightingMinimal ? ['light:minimal'] : [];
-    addPhase('I1', 'setup', i1Seq, withCo2Wait(i1Modifiers));
+    addPhase('I1', 'setup', 100, withCo2Wait([]));
     addPhase('I2', 'stabilization', 200, withCo2Wait([]));
     addPhase('I3', 'biofilter build', 300, withCo2Wait([]));
     addPhase('I4', 'transition', 500, ['light:ramp']);
@@ -1212,7 +1188,6 @@ const normalizeSetup = (setup, notes) => {
   const normalized = {
     user_preferences: {
       cycling_mode_preference: setup?.user_preferences?.cycling_mode_preference ?? 'auto',
-      dark_start: setup?.user_preferences?.dark_start ?? 'auto',
       risk_tolerance: setup?.user_preferences?.risk_tolerance ?? 'low',
       goal_profile: setup?.user_preferences?.goal_profile ?? 'stability_first',
       photoperiod_hours_initial: setup?.user_preferences?.photoperiod_hours_initial ?? 6,
@@ -1480,37 +1455,6 @@ export const generatePlan = ({
   const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none'
     || enabledUserProducts.some((product) => product.role === 'ammonia_source');
 
-  const cyclingDecisionContext = {
-    cycling_mode_preference: normalizedSetup.user_preferences.cycling_mode_preference,
-    shrimp_planned: shrimpPlanned,
-    risk_tolerance: normalizedSetup.user_preferences.risk_tolerance,
-    tap_kh_status: tapKhStatus,
-    ammonia_available: ammoniaAvailable
-  };
-
-  const cyclingDecision = evaluateDecisionTable(
-    enginePackage.decision_tables['cycling_mode.decision_table.json'],
-    cyclingDecisionContext
-  );
-  const cyclingDecisionRecommended = evaluateDecisionTable(
-    enginePackage.decision_tables['cycling_mode.decision_table.json'],
-    { ...cyclingDecisionContext, cycling_mode_preference: 'auto' }
-  );
-
-    const darkStartPreference = normalizedSetup.user_preferences.dark_start;
-    const darkStartRequested = darkStartPreference === true;
-  const darkDecisionContext = {
-    dark_start: darkStartRequested,
-    goal_profile: normalizedSetup.user_preferences.goal_profile,
-    high_light: normalizedSetup.user_preferences.photoperiod_hours_initial >= 8,
-    aquasoil: normalizedSetup.tank_profile.substrate.type === 'aquasoil'
-  };
-
-  const darkDecision = evaluateDecisionTable(
-    enginePackage.decision_tables['dark_start.decision_table.json'],
-    darkDecisionContext
-  );
-
   const lightingIntensityMap = {
     basic: 'low',
     dedicated: 'medium',
@@ -1539,13 +1483,9 @@ export const generatePlan = ({
     ? 'fish_in'
     : cycleRecommendation.recommended_method_id === 'PA1'
       ? 'plant_assisted'
-      : 'fishless_ammonia';
-  const recommendedDarkStart = cycleRecommendation.recommended_method_id === 'DS1';
-  const darkDecisionRecommended = darkDecision;
-  const userSelectedDarkStart =
-    darkStartPreference === 'auto' || darkStartPreference === undefined
-      ? recommendedDarkStart
-      : !!darkStartPreference;
+      : cycleRecommendation.recommended_method_id === 'DS1'
+        ? 'dark_start'
+        : 'fishless_ammonia';
   const userSelectedCyclingMode =
     normalizedSetup.user_preferences.cycling_mode_preference !== 'auto'
       ? normalizedSetup.user_preferences.cycling_mode_preference
@@ -1555,7 +1495,7 @@ export const generatePlan = ({
       ? 'I1'
       : userSelectedCyclingMode === 'plant_assisted'
         ? 'PA1'
-        : userSelectedDarkStart
+        : userSelectedCyclingMode === 'dark_start'
           ? 'DS1'
           : 'F1';
   const selectedRisk = buildRiskMotivation(
@@ -1749,10 +1689,6 @@ export const generatePlan = ({
   const ruleset = protocolRuleset || enginePackage.protocol_ruleset;
   const rulesContext = {
     cycling_mode: userSelectedCyclingMode,
-    dark_start_enabled: userSelectedDarkStart,
-    recommended_dark_start: recommendedDarkStart,
-    user_dark_start_override: userSelectedDarkStart !== recommendedDarkStart,
-    dark_start_preference: darkStartPreference ?? 'auto',
     substrate_type: normalizedSetup.tank_profile.substrate.type,
     hardscape_type: normalizedSetup.tank_profile.hardscape.type,
     heater_installed: normalizedSetup.tank_profile.heater_installed,
@@ -1816,11 +1752,8 @@ export const generatePlan = ({
     selection: {
       recommended_cycling_mode: recommendedCyclingMode,
       user_selected_cycling_mode: userSelectedCyclingMode,
-      recommended_dark_start: recommendedDarkStart,
-      user_selected_dark_start: userSelectedDarkStart,
       risk_score_1_to_5: selectedRisk.finalRisk,
-      reason_codes: cyclingDecisionRecommended.reason_codes || [],
-      dark_start_reason_codes: darkDecisionRecommended.reason_codes || [],
+      reason_codes: [],
       spectrum_motivation: cycleRecommendation.spectrum_motivation,
       risk_motivation: selectedRisk.motivation,
       method_motivation: cycleRecommendation.method_motivation,

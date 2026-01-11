@@ -5,39 +5,28 @@
       "id": "startup",
       "label": "Startup",
       "order": 10,
-      "when": { "cycling_mode_in": ["fishless_ammonia", "fish_in", "plant_assisted"] },
+      "when": { "cycling_mode_in": ["fishless_ammonia", "dark_start", "fish_in", "plant_assisted"] },
       "objective_ids": ["setup", "stability"]
     },
     {
       "id": "dark_start",
       "label": "Dark Start",
       "order": 20,
-      "when": {
-        "all": [
-          { "dark_start_enabled": true },
-          { "any": [
-            { "dark_start_preference_in": ["true"] },
-            { "all": [
-              { "dark_start_preference_in": ["auto"] },
-              { "recommended_dark_start": true }
-            ]}
-          ]}
-        ]
-      },
+      "when": { "cycling_mode_in": ["dark_start"] },
       "objective_ids": ["algae_control"]
     },
     {
       "id": "establish",
       "label": "Establish",
       "order": 30,
-      "when": { "cycling_mode_in": ["fishless_ammonia", "fish_in", "plant_assisted"] },
+      "when": { "cycling_mode_in": ["fishless_ammonia", "dark_start", "fish_in", "plant_assisted"] },
       "objective_ids": ["monitoring", "cycle_start"]
     },
     {
       "id": "cycle",
       "label": "Cycle",
       "order": 40,
-      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted"] },
+      "when": { "cycling_mode_in": ["fishless_ammonia", "dark_start", "plant_assisted"] },
       "objective_ids": ["cycle_progress"],
       "exit_checks": [
         "Ammonia returns to 0 within 24h after dosing",
@@ -49,21 +38,21 @@
       "id": "stabilize",
       "label": "Stabilize",
       "order": 50,
-      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted"] },
+      "when": { "cycling_mode_in": ["fishless_ammonia", "dark_start", "plant_assisted"] },
       "objective_ids": ["cycle_complete"]
     },
     {
       "id": "stock",
       "label": "Stock",
       "order": 60,
-      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted", "fish_in"] },
+      "when": { "cycling_mode_in": ["fishless_ammonia", "dark_start", "plant_assisted", "fish_in"] },
       "objective_ids": ["stocking", "stability"]
     },
     {
       "id": "maintenance",
       "label": "Maintenance",
       "order": 70,
-      "when": { "cycling_mode_in": ["fishless_ammonia", "plant_assisted", "fish_in"] },
+      "when": { "cycling_mode_in": ["fishless_ammonia", "dark_start", "plant_assisted", "fish_in"] },
       "objective_ids": ["maintenance", "stability"]
     }
   ],
@@ -110,20 +99,11 @@
     {
       "id": "r_day0_photoperiod",
       "phase_ids": ["startup"],
-      "when": { "dark_start_enabled": false },
+      "when": { "cycling_mode_in": ["fishless_ammonia", "fish_in", "plant_assisted"] },
       "instructions": [
         { "text": "Set photoperiod to {photoperiod_hours_initial} hours." }
       ],
       "objectives": ["setup"]
-    },
-    {
-      "id": "r_dark_start_override_warning",
-      "phase_ids": ["startup"],
-      "when": { "dark_start_enabled": false, "recommended_dark_start": true },
-      "instructions": [
-        { "text": "Dark start was disabled; expect higher early algae risk." }
-      ],
-      "objectives": ["stability"]
     },
     {
       "id": "r_day0_gh_dose",

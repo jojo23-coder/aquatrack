@@ -15,8 +15,7 @@
       "version": "0.1",
       "fields": {
         "user_preferences": {
-          "cycling_mode_preference": { "type": "string", "enum": ["auto", "fishless_ammonia", "fish_in", "plant_assisted"], "default": "auto" },
-          "dark_start": { "type": "boolean", "default": false },
+          "cycling_mode_preference": { "type": "string", "enum": ["auto", "fishless_ammonia", "dark_start", "fish_in", "plant_assisted"], "default": "auto" },
           "risk_tolerance": { "type": "string", "enum": ["low", "medium", "high"], "default": "low" },
           "goal_profile": { "type": "string", "enum": ["stability_first", "growth_first", "balanced"], "default": "stability_first" },
           "photoperiod_hours_initial": { "type": "number", "default": 6 },
@@ -173,8 +172,6 @@
         "selection": {
           "recommended_cycling_mode": "string",
           "user_selected_cycling_mode": "string",
-          "recommended_dark_start": "boolean",
-          "user_selected_dark_start": "boolean",
           "risk_score_1_to_5": "number",
           "reason_codes": "array",
           "override_acknowledged": "boolean"
@@ -254,20 +251,6 @@
             "reason_codes": ["NO_AMMONIA_SOURCE", "USER_ACCEPTS_RISK"]
           }
         }
-      ]
-    },
-
-    "dark_start.decision_table.json": {
-      "version": "0.1",
-      "derived_fields_logic": {
-        "high_light": "true if photoperiod_hours_initial >= 8",
-        "aquasoil": "true if substrate.type == 'aquasoil'"
-      },
-      "rules": [
-        { "id": "D_user_on", "if": { "dark_start": true }, "then": { "recommended_dark_start": true, "reason_codes": ["USER_SELECTED"] } },
-        { "id": "D_aquasoil", "if": { "aquasoil": true }, "then": { "recommended_dark_start": true, "reason_codes": ["AQUASOIL_ALGAE_RISK"] } },
-        { "id": "D_high_light_growth_first", "if": { "goal_profile": "growth_first", "high_light": true }, "then": { "recommended_dark_start": true, "reason_codes": ["HIGH_LIGHT_RISK"] } },
-        { "id": "D_default_off", "if": {}, "then": { "recommended_dark_start": false, "reason_codes": ["DEFAULT"] } }
       ]
     },
 

@@ -10,7 +10,6 @@ const loadEnginePackage = async () => {
 const baseSetup = {
   user_preferences: {
     cycling_mode_preference: 'auto',
-    dark_start: false,
     risk_tolerance: 'low',
     goal_profile: 'stability_first',
     photoperiod_hours_initial: 6,

@@ -68,8 +68,7 @@ export interface ReminderSettings {
 
 export interface EngineSetup {
   user_preferences: {
-    cycling_mode_preference: 'auto' | 'fishless_ammonia' | 'fish_in' | 'plant_assisted';
-    dark_start: boolean | 'auto';
+    cycling_mode_preference: 'auto' | 'fishless_ammonia' | 'dark_start' | 'fish_in' | 'plant_assisted';
     risk_tolerance: 'low' | 'medium' | 'high';
     goal_profile: 'stability_first' | 'growth_first' | 'balanced';
     photoperiod_hours_initial: number;
@@ -86,7 +85,6 @@ export interface EngineSetup {
   };
   protocol_overrides: {
     cycling: boolean;
-    dark_start: boolean | 'auto';
     maintenance: boolean;
   };
   tank_profile: {
@@ -148,6 +146,7 @@ export interface EngineSetup {
       solution_percent: number | null;
     };
     selected_product_ids: string[];
+    remineralizer_mode?: 'combo' | 'separate';
     user_products: Array<{
       role: 'gh_remineralizer' | 'kh_buffer' | 'gh_kh_remineralizer' | 'bacteria_starter' | 'fertilizer_micros' | 'ammonia_source' | 'detoxifier_conditioner' | 'water_clarifier' | 'water_quality_support';
       enabled: boolean;
