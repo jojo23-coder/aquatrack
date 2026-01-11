@@ -488,6 +488,10 @@
     "i_light_ramp_strategy": {
       "type": "instruction",
       "text_template": "Strategy: **Start Lights Low.** We will set your lights to **50–60%** intensity initially. Your plants are currently in transplant shock and growing roots, not leaves. If you blast them with 100% light now, they can't use it, but **Algae** can. We will ramp up the power slowly over the next 6 weeks. Increase intensity a little each week; if algae appears, pause the ramp until the tank stabilizes."
+      ,
+      "conditions": [
+        "setup.lighting_system == 'high_performance'"
+      ]
     },
     "i_light_turn_on_guidance": {
       "type": "instruction",

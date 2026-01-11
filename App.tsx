@@ -828,6 +828,8 @@ const App: React.FC = () => {
     return Number.isNaN(parsed) ? null : parsed;
   };
 
+  const [waterTargetsExported, setWaterTargetsExported] = useState(false);
+
   const targetSpreads: Record<'temperature' | 'pH' | 'nitrate' | 'gh' | 'kh', number> = {
     temperature: 1,
     pH: 0.3,
@@ -851,6 +853,13 @@ const App: React.FC = () => {
       }
     }));
   };
+
+  const getTargetsSignature = (targets: AquariumState['targets']) => JSON.stringify({
+    temperature: getTargetCenter(targets.temperature),
+    pH: getTargetCenter(targets.pH),
+    gh: getTargetCenter(targets.gh),
+    kh: getTargetCenter(targets.kh)
+  });
 
   const addLivestock = (key: keyof AquariumState['engineSetup']['biology_profile']['livestock_plan'], name: string) => {
     if (!name) return;
@@ -1204,6 +1213,29 @@ const App: React.FC = () => {
     return issues;
   }, [aquarium, recommendedWaterTargets, recommendedPlantGuidance, protocolPlan, recommendedProtocolPlan]);
 
+  const recommendedTargetsSignature = recommendedWaterTargets ? JSON.stringify({
+    temperature: recommendedWaterTargets.temperature.mean,
+    pH: recommendedWaterTargets.pH.mean,
+    gh: recommendedWaterTargets.gh.mean,
+    kh: recommendedWaterTargets.kh.mean
+  }) : null;
+  const currentTargetsSignature = getTargetsSignature(aquarium.targets);
+  const isWaterTargetsExported = Boolean(
+    waterTargetsExported
+    && recommendedTargetsSignature
+    && currentTargetsSignature === recommendedTargetsSignature
+  );
+
+  useEffect(() => {
+    if (!recommendedTargetsSignature) {
+      setWaterTargetsExported(false);
+      return;
+    }
+    if (currentTargetsSignature !== recommendedTargetsSignature) {
+      setWaterTargetsExported(false);
+    }
+  }, [currentTargetsSignature, recommendedTargetsSignature]);
+
   const applyRecommendedWaterTargets = () => {
     if (!recommendedWaterTargets) return;
     if (recommendedWaterTargets.temperature.mean !== null) {
@@ -1218,6 +1250,7 @@ const App: React.FC = () => {
     if (recommendedWaterTargets.kh.mean !== null) {
       updateTargetCenter('kh', recommendedWaterTargets.kh.mean);
     }
+    setWaterTargetsExported(true);
   };
 
   const productDefinitions = [
@@ -2270,13 +2303,15 @@ const App: React.FC = () => {
                     <button
                       onClick={applyRecommendedWaterTargets}
                       disabled={!recommendedWaterTargets}
-                      className={`px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                        recommendedWaterTargets
-                          ? 'bg-slate-100 text-slate-950 border-slate-100'
-                          : 'bg-slate-800 text-slate-500 border-slate-700'
+                      className={`px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-colors ${
+                        !recommendedWaterTargets
+                          ? 'bg-slate-800 text-slate-500 border-slate-700'
+                          : isWaterTargetsExported
+                            ? 'bg-slate-700 text-slate-300 border-slate-600'
+                            : 'bg-slate-100 text-slate-950 border-slate-100'
                       }`}
                     >
-                      Export to Water
+                      {isWaterTargetsExported ? 'Exported' : 'Export to Water'}
                     </button>
                   </div>
                 </div>
