@@ -184,7 +184,9 @@ export const getTaskSchedule = (
     completionKey && compareDateKeys(completionKey, startKey) >= 0 ? completionKey : null;
 
   if (task.frequency === 'one-time') {
-    const dueDateKey = getPhaseStartKey(task, context);
+    const offsetDays = Number.isFinite(task.dueOffsetDays) ? Number(task.dueOffsetDays) : 0;
+    const phaseStartKey = getPhaseStartKey(task, context);
+    const dueDateKey = offsetDays ? addDaysToKey(phaseStartKey, offsetDays, context.timezone) : phaseStartKey;
     const isCompletedForPeriod = Boolean(task.completed || effectiveCompletionKey);
     const daysUntilDue = dueDateKey ? daysBetweenKeys(todayKey, dueDateKey) : null;
     const status = isCompletedForPeriod

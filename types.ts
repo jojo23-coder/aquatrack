@@ -51,6 +51,7 @@ export interface Task {
   endPhaseId?: PhaseId; // For recurring tasks: hidden after this phase
   frequency: TaskFrequency;
   everyDays?: number;
+  dueOffsetDays?: number;
   title: string;
   completed: boolean;
   lastCompletedAt?: string;

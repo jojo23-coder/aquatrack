@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AquariumState, TankType, WaterLog, PhaseId, ParameterRange, ReminderSettings, EngineSetup, Task, WaterLogParameter } from './types';
 import { INITIAL_TASKS, MOCK_LOGS, PHASES } from './constants';
 import WaterParameterChart from './components/WaterParameterChart';
@@ -234,6 +234,10 @@ const App: React.FC = () => {
   const [selectedFishToAdd, setSelectedFishToAdd] = useState(fishOptions[0] || '');
   const [selectedShrimpToAdd, setSelectedShrimpToAdd] = useState(shrimpOptions[0] || '');
   const [selectedPlantToAdd, setSelectedPlantToAdd] = useState(plantOptions[0] || '');
+  const manualPhaseScrollRef = useRef<HTMLDivElement | null>(null);
+  const activePhaseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const selectedPhaseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const activePhasePickerRef = useRef<HTMLButtonElement | null>(null);
 
   const debugNow = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -817,6 +821,44 @@ const App: React.FC = () => {
       setManualPhaseId(null);
     }
   }, [manualPhaseId, phaseOrder]);
+
+  useEffect(() => {
+    if (activeTab !== 'roadmap') return;
+    if (!activePhaseButtonRef.current) return;
+    const handle = requestAnimationFrame(() => {
+      activePhaseButtonRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [activeTab, aquarium.currentPhase, manualPhases.length]);
+
+  useEffect(() => {
+    if (activeTab !== 'roadmap') return;
+    if (!selectedPhaseButtonRef.current) return;
+    const handle = requestAnimationFrame(() => {
+      selectedPhaseButtonRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [activeTab, manualViewPhaseId, manualPhases.length]);
+
+  useEffect(() => {
+    if (!showPhasePicker) return;
+    if (!activePhasePickerRef.current) return;
+    const handle = requestAnimationFrame(() => {
+      activePhasePickerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [showPhasePicker, manualViewPhaseId, manualPhases.length]);
 
   const getPhaseStatus = (phaseId: PhaseId) => {
     const currentIndex = phaseOrder.indexOf(aquarium.currentPhase);
@@ -1718,6 +1760,7 @@ const App: React.FC = () => {
           endPhaseId: isOneTime ? undefined : ((taskAtom.until_phase_id as PhaseId) || (phaseId as PhaseId)),
           frequency,
           everyDays: frequency === 'interval' ? Number(everyDays || 0) || undefined : undefined,
+          dueOffsetDays: isOneTime ? Number(taskAtom.due_offset_days ?? taskAtom.dueOffsetDays ?? 0) || undefined : undefined,
           title: taskAtom.text,
           completed: false,
           logParameter: logParameter || undefined
@@ -2089,13 +2132,14 @@ const App: React.FC = () => {
           <div className="px-4 space-y-6 pb-24 animate-in fade-in duration-300 pt-4">
              <h1 className="text-3xl font-extrabold text-white">Manual</h1>
              
-             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+             <div ref={manualPhaseScrollRef} className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                {manualPhases.map(phase => {
                  const status = getPhaseStatus(phase.id as PhaseId);
                  const statusLabel = status === 'done' ? 'DONE' : status === 'not-yet' ? 'NOT YET' : '';
                  return (
                    <button 
                     key={phase.id}
+                    ref={phase.id === manualViewPhaseId ? selectedPhaseButtonRef : phase.id === aquarium.currentPhase ? activePhaseButtonRef : null}
                     onClick={() => setManualPhaseId(phase.id as PhaseId)}
                     className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shrink-0 border flex items-center gap-2 ${
                       manualViewPhaseId === phase.id 
@@ -2122,11 +2166,20 @@ const App: React.FC = () => {
                  <span className="text-lg">{manualPhaseData.icon}</span> 
                  {manualPhaseData.name}
                </h3>
-               {manualPhaseCountdown && (
+               {manualPhaseCountdown && isManualViewActive && (
                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                    <span>{manualPhaseCountdown.label}</span>
                    <span className="text-slate-600">•</span>
                    <span>{manualPhaseCountdown.detail}</span>
+                 </div>
+               )}
+               {!isManualViewActive && (
+                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                   {manualPhaseData.durationDays === null
+                     ? 'Normal duration: ongoing'
+                     : manualPhaseData.durationDays
+                       ? `Normal duration: ${manualPhaseData.durationDays} days`
+                       : 'Normal duration: not set'}
                  </div>
                )}
                {!isManualViewActive && (
@@ -3725,23 +3778,24 @@ const App: React.FC = () => {
                 return (
                   <button 
                     key={phase.id}
+                    ref={phase.id === manualViewPhaseId ? activePhasePickerRef : null}
                     onClick={() => {
                       setPhase(phase.id as PhaseId);
                       setShowPhasePicker(false);
                     }}
                     className={`p-5 rounded-[24px] border text-left flex items-center gap-4 transition-all active:scale-95 ${
-                      aquarium.currentPhase === phase.id 
+                      manualViewPhaseId === phase.id 
                         ? 'bg-slate-100 border-slate-100 shadow-lg shadow-white/5' 
                         : 'bg-slate-800/40 border-slate-800 hover:border-slate-700'
                     }`}
                   >
                     <span className="text-2xl grayscale-[0.5] group-hover:grayscale-0">{phase.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-bold ${aquarium.currentPhase === phase.id ? 'text-slate-950' : 'text-white'}`}>
+                      <p className={`text-sm font-bold ${manualViewPhaseId === phase.id ? 'text-slate-950' : 'text-white'}`}>
                         {phase.name.split(' — ')[1] || phase.name}
                       </p>
                       <div className="flex items-center gap-2">
-                        <p className={`text-[10px] font-medium truncate ${aquarium.currentPhase === phase.id ? 'text-slate-700' : 'text-slate-500'}`}>
+                        <p className={`text-[10px] font-medium truncate ${manualViewPhaseId === phase.id ? 'text-slate-700' : 'text-slate-500'}`}>
                           {phase.objectives?.[0] || 'Protocol phase'}
                         </p>
                         {statusLabel && (

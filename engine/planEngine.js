@@ -287,6 +287,11 @@ const buildPlaceholderMap = (data) => {
     fertilizer_start_ml_week: formatNumber(dosingReference.fertilizer_start_ml_week, 2),
     fertilizer_start_factor: formatNumber(calculatorDefaults.fertilizer_start_factor, 2),
     fertilizer_maint_ml_week_range: formatRange(dosingReference.fertilizer_maint_ml_week_range, 2),
+    'doses.fertilizer_micros.fertilizer_micros_ml_week_half': formatNumber(dosingReference.fertilizer_start_ml_week, 1),
+    'doses.fertilizer_micros.fertilizer_micros_ml_week_full': formatNumber(
+      averageRange(dosingReference.fertilizer_maint_ml_week_range),
+      1
+    ),
     gh_remineralizer_name: getRoleName('gh_remineralizer'),
     kh_buffer_name: getRoleName('kh_buffer'),
     bacteria_starter_name: getRoleName('bacteria_starter'),
@@ -418,7 +423,9 @@ const buildTemplateContext = ({
   doses.fertilizer_micros = {
     ...doses.fertilizer_micros,
     fertilizer_micros_ml_week_start: formatNumber(dosingReference.fertilizer_start_ml_week, 1),
-    fertilizer_micros_ml_week_range: formatNumber(averageRange(dosingReference.fertilizer_maint_ml_week_range), 1)
+    fertilizer_micros_ml_week_range: formatNumber(averageRange(dosingReference.fertilizer_maint_ml_week_range), 1),
+    fertilizer_micros_ml_week_half: formatNumber(dosingReference.fertilizer_start_ml_week, 1),
+    fertilizer_micros_ml_week_full: formatNumber(averageRange(dosingReference.fertilizer_maint_ml_week_range), 1)
   };
   doses.gh_remineralizer = {
     ...doses.gh_remineralizer,
@@ -1169,6 +1176,7 @@ const generatePhasesFromPlaylists = ({
           text,
           cadence: atom.cadence || 'one_time',
           every_days: atom.every_days ?? atom.everyDays,
+          due_offset_days: atom.due_offset_days ?? atom.dueOffsetDays,
           parameter: atom.parameter
         });
       }

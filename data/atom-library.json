@@ -174,6 +174,11 @@
       "type": "instruction",
       "text_template": "Run the filter 24/7. Oxygen is vital for the bacteria."
     },
+    "t_equip_filter_turn_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on the filter and confirm steady flow."
+    },
     "i_equip_heater_target_reset": {
       "type": "instruction",
       "text_template": "Reset your heater to your target temperature ({{targets.temperature_target_c}}°C). We no longer need the elevated incubation temperature.",
@@ -303,8 +308,8 @@
     },
     "t_fert_dose_full_weekly_transition": {
       "type": "task",
-      "cadence": "weekly",
-      "text_template": "Increase to **Full Fertilizer Dose**. {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}}.",
+      "cadence": "one_time",
+      "text_template": "Increase to Full Fertilizer Dose. {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}}.",
       "conditions": [
         "products.fertilizer_micros.selected == true",
         "setup.plants_present_in_plan == true"
@@ -313,7 +318,7 @@
     "t_fert_dose_half_once": {
       "type": "task",
       "cadence": "one_time",
-      "text_template": "Add {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}} (**Half Dose**).",
+      "text_template": "Add {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
       "conditions": [
         "products.fertilizer_micros.selected == true"
       ]
@@ -321,7 +326,7 @@
     "t_fert_dose_half_weekly": {
       "type": "task",
       "cadence": "weekly",
-      "text_template": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}} (**Half Dose**).",
+      "text_template": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
       "conditions": [
         "products.fertilizer_micros.selected == true",
         "setup.plants_present_in_plan == true"
@@ -330,7 +335,7 @@
     "t_fert_dose_maintenance_weekly": {
       "type": "task",
       "cadence": "weekly",
-      "text_template": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_start}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth).",
+      "text_template": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth).",
       "conditions": [
         "products.fertilizer_micros.selected == true",
         "setup.plants_present_in_plan == true"
@@ -524,6 +529,10 @@
     "i_maint_filter_do_not_clean_early": {
       "type": "instruction",
       "text_template": "Do NOT clean your filter yet. The brown sludge building up inside is the bacterial colony we are trying to grow."
+    },
+    "i_maint_long_haul_nitrate_report_card": {
+      "type": "instruction",
+      "text_template": "**Test Before You Clean**. Always measure Nitrates before performing your water change and before dosing fertilizer. This reading is your 'Report Card' for the previous week.**> 40 ppm**: The tank is dirty. Perform a larger (50%) water change today.**< 5 ppm**: Your plants may starve. Feed slightly more or reduce water change volume. **10-20 ppm**: Perfect. Your routine is working."
     },
     "i_maint_wc_inert_emergency": {
       "type": "instruction",
@@ -808,7 +817,7 @@
     "t_water_gh_dose_full_fill": {
       "type": "task",
       "cadence": "one_time",
-      "text_template": "Dissolve {{doses.gh_remineralizer.fullfill_dose_amount}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} before filling.",
+      "text_template": "Dissolve {{doses.gh_remineralizer.fullfill_dose_amount}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in bucket before filling.",
       "conditions": [
         "products.gh_remineralizer.selected == true",
         "!products.gh_kh_remineralizer.selected"
@@ -817,7 +826,7 @@
     "t_water_ghkh_dose_full_fill": {
       "type": "task",
       "cadence": "one_time",
-      "text_template": "Dissolve {{doses.gh_kh_remineralizer.fullfill_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} before filling.",
+      "text_template": "Dissolve {{doses.gh_kh_remineralizer.fullfill_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} in bucket before filling.",
       "conditions": [
         "products.gh_kh_remineralizer.selected == true"
       ]
@@ -825,7 +834,7 @@
     "t_water_kh_dose_full_fill": {
       "type": "task",
       "cadence": "one_time",
-      "text_template": "Dissolve {{doses.kh_buffer.fullfill_dose_amount}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} before filling.",
+      "text_template": "Dissolve {{doses.kh_buffer.fullfill_dose_amount}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in bucket before filling.",
       "conditions": [
         "products.kh_buffer.selected == true",
         "!products.gh_kh_remineralizer.selected"
@@ -876,7 +885,8 @@
       "parameter": "ammonia",
       "conditions": [
         "setup.can_test_ammonia == true"
-      ]
+      ],
+      "due_offset_days": 1
     },
     "t_chem_ammonia_test_daily": {
       "type": "task",
@@ -931,7 +941,8 @@
       "parameter": "nitrite",
       "conditions": [
         "setup.can_test_nitrite == true"
-      ]
+      ],
+      "due_offset_days": 1
     },
     "t_chem_nitrite_test_daily": {
       "type": "task",
@@ -985,6 +996,13 @@
     "i_intro_duration_indefinite": {
       "type": "instruction",
       "text_template": "This is the long-haul routine. It continues indefinitely as your steady maintenance phase."
+    },
+    "e_chem_nitrate_fert_high_note": {
+      "type": "expected_behaviour",
+      "text_template": "Note: If your fertilizer contains Nitrogen (check the label for 'N'), your Nitrate tests will read artificially high. Rely on Ammonia and Nitrite dropping to 0 to confirm your cycle is finished.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true"
+      ]
     }
   }
 }

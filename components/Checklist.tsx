@@ -56,7 +56,8 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, onTaskClick,
     return `${Math.abs(daysUntilDue)}d overdue`;
   };
 
-  const getStatusLabel = (task: Task, dueDateKey: string | null, status: string) => {
+  const getStatusLabel = (task: Task, dueDateKey: string | null, status: string, hideDueTags: boolean) => {
+    if (hideDueTags) return '';
     if (status === 'overdue') return 'Overdue';
     if (status === 'due') return 'Due today';
     if (status === 'completed' && task.frequency === 'one-time') return 'Completed';
@@ -104,7 +105,7 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, onTaskClick,
             >
               {(() => {
                 const schedule = getTaskSchedule(task, cadenceContext, now);
-                const statusLabel = getStatusLabel(task, schedule.dueDateKey, schedule.status);
+                const statusLabel = getStatusLabel(task, schedule.dueDateKey, schedule.status, isReadOnly);
                 const countdownLabel = (task.frequency === 'one-time' && schedule.status === 'completed')
                   ? ''
                   : getCountdownLabel(schedule.daysUntilDue, schedule.status);
@@ -131,10 +132,12 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, onTaskClick,
                           </span>
                         )}
                       </div>
-                      <div className={`text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between ${statusColor}`}>
-                        <span>{statusLabel}</span>
-                        {countdownLabel && <span className="text-[9px] font-medium text-slate-500">{countdownLabel}</span>}
-                      </div>
+                      {!isReadOnly && (
+                        <div className={`text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between ${statusColor}`}>
+                          <span>{statusLabel}</span>
+                          {countdownLabel && <span className="text-[9px] font-medium text-slate-500">{countdownLabel}</span>}
+                        </div>
+                      )}
                     </div>
                   </>
                 );
