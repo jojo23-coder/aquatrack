@@ -17,6 +17,7 @@ import { formatDateKeyForDisplay, formatZonedTimestamp, getDateKeyFromTimestamp,
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
 
 const STORAGE_KEY = 'aquatrack_v1_data';
+const PROTOCOL_RESET_MODAL_KEY = 'aquatrack_hide_protocol_reset_modal';
 const DEFAULT_TIME_ZONE = getDefaultTimeZone();
 
 const fishSpeciesIndex = new Map();
@@ -224,6 +225,11 @@ const App: React.FC = () => {
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>('default');
   const [showTankSwitcher, setShowTankSwitcher] = useState(false);
   const [showDeleteTankModal, setShowDeleteTankModal] = useState(false);
+  const [showProtocolResetModal, setShowProtocolResetModal] = useState(false);
+  const [hideProtocolResetModal, setHideProtocolResetModal] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(PROTOCOL_RESET_MODAL_KEY) === 'true';
+  });
   const [activeSetupSection, setActiveSetupSection] = useState<'tank' | 'water' | 'biology' | 'preferences' | 'products' | 'protocol' | 'alerts' | 'data'>('tank');
   const [selectedFishToAdd, setSelectedFishToAdd] = useState(fishOptions[0] || '');
   const [selectedShrimpToAdd, setSelectedShrimpToAdd] = useState(shrimpOptions[0] || '');
@@ -881,6 +887,18 @@ const App: React.FC = () => {
       };
     });
     setManualPhaseId(phaseId);
+  };
+
+  const handleStartProtocol = () => {
+    if (aquarium.tasks.length) {
+      if (hideProtocolResetModal) {
+        generateProtocolTasks();
+        return;
+      }
+      setShowProtocolResetModal(true);
+      return;
+    }
+    generateProtocolTasks();
   };
 
   const handleToggleTask = (id: string) => {
@@ -1619,7 +1637,7 @@ const App: React.FC = () => {
     { role: 'gh_kh_remineralizer', label: 'GH/KH Remineralizer', defaultUnit: 'g' },
     { role: 'bacteria_starter', label: 'Bacteria Starter', defaultUnit: 'mL' },
     { role: 'fertilizer_micros', label: 'Fertilizer (Micros)', defaultUnit: 'mL' },
-    { role: 'ammonia_source', label: 'Ammonia Source', defaultUnit: 'mL', effectLabel: 'Δ Ammonia' },
+    { role: 'ammonia_source', label: 'Ammonia Source', defaultUnit: 'mL', effectLabel: 'Δ PPM' },
     { role: 'detoxifier_conditioner', label: 'Detoxifier/Conditioner', defaultUnit: 'mL' },
     { role: 'water_clarifier', label: 'Water Clarifier', defaultUnit: 'mL' },
     { role: 'water_quality_support', label: 'Water Quality Support', defaultUnit: 'mL' }
@@ -1708,10 +1726,12 @@ const App: React.FC = () => {
     });
 
     const firstPhaseId = (planPhases?.[0]?.phase_id as PhaseId) || aquarium.currentPhase;
-    const phaseStartKey = getZonedDateKey(new Date(), aquarium.timezone || DEFAULT_TIME_ZONE);
+    const timeZone = aquarium.timezone || DEFAULT_TIME_ZONE;
+    const phaseStartKey = getZonedDateKey(debugNow || new Date(), timeZone);
     setAquarium(prev => ({
       ...prev,
       tasks,
+      startDate: phaseStartKey,
       currentPhase: firstPhaseId,
       phaseStartDates: {
         ...prev.phaseStartDates,
@@ -2918,15 +2938,14 @@ const App: React.FC = () => {
                   }).map(def => {
                     const product = aquarium.engineSetup.product_stack.user_products.find(item => item.role === def.role);
                     if (!product) return null;
-                    const hasEffect = Boolean(def.effectLabel)
-                      && def.role !== 'ammonia_source'
-                      && !(def.role === 'kh_buffer' && product.bicarbonate)
-                      && !(def.role === 'ammonia_source' && product.pure_ammonia);
                     const isKhBuffer = def.role === 'kh_buffer';
                     const isCombo = def.role === 'gh_kh_remineralizer';
-                    const useBicarbonate = isKhBuffer && product.bicarbonate;
                     const isAmmonia = def.role === 'ammonia_source';
+                    const useBicarbonate = isKhBuffer && product.bicarbonate;
                     const usePureAmmonia = isAmmonia && product.pure_ammonia;
+                    const hasEffect = Boolean(def.effectLabel)
+                      && !useBicarbonate
+                      && !usePureAmmonia;
                     const bicarbonatePreset = {
                       name: 'Bicarbonate (NaHCO₃)',
                       dose_amount: 0.03,
@@ -3250,9 +3269,9 @@ const App: React.FC = () => {
                     <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Protocol Summary</h3>
                     <span className="text-[10px] text-slate-500">Engine-guided</span>
                   </div>
-                  <p className="text-[11px] text-slate-500">Review recommendations and enable overrides when you need to deviate.</p>
+                  <p className="text-[11px] text-slate-500">Start the protocol to set your timeline and generate the checklist.</p>
                   <button
-                    onClick={generateProtocolTasks}
+                    onClick={handleStartProtocol}
                     disabled={!protocolPlan}
                     className={`w-full py-3 rounded-2xl text-xs font-bold border transition-all ${
                       protocolPlan
@@ -3260,7 +3279,7 @@ const App: React.FC = () => {
                         : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
                     }`}
                   >
-                    Generate Protocol
+                    Start Protocol
                   </button>
                 </div>
 
@@ -3645,6 +3664,48 @@ const App: React.FC = () => {
                 className="py-3 bg-red-600 text-white font-bold rounded-2xl border border-red-500"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showProtocolResetModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowProtocolResetModal(false)} />
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm relative z-10 shadow-2xl space-y-4">
+            <h3 className="text-lg font-bold text-white">Restart Protocol?</h3>
+            <p className="text-[12px] text-slate-400">
+              Starting a new protocol will reset your current checklist and phase timeline. This cannot be undone.
+            </p>
+            <label className="flex items-center gap-2 text-[11px] text-slate-400">
+              <input
+                type="checkbox"
+                checked={hideProtocolResetModal}
+                onChange={(event) => {
+                  const nextValue = event.target.checked;
+                  setHideProtocolResetModal(nextValue);
+                  localStorage.setItem(PROTOCOL_RESET_MODAL_KEY, String(nextValue));
+                }}
+                className="h-4 w-4 rounded border border-slate-600 bg-slate-800 text-emerald-400 focus:ring-emerald-400"
+              />
+              Don’t show again
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowProtocolResetModal(false)}
+                className="py-3 bg-slate-800 text-slate-300 font-bold rounded-2xl border border-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowProtocolResetModal(false);
+                  generateProtocolTasks();
+                }}
+                className="py-3 bg-amber-500 text-slate-950 font-bold rounded-2xl border border-amber-400"
+              >
+                Start New
               </button>
             </div>
           </div>

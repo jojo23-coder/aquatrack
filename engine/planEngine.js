@@ -186,6 +186,13 @@ const calcAmmoniaMl = (netVolume, targetPpm, solutionPercent, calibration) => {
   return calibration.reference_dose_ml * ratio;
 };
 
+const calcAmmoniaDoseFromEffect = (netVolume, targetPpm, doseAmount, perVolumeL, effectValue) => {
+  if (!doseAmount || !perVolumeL || !effectValue) return null;
+  if (doseAmount <= 0 || perVolumeL <= 0 || effectValue <= 0) return null;
+  const ratio = (netVolume / perVolumeL) * (targetPpm / effectValue);
+  return doseAmount * ratio;
+};
+
 const calcFertilizerMlWeek = (netVolume, doseFactor, label) => {
   const base = label.ml_per_250l_per_week * (netVolume / 250);
   return base * doseFactor;
@@ -1011,17 +1018,32 @@ const generatePhasesFromPlaylists = ({
     ?? parameterLimits.kh_dkh?.max
     ?? 0;
 
-  const ammoniaSolutionPercent = normalizedSetup.product_stack.ammonia_source.solution_percent
+  const userProducts = normalizedSetup.product_stack.user_products || [];
+  const enabledUserProducts = userProducts.filter((product) => product.enabled);
+  const userAmmonia = enabledUserProducts.find((product) => product.role === 'ammonia_source');
+  const useAmmoniaEffect = userAmmonia && userAmmonia.pure_ammonia === false;
+  const ammoniaSolutionPercent = userAmmonia?.ammonia_solution_percent
+    ?? normalizedSetup.product_stack.ammonia_source.solution_percent
     ?? calculatorDefaults.ammonia_solution_percent;
   const ammoniaTargetRange = calculatorDefaults.cycle_ammonia_target_ppm_range || [1.5, 2.0];
-  const ammoniaMlRange = ammoniaTargetRange.map((ppm) =>
-    calcAmmoniaMl(
-      derivedNetVolume,
-      ppm,
-      ammoniaSolutionPercent,
-      calculatorConstants.ammonia_calibration
+  const ammoniaMlRange = useAmmoniaEffect
+    ? ammoniaTargetRange.map((ppm) =>
+      calcAmmoniaDoseFromEffect(
+        derivedNetVolume,
+        ppm,
+        userAmmonia.dose_amount,
+        userAmmonia.per_volume_l,
+        userAmmonia.effect_value
+      )
     )
-  );
+    : ammoniaTargetRange.map((ppm) =>
+      calcAmmoniaMl(
+        derivedNetVolume,
+        ppm,
+        ammoniaSolutionPercent,
+        calculatorConstants.ammonia_calibration
+      )
+    );
 
   const ghFullFillRange = calcGhGRange(
     normalizedSetup.water_source_profile.tap_gh_dgh,
@@ -1075,8 +1097,6 @@ const generatePhasesFromPlaylists = ({
     fertilizer_maint_ml_week_range: fertilizerMaintRange.map((value) => roundTo(value, 2))
   };
 
-  const userProducts = normalizedSetup.product_stack.user_products || [];
-  const enabledUserProducts = userProducts.filter((product) => product.enabled);
   const buildSelectedIds = (products) => {
     const ids = [];
     products.forEach((product) => {
@@ -1566,25 +1586,36 @@ export const generatePlan = ({
     ?? parameterLimits.kh_dkh?.max
     ?? 0;
 
+  const userAmmonia = enabledUserProducts.find(
+    (product) => product.role === 'ammonia_source'
+  );
+  const useAmmoniaEffect = userAmmonia && userAmmonia.pure_ammonia === false;
   const ammoniaSolutionPercent = (() => {
-    const userAmmonia = enabledUserProducts.find(
-      (product) => product.role === 'ammonia_source'
-    );
     if (userAmmonia?.ammonia_solution_percent) {
       return userAmmonia.ammonia_solution_percent;
     }
     return normalizedSetup.product_stack.ammonia_source.solution_percent;
   })();
   const ammoniaTargetRange = calculatorDefaults.cycle_ammonia_target_ppm_range || [1.5, 2.0];
-  const ammoniaMlRange = ammoniaTargetRange.map((target) =>
-    calcAmmoniaMl(
-      derivedNetVolume,
-      target,
-      ammoniaSolutionPercent,
-      calculatorConstants.ammonia_calibration
+  const ammoniaMlRange = useAmmoniaEffect
+    ? ammoniaTargetRange.map((target) =>
+      calcAmmoniaDoseFromEffect(
+        derivedNetVolume,
+        target,
+        userAmmonia.dose_amount,
+        userAmmonia.per_volume_l,
+        userAmmonia.effect_value
+      )
     )
-  );
-  if (ammoniaMlRange.some((value) => value === null)) {
+    : ammoniaTargetRange.map((target) =>
+      calcAmmoniaMl(
+        derivedNetVolume,
+        target,
+        ammoniaSolutionPercent,
+        calculatorConstants.ammonia_calibration
+      )
+    );
+  if (!useAmmoniaEffect && ammoniaMlRange.some((value) => value === null)) {
     notes.push({
       type: 'warning',
       message: `Ammonia dosing requires calibration for solution_percent ${ammoniaSolutionPercent}.`
