@@ -31,16 +31,18 @@ export interface WaterLog {
   id: string;
   date: string;
   temperature: number;
-  pH: number;
-  ammonia: number;
-  nitrite: number;
-  nitrate: number;
+  pH?: number;
+  ammonia?: number;
+  nitrite?: number;
+  nitrate?: number;
   gh?: number;
   kh?: number;
   degassedPH?: number;
   bubbleRate?: number;
   notes?: string;
 }
+
+export type WaterLogParameter = 'pH' | 'ammonia' | 'nitrite' | 'nitrate' | 'gh' | 'kh';
 
 export interface Task {
   id: string;
@@ -52,6 +54,8 @@ export interface Task {
   title: string;
   completed: boolean;
   lastCompletedAt?: string;
+  logParameter?: WaterLogParameter;
+  logDerived?: boolean;
 }
 
 export interface ReminderSettings {

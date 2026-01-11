@@ -8,13 +8,14 @@ interface Props {
   tasks: Task[];
   activePhase: PhaseId;
   onToggle: (id: string) => void;
+  onTaskClick?: (task: Task) => void;
   phaseOrder?: PhaseId[];
   cadenceContext: CadenceContext;
   isReadOnly?: boolean;
   nowOverride?: Date | null;
 }
 
-const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder, cadenceContext, isReadOnly = false, nowOverride = null }) => {
+const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, onTaskClick, phaseOrder, cadenceContext, isReadOnly = false, nowOverride = null }) => {
   // Helper to determine if a task is available in the current phase
   const isTaskAvailable = (task: Task) => {
     if (task.frequency === 'one-time') {
@@ -92,7 +93,9 @@ const Checklist: React.FC<Props> = ({ tasks, activePhase, onToggle, phaseOrder, 
             <div 
               key={task.id}
               onClick={() => {
-                if (!isReadOnly) onToggle(task.id);
+                if (isReadOnly) return;
+                onTaskClick?.(task);
+                onToggle(task.id);
               }}
               className={`flex items-center p-4 transition-colors group ${
                 isReadOnly ? 'cursor-not-allowed opacity-60' : 'cursor-pointer active:bg-slate-800'

@@ -1148,7 +1148,8 @@ const generatePhasesFromPlaylists = ({
         task_atoms.push({
           text,
           cadence: atom.cadence || 'one_time',
-          every_days: atom.every_days ?? atom.everyDays
+          every_days: atom.every_days ?? atom.everyDays,
+          parameter: atom.parameter
         });
       }
     });

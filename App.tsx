@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { AquariumState, TankType, WaterLog, PhaseId, ParameterRange, ReminderSettings, EngineSetup, Task } from './types';
+import { AquariumState, TankType, WaterLog, PhaseId, ParameterRange, ReminderSettings, EngineSetup, Task, WaterLogParameter } from './types';
 import { INITIAL_TASKS, MOCK_LOGS, PHASES } from './constants';
 import WaterParameterChart from './components/WaterParameterChart';
 import Checklist from './components/Checklist';
@@ -12,7 +12,7 @@ import protocolRuleset from './data/protocol.ruleset.json';
 import atomLibrary from './data/atom-library.json';
 import phasePlaylists from './data/phase-playlists.lookup.json';
 import { generatePlan, generatePhasesFromPlaylists } from './engine/planEngine';
-import { formatZonedTimestamp, getDefaultTimeZone, getTaskSchedule, getZonedDateKey, normalizeDateKey } from './services/cadence';
+import { formatZonedTimestamp, getDateKeyFromTimestamp, getDefaultTimeZone, getTaskSchedule, getZonedDateKey, normalizeDateKey } from './services/cadence';
 
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
 
@@ -121,6 +121,48 @@ const renderBoldText = (text: string) => {
     }
     return <span key={`t-${index}`}>{part}</span>;
   });
+};
+
+const CHEM_LOG_PARAMETERS: WaterLogParameter[] = ['pH', 'ammonia', 'nitrite', 'nitrate', 'gh', 'kh'];
+
+const normalizeLogParameter = (value?: string | null): WaterLogParameter | null => {
+  if (!value) return null;
+  const normalized = value.toLowerCase();
+  switch (normalized) {
+    case 'ph':
+      return 'pH';
+    case 'ammonia':
+      return 'ammonia';
+    case 'nitrite':
+      return 'nitrite';
+    case 'nitrate':
+      return 'nitrate';
+    case 'gh':
+      return 'gh';
+    case 'kh':
+      return 'kh';
+    default:
+      return null;
+  }
+};
+
+const inferLogParameterFromTitle = (title: string): WaterLogParameter | null => {
+  const normalized = title.toLowerCase();
+  if (/\bammonia\b/.test(normalized)) return 'ammonia';
+  if (/\bnitrite\b/.test(normalized)) return 'nitrite';
+  if (/\bnitrate\b/.test(normalized)) return 'nitrate';
+  if (/\bph\b/.test(normalized)) return 'pH';
+  if (/\bgh\b/.test(normalized)) return 'gh';
+  if (/\bkh\b/.test(normalized)) return 'kh';
+  return null;
+};
+
+const getTaskLogParameter = (task: Task) =>
+  task.logParameter || inferLogParameterFromTitle(task.title);
+
+const logHasParameter = (log: WaterLog, parameter: WaterLogParameter) => {
+  const value = log[parameter];
+  return value !== undefined && value !== null && !Number.isNaN(value);
 };
 
 const cyclingReasonDescriptions: Record<string, string> = {
@@ -827,14 +869,95 @@ const App: React.FC = () => {
         const now = debugNow || new Date();
         const schedule = getTaskSchedule(task, context, now);
         const nextCompleted = !schedule.isCompletedForPeriod;
+        const logParameter = getTaskLogParameter(task);
         return {
           ...task,
           completed: nextCompleted,
-          lastCompletedAt: nextCompleted ? formatZonedTimestamp(now, context.timezone) : undefined
+          lastCompletedAt: nextCompleted ? formatZonedTimestamp(now, context.timezone) : undefined,
+          logParameter: logParameter || task.logParameter,
+          logDerived: logParameter ? false : task.logDerived
         };
       })
     }));
   };
+
+  const handleTaskClick = (task: Task) => {
+    if (getTaskLogParameter(task)) {
+      setActiveTab('logs');
+    }
+  };
+
+  useEffect(() => {
+    if (!aquarium.tasks.length) return;
+    const timeZone = aquarium.timezone || DEFAULT_TIME_ZONE;
+    const now = debugNow || new Date();
+    const context = buildCadenceContext(aquarium);
+    const logParamsByDateKey = new Map<string, Set<WaterLogParameter>>();
+
+    aquarium.logs.forEach(log => {
+      const dateKey = normalizeDateKey(log.date, timeZone);
+      let paramSet = logParamsByDateKey.get(dateKey);
+      if (!paramSet) {
+        paramSet = new Set();
+        logParamsByDateKey.set(dateKey, paramSet);
+      }
+      CHEM_LOG_PARAMETERS.forEach(param => {
+        if (logHasParameter(log, param)) {
+          paramSet.add(param);
+        }
+      });
+    });
+
+    let didChange = false;
+    const nextTasks = aquarium.tasks.map(task => {
+      const logParameter = getTaskLogParameter(task);
+      if (!logParameter) return task;
+      const schedule = getTaskSchedule(task, context, now);
+      const dueDateKey = schedule.dueDateKey;
+      const lastCompletedKey = getDateKeyFromTimestamp(task.lastCompletedAt, timeZone);
+      const hasParamOn = (key?: string | null) =>
+        Boolean(key && logParamsByDateKey.get(key)?.has(logParameter));
+
+      let nextTask = task;
+      if (task.logParameter !== logParameter) {
+        nextTask = { ...nextTask, logParameter };
+      }
+
+      if (nextTask.logDerived) {
+        const hasLogForCompletion = hasParamOn(lastCompletedKey);
+        if (!hasLogForCompletion) {
+          nextTask = { ...nextTask, completed: false, lastCompletedAt: undefined, logDerived: false };
+        }
+      }
+
+      if (!schedule.isCompletedForPeriod && dueDateKey && hasParamOn(dueDateKey)) {
+        nextTask = {
+          ...nextTask,
+          completed: true,
+          lastCompletedAt: `${dueDateKey}T00:00:00`,
+          logDerived: true
+        };
+      }
+
+      if (nextTask !== task) {
+        didChange = true;
+      }
+      return nextTask;
+    });
+
+    if (didChange) {
+      setAquarium(prev => ({ ...prev, tasks: nextTasks }));
+    }
+  }, [
+    aquarium.currentPhase,
+    aquarium.logs,
+    aquarium.phaseStartDates,
+    aquarium.reminderSettings,
+    aquarium.startDate,
+    aquarium.tasks,
+    aquarium.timezone,
+    debugNow
+  ]);
 
   const handleAddLog = (newLogData: Omit<WaterLog, 'id'>) => {
     if (editingLog) {
@@ -1495,6 +1618,9 @@ const App: React.FC = () => {
         const frequency = normalizeCadence(taskAtom.cadence);
         const everyDays = taskAtom.every_days ?? taskAtom.everyDays;
         const isOneTime = frequency === 'one-time';
+        const logParameter =
+          normalizeLogParameter(taskAtom.parameter)
+          || inferLogParameterFromTitle(taskAtom.text);
         tasks.push({
           id: `${phaseId}_${taskAtom.cadence}_${tasks.length}`,
           phaseId: isOneTime ? (phaseId as PhaseId) : undefined,
@@ -1503,7 +1629,8 @@ const App: React.FC = () => {
           frequency,
           everyDays: frequency === 'interval' ? Number(everyDays || 0) || undefined : undefined,
           title: taskAtom.text,
-          completed: false
+          completed: false,
+          logParameter: logParameter || undefined
         });
       });
     });
@@ -1562,14 +1689,14 @@ const App: React.FC = () => {
     { 
       id: 'temperature', 
       label: 'Temp', 
-      value: `${latestLog.temperature || '--'}°C`, 
+      value: `${latestLog.temperature ?? '--'}°C`, 
       paramValue: latestLog.temperature,
       note: `Target Range: ${fmtTarget(aquarium.targets.temperature.min)}–${fmtTarget(aquarium.targets.temperature.max)}°C.\nShort excursions of ±0.5 °C are acceptable.`
     },
     { 
       id: 'pH', 
       label: 'pH', 
-      value: `${latestLog.pH || '--'}`, 
+      value: `${latestLog.pH ?? '--'}`, 
       paramValue: latestLog.pH,
       note: `Target Range: ${fmtTarget(aquarium.targets.pH.min, 2)}–${fmtTarget(aquarium.targets.pH.max, 2)}.\nTarget Drop: ~1.0 unit (Degassed minus CO2-on). Latest pH drop: ${currentPhDrop !== null ? currentPhDrop.toFixed(2) : '--'}`
     },
@@ -1788,11 +1915,11 @@ const App: React.FC = () => {
                     <div className="flex flex-col gap-1">
                       <span className="text-[10px] font-bold text-slate-500">{new Date(log.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       <div className="flex gap-3 items-center">
-                        <span className="text-xs font-bold text-white">NH₃: {log.ammonia}</span>
+                        <span className="text-xs font-bold text-white">NH₃: {log.ammonia ?? '--'}</span>
                         <span className="text-[8px] text-slate-600">•</span>
-                        <span className="text-xs font-bold text-white">NO₂: {log.nitrite}</span>
+                        <span className="text-xs font-bold text-white">NO₂: {log.nitrite ?? '--'}</span>
                         <span className="text-[8px] text-slate-600">•</span>
-                        <span className="text-xs font-bold text-white">pH: {log.pH}</span>
+                        <span className="text-xs font-bold text-white">pH: {log.pH ?? '--'}</span>
                         {log.bubbleRate && (
                           <>
                             <span className="text-[8px] text-slate-600">•</span>
@@ -1925,13 +2052,14 @@ const App: React.FC = () => {
              </div>
 
              <Checklist 
-              tasks={aquarium.tasks} 
-              activePhase={manualViewPhaseId} 
-              onToggle={handleToggleTask}
-              phaseOrder={phaseOrder}
-              cadenceContext={buildCadenceContext(aquarium)}
-              isReadOnly={!isManualViewActive}
-              nowOverride={debugNow}
+             tasks={aquarium.tasks} 
+             activePhase={manualViewPhaseId} 
+             onToggle={handleToggleTask}
+             onTaskClick={handleTaskClick}
+             phaseOrder={phaseOrder}
+             cadenceContext={buildCadenceContext(aquarium)}
+             isReadOnly={!isManualViewActive}
+             nowOverride={debugNow}
              />
           </div>
         );

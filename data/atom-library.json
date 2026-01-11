@@ -873,6 +873,7 @@
       "type": "task",
       "cadence": "per_event",
       "text_template": "Measure and log Ammonia after 24 hours.",
+      "parameter": "ammonia",
       "conditions": [
         "setup.can_test_ammonia == true"
       ]
@@ -881,6 +882,7 @@
       "type": "task",
       "cadence": "daily",
       "text_template": "Measure and log Ammonia.",
+      "parameter": "ammonia",
       "conditions": [
         "setup.can_test_ammonia == true"
       ]
@@ -890,6 +892,7 @@
       "cadence": "interval",
       "every_days": 3,
       "text_template": "Measure and log Ammonia.",
+      "parameter": "ammonia",
       "conditions": [
         "setup.can_test_ammonia == true"
       ]
@@ -898,6 +901,7 @@
       "type": "task",
       "cadence": "one_time",
       "text_template": "Measure and log GH.",
+      "parameter": "gh",
       "conditions": [
         "setup.can_test_gh == true"
       ]
@@ -906,6 +910,7 @@
       "type": "task",
       "cadence": "one_time",
       "text_template": "Measure and log KH.",
+      "parameter": "kh",
       "conditions": [
         "setup.can_test_kh == true"
       ]
@@ -914,6 +919,7 @@
       "type": "task",
       "cadence": "weekly",
       "text_template": "Measure and log Nitrates.",
+      "parameter": "nitrate",
       "conditions": [
         "setup.can_test_nitrate == true"
       ]
@@ -922,6 +928,7 @@
       "type": "task",
       "cadence": "per_event",
       "text_template": "Measure and log Nitrite after 24 hours.",
+      "parameter": "nitrite",
       "conditions": [
         "setup.can_test_nitrite == true"
       ]
@@ -930,6 +937,7 @@
       "type": "task",
       "cadence": "daily",
       "text_template": "Measure and log Nitrite.",
+      "parameter": "nitrite",
       "conditions": [
         "setup.can_test_nitrite == true"
       ]
@@ -939,6 +947,7 @@
       "cadence": "interval",
       "every_days": 3,
       "text_template": "Measure and log Nitrite.",
+      "parameter": "nitrite",
       "conditions": [
         "setup.can_test_nitrite == true"
       ]
@@ -947,6 +956,7 @@
       "type": "task",
       "cadence": "one_time",
       "text_template": "Measure and log pH.",
+      "parameter": "pH",
       "conditions": [
         "setup.can_test_ph == true"
       ]
@@ -955,6 +965,7 @@
       "type": "task",
       "cadence": "weekly",
       "text_template": "Measure and log pH.",
+      "parameter": "pH",
       "conditions": [
         "setup.can_test_ph == true"
       ]
