@@ -12,7 +12,7 @@ import protocolRuleset from './data/protocol.ruleset.json';
 import atomLibrary from './data/atom-library.json';
 import phasePlaylists from './data/phase-playlists.lookup.json';
 import { generatePlan, generatePhasesFromPlaylists } from './engine/planEngine';
-import { formatZonedTimestamp, getDateKeyFromTimestamp, getDefaultTimeZone, getTaskSchedule, getZonedDateKey, normalizeDateKey } from './services/cadence';
+import { formatDateKeyForDisplay, formatZonedTimestamp, getDateKeyFromTimestamp, getDefaultTimeZone, getTaskSchedule, getZonedDateKey, normalizeDateKey } from './services/cadence';
 
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
 
@@ -165,6 +165,28 @@ const logHasParameter = (log: WaterLog, parameter: WaterLogParameter) => {
   return value !== undefined && value !== null && !Number.isNaN(value);
 };
 
+const isTaskAvailableInPhase = (task: Task, activePhase: PhaseId, orderedPhases: PhaseId[]) => {
+  if (task.frequency === 'one-time') {
+    return task.phaseId === activePhase;
+  }
+
+  if (!task.startPhaseId) return true;
+
+  const activeIndex = orderedPhases.indexOf(activePhase);
+  const startIndex = orderedPhases.indexOf(task.startPhaseId);
+  const endIndex = task.endPhaseId ? orderedPhases.indexOf(task.endPhaseId) : -1;
+
+  if (activeIndex === -1 || startIndex === -1) {
+    return task.startPhaseId === activePhase;
+  }
+
+  if (endIndex !== -1 && activeIndex > endIndex) {
+    return false;
+  }
+
+  return activeIndex >= startIndex;
+};
+
 const cyclingReasonDescriptions: Record<string, string> = {
   DEFAULT_SAFE: 'Default safe recommendation when no risk flags are present.',
   SHRIMP_PLANNED: 'Shrimp planned: favor a stable, low-risk cycle.',
@@ -196,6 +218,7 @@ const App: React.FC = () => {
   const [highlightedParam, setHighlightedParam] = useState<string | null>(null);
   const [editingLog, setEditingLog] = useState<WaterLog | null>(null);
   const [infoModal, setInfoModal] = useState<{ title: string; content: string } | null>(null);
+  const [entryTaskContext, setEntryTaskContext] = useState<{ taskId: string; dueDateKey: string | null } | null>(null);
   const [showPhasePicker, setShowPhasePicker] = useState(false);
   const [manualPhaseId, setManualPhaseId] = useState<PhaseId | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<NotificationPermission>('default');
@@ -865,6 +888,7 @@ const App: React.FC = () => {
       ...prev,
       tasks: prev.tasks.map(task => {
         if (task.id !== id) return task;
+        if (getTaskLogParameter(task)) return task;
         const context = buildCadenceContext(prev);
         const now = debugNow || new Date();
         const schedule = getTaskSchedule(task, context, now);
@@ -883,15 +907,52 @@ const App: React.FC = () => {
 
   const handleTaskClick = (task: Task) => {
     if (getTaskLogParameter(task)) {
+      const context = buildCadenceContext(aquarium);
+      const now = debugNow || new Date();
+      const schedule = getTaskSchedule(task, context, now);
+      setEntryTaskContext({ taskId: task.id, dueDateKey: schedule.dueDateKey });
       setActiveTab('logs');
     }
   };
+
+  const markEntryTaskComplete = () => {
+    if (!entryTaskContext) return;
+    setAquarium(prev => {
+      const context = buildCadenceContext(prev);
+      const now = debugNow || new Date();
+      return {
+        ...prev,
+        tasks: prev.tasks.map(task => {
+          if (task.id !== entryTaskContext.taskId) return task;
+          const schedule = getTaskSchedule(task, context, now);
+          const dueDateKey = entryTaskContext.dueDateKey || schedule.dueDateKey || getZonedDateKey(now, context.timezone);
+          const logParameter = getTaskLogParameter(task);
+          return {
+            ...task,
+            completed: true,
+            lastCompletedAt: `${dueDateKey}T00:00:00`,
+            logParameter: logParameter || task.logParameter,
+            logDerived: false
+          };
+        })
+      };
+    });
+    setEntryTaskContext(null);
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'logs' && entryTaskContext) {
+      setEntryTaskContext(null);
+    }
+  }, [activeTab, entryTaskContext]);
 
   useEffect(() => {
     if (!aquarium.tasks.length) return;
     const timeZone = aquarium.timezone || DEFAULT_TIME_ZONE;
     const now = debugNow || new Date();
-    const context = buildCadenceContext(aquarium);
+    const viewPhaseId = manualPhaseId || aquarium.currentPhase;
+    const context = { ...buildCadenceContext(aquarium), activePhase: viewPhaseId };
+    const orderedPhases = phaseOrder.length ? phaseOrder : PHASES.map(phase => phase.id as PhaseId);
     const logParamsByDateKey = new Map<string, Set<WaterLogParameter>>();
 
     aquarium.logs.forEach(log => {
@@ -912,6 +973,9 @@ const App: React.FC = () => {
     const nextTasks = aquarium.tasks.map(task => {
       const logParameter = getTaskLogParameter(task);
       if (!logParameter) return task;
+      if (!isTaskAvailableInPhase(task, viewPhaseId, orderedPhases)) {
+        return task;
+      }
       const schedule = getTaskSchedule(task, context, now);
       const dueDateKey = schedule.dueDateKey;
       const lastCompletedKey = getDateKeyFromTimestamp(task.lastCompletedAt, timeZone);
@@ -951,12 +1015,14 @@ const App: React.FC = () => {
   }, [
     aquarium.currentPhase,
     aquarium.logs,
+    manualPhaseId,
     aquarium.phaseStartDates,
     aquarium.reminderSettings,
     aquarium.startDate,
     aquarium.tasks,
     aquarium.timezone,
-    debugNow
+    debugNow,
+    phaseOrder
   ]);
 
   const handleAddLog = (newLogData: Omit<WaterLog, 'id'>) => {
@@ -977,7 +1043,13 @@ const App: React.FC = () => {
         logs: [...prev.logs, logWithId].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       }));
     }
-    setActiveTab('dashboard');
+    if (entryTaskContext) {
+      setEntryTaskContext(null);
+      setManualPhaseId(null);
+      setActiveTab('roadmap');
+    } else {
+      setActiveTab('dashboard');
+    }
   };
 
   const handleDeleteLog = (id: string) => {
@@ -1737,6 +1809,17 @@ const App: React.FC = () => {
     setHighlightedParam(prev => prev === id ? null : id);
   };
 
+  const entryTask = entryTaskContext
+    ? aquarium.tasks.find(task => task.id === entryTaskContext.taskId)
+    : null;
+  const entryTaskSchedule = entryTask
+    ? getTaskSchedule(entryTask, buildCadenceContext(aquarium), debugNow || new Date())
+    : null;
+  const entryTaskDueKey = entryTaskContext?.dueDateKey || entryTaskSchedule?.dueDateKey || null;
+  const entryTaskDueLabel = entryTaskDueKey
+    ? formatDateKeyForDisplay(entryTaskDueKey, aquarium.timezone || DEFAULT_TIME_ZONE)
+    : null;
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -1876,7 +1959,10 @@ const App: React.FC = () => {
                      Full Manual
                    </button>
                    <button 
-                    onClick={() => setActiveTab('logs')}
+                    onClick={() => {
+                      setEntryTaskContext(null);
+                      setActiveTab('logs');
+                    }}
                     className="py-3 bg-slate-100 text-slate-950 font-bold rounded-2xl text-xs flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-white/5"
                    >
                      Log Progress <ChevronRight className="w-4 h-4" />
@@ -1901,6 +1987,30 @@ const App: React.FC = () => {
               )}
             </div>
             
+            {entryTask && entryTaskSchedule && !entryTaskSchedule.isCompletedForPeriod && (
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Opened From Checklist</div>
+                <div className="text-xs text-slate-300 font-semibold">
+                  {entryTask.title}
+                  {entryTaskDueLabel ? ` • Due ${entryTaskDueLabel}` : ''}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={markEntryTaskComplete}
+                    className="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-950"
+                  >
+                    Mark This Task Complete
+                  </button>
+                  <button
+                    onClick={() => setEntryTaskContext(null)}
+                    className="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-slate-800 text-slate-400 border border-slate-700"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+
             <LogForm onAdd={handleAddLog} initialData={editingLog || undefined} />
             
             <div className="space-y-4 mt-8">
@@ -3611,7 +3721,10 @@ const App: React.FC = () => {
             <span className="text-[9px] font-bold tracking-tight">Status</span>
           </button>
           <button 
-            onClick={() => setActiveTab('logs')}
+            onClick={() => {
+              setEntryTaskContext(null);
+              setActiveTab('logs');
+            }}
             className={`flex flex-col items-center justify-center gap-1 transition-all ${activeTab === 'logs' ? 'text-white' : 'text-slate-500'}`}
           >
             <PlusCircle className={`w-5 h-5 ${activeTab === 'logs' ? 'fill-white/10' : ''}`} />
