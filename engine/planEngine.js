@@ -356,10 +356,12 @@ const buildTemplateContext = ({
     hardscape_type: normalizedSetup.tank_profile.hardscape.type,
     co2_enabled: normalizedSetup.tank_profile.co2.enabled,
     heater_installed: normalizedSetup.tank_profile.heater_installed,
+    lighting_system: normalizedSetup.tank_profile.lighting_system,
     photoperiod_hours_initial: normalizedSetup.user_preferences.photoperiod_hours_initial,
     photoperiod_hours_post_cycle: normalizedSetup.user_preferences.photoperiod_hours_post_cycle,
     plants_present: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
     plants_present_in_plan: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
+    plant_demand_class: normalizedSetup.biology_profile.plants?.demand_class ?? 'auto',
     can_test_ammonia: normalizedSetup.testing.can_test_ammonia,
     can_test_nitrite: normalizedSetup.testing.can_test_nitrite,
     can_test_nitrate: normalizedSetup.testing.can_test_nitrate,
@@ -434,6 +436,11 @@ const buildTemplateContext = ({
   doses.kh_buffer = {
     ...doses.kh_buffer,
     kh_buffer_g_wc_range: formatNumber(averageRange(dosingReference.kh_wc_g_range), 1)
+  };
+  const netVolumeL = derived.net_water_volume_l;
+  doses.co2 = {
+    bps_lime_green: formatNumber(typeof netVolumeL === 'number' ? netVolumeL / 40 : null, 1),
+    bps_dark_green: formatNumber(typeof netVolumeL === 'number' ? netVolumeL / 80 : null, 1)
   };
 
   if (comboProduct) {

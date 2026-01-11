@@ -23,7 +23,7 @@
     },
     "i_co2_start_high_saturation_fishless": {
       "type": "instruction",
-      "text_template": "Since you are fishless, **Turn CO2 ON immediately**. Aim for a **Lime Green** or even **Yellow-Green** drop checker. This supercharges growth and prevents your new plants from melting.",
+      "text_template": "Since you are fishless, **Turn CO2 ON immediately** at ~{{doses.co2.bps_lime_green}} BPS. Aim for a **Lime Green** or even **Yellow-Green** drop checker. This supercharges growth and prevents your new plants from melting.",
       "conditions": [
         "setup.co2_enabled == true"
       ]
@@ -37,7 +37,7 @@
     },
     "i_co2_target_dark_green_safe": {
       "type": "instruction",
-      "text_template": "Start CO2 (1 bubble / 3 secs). Check drop checker after 2-3 hours. Aim for **Dark Green** (Safe).",
+      "text_template": "Start CO2 (~{{doses.co2.bps_dark_green}} BPS). Check drop checker after 2-3 hours. Aim for **Dark Green** (Safe).",
       "conditions": [
         "setup.co2_enabled == true",
         "!modifiers.includes('co2:wait')",
@@ -46,7 +46,7 @@
     },
     "i_co2_target_yellow_green_growth": {
       "type": "instruction",
-      "text_template": "Since there are no fish, you can run CO2 slightly higher than normal (Yellow-Green color on the drop checker). This maximizes plant growth and suppresses algae during the ammonia spikes.",
+      "text_template": "Since there are no fish, you can run CO2 slightly higher than normal (~{{doses.co2.bps_lime_green}} BPS) target **Yellow-Green** color on the drop checker. This maximizes plant growth and suppresses algae during the ammonia spikes.",
       "conditions": [
         "setup.co2_enabled == true"
       ]
@@ -104,7 +104,7 @@
     "t_co2_turn_on_initial_setup": {
       "type": "task",
       "cadence": "one_time",
-      "text_template": "Turn on CO2 system. Set bubble rate to approx 1 bubble per second (adjust for tank size).",
+      "text_template": "Turn on CO2 system. Set bubble rate to ~{{doses.co2.bps_lime_green}} BPS (adjust for tank size).",
       "conditions": [
         "setup.co2_enabled == true"
       ]
@@ -490,17 +490,35 @@
       "text_template": "**Lights ON.** Set your lights to **6 hours daily**. Your plants need energy to consume the ammonia. Without light, they will starve and rot, causing an ammonia spike.",
       "conditions": []
     },
-    "i_light_ramp_strategy": {
+    "i_light_basic_ramp_plan": {
       "type": "instruction",
-      "text_template": "Strategy: **Start Lights Low.** We will set your lights to **50–60%** intensity initially. Your plants are currently in transplant shock and growing roots, not leaves. If you blast them with 100% light now, they can't use it, but **Algae** can. We will ramp up the power slowly over the next 6 weeks. Increase intensity a little each week; if algae appears, pause the ramp until the tank stabilizes.",
+      "text_template": "Basic light: Start with **6 hours**. Increase duration by **30 minutes per week**. If algae appears, pause the ramp.",
       "conditions": [
-        "setup.lighting_system == 'high_performance'"
+        "setup.lighting_system == 'basic'"
       ]
     },
-    "i_light_turn_on_guidance": {
+    "i_light_dedicated_ramp_plan": {
       "type": "instruction",
-      "text_template": "Turn on your lights! We start with a short duration and **50% intensity** to prevent algae shock while the ecosystem settles.",
-      "conditions": []
+      "text_template": "Dedicated light: Start at **6 hours** at **60%** intensity. Ramp intensity first (~10% per week), then increase duration. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'dedicated'"
+      ]
+    },
+    "i_light_high_perf_ramp_low_demand": {
+      "type": "instruction",
+      "text_template": "High-performance light (no high-demand plants): Start at **6 hours** at **30%** intensity. Ramp intensity first to **60%**, then increase duration. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class != 'high'"
+      ]
+    },
+    "i_light_high_perf_ramp_high_demand": {
+      "type": "instruction",
+      "text_template": "High-performance light (high-demand plants): Start at **6 hours** at **50%** intensity. Ramp intensity first to **100%**, then increase duration. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class == 'high'"
+      ]
     },
     "t_light_confirm_off": {
       "type": "task",
@@ -510,20 +528,80 @@
         "modifiers.includes('light:off')"
       ]
     },
+    "t_light_basic_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Basic light ramp: add 30 minutes to your photoperiod. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'basic'"
+      ]
+    },
+    "t_light_dedicated_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dedicated light ramp: increase intensity by 10% per week first. After that, add 30 minutes of duration. Pause if algae appears.",
+      "conditions": [
+        "setup.lighting_system == 'dedicated'"
+      ]
+    },
+    "t_light_high_perf_ramp_low_demand_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "High-performance ramp (no high-demand plants): increase intensity toward 60% first, then add 30 minutes of duration. Pause if algae appears.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class != 'high'"
+      ]
+    },
+    "t_light_high_perf_ramp_high_demand_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "High-performance ramp (high-demand plants): increase intensity toward 100% first, then add 30 minutes of duration. Pause if algae appears.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class == 'high'"
+      ]
+    },
+    "t_light_start_basic_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'basic'"
+      ]
+    },
+    "t_light_start_dedicated_60_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 60% intensity for 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'dedicated'"
+      ]
+    },
+    "t_light_start_high_perf_low_30_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 30% intensity for 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class != 'high'"
+      ]
+    },
+    "t_light_start_high_perf_high_50_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 50% intensity for 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class == 'high'"
+      ]
+    },
     "t_light_ramp_weekly": {
       "type": "task",
       "cadence": "weekly",
       "text_template": "Increase Light Intensity by 5–10% every week.",
       "conditions": [
         "modifiers.includes('light:ramp')"
-      ]
-    },
-    "t_light_set_6h": {
-      "type": "task",
-      "cadence": "one_time",
-      "text_template": "Set light timer to 6 hours.",
-      "conditions": [
-        "!modifiers.includes('light:off')"
       ]
     },
     "i_maint_filter_do_not_clean_early": {
@@ -1003,6 +1081,35 @@
       "conditions": [
         "products.fertilizer_micros.selected == true"
       ]
+    },
+    "i_stock_fishin_wait_before_adding": {
+      "type": "instruction",
+      "text_template": "Even though you're cycling with fish-in, it's wise to wait a couple of days before adding stock. It takes time to get everything running, and it's better to add fish to a working tank with stable temperature and flow.",
+      "conditions": [
+        "livestock.has_fish == true"
+      ]
+    },
+    "t_stock_fish_acclimate_day3": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Acclimate fish before adding to tank.",
+      "conditions": [
+        "livestock.has_fish == true"
+      ],
+      "due_offset_days": 3
+    },
+    "t_stock_shrimp_acclimate_day3": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Drip acclimate shrimp before adding them to tank.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ],
+      "due_offset_days": 3
+    },
+    "i_intro_duration_3_days": {
+      "type": "instruction",
+      "text_template": "This phase is short and focused. Plan for about 3 days."
     }
   }
 }

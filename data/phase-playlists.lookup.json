@@ -32,7 +32,10 @@
       "i_equip_filter_on",
       "t_equip_heater_set_target",
       "i_cycle_algae_light_warning",
-      "t_light_set_6h",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
       "i_co2_target_yellow_green_growth",
       "t_co2_turn_on",
       "i_cycle_ammonia_dose_inert",
@@ -96,7 +99,11 @@
       "t_maint_wc_weekly",
       "t_fert_dose_half_weekly",
       "t_maint_trim_melting_plants",
-      "t_water_top_off_interval"
+      "t_water_top_off_interval",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
@@ -241,7 +248,11 @@
       "t_maint_prep_kh_weekly",
       "t_maint_wc_weekly",
       "i_light_dark_rule",
-      "t_water_top_off_interval"
+      "t_water_top_off_interval",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
@@ -284,8 +295,14 @@
       "t_water_fill_tank",
       "i_equip_heater_target_reset",
       "t_equip_heater_set_target",
-      "i_light_turn_on_guidance",
-      "t_light_set_6h",
+      "i_light_basic_ramp_plan",
+      "i_light_dedicated_ramp_plan",
+      "i_light_high_perf_ramp_low_demand",
+      "i_light_high_perf_ramp_high_demand",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
       "i_co2_timer_on_off",
       "i_co2_target_dark_green_safe",
       "t_co2_turn_on",
@@ -317,7 +334,7 @@
     "phase_name": "Fish-in Setup",
     "sequence": [
       "i_intro_fishin_light_setup",
-      "i_intro_duration_1_day",
+      "i_intro_duration_3_days",
       "t_sub_rinse_inert",
       "i_sub_no_rinse_aquasoil",
       "t_sub_place_slope",
@@ -345,16 +362,22 @@
       "e_hard_tannins_fungus",
       "i_equip_filter_on",
       "t_equip_heater_set_target",
-      "i_light_ramp_strategy",
-      "t_light_set_6h",
+      "i_light_basic_ramp_plan",
+      "i_light_dedicated_ramp_plan",
+      "i_light_high_perf_ramp_low_demand",
+      "i_light_high_perf_ramp_high_demand",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
       "i_co2_strategy_off_during_cycle",
       "i_co2_wait_for_fish",
       "i_cycle_ammonia_aquasoil_caution",
       "i_stock_add_in_batches_weekly",
+      "i_stock_fishin_wait_before_adding",
+      "i_stock_shrimp_wait_warning",
       "i_stock_fish_acclimation_guide",
       "i_stock_shrimp_acclimation_guide",
-      "t_stock_fish_acclimate",
-      "t_stock_shrimp_acclimate",
       "e_stock_new_fish_stress",
       "e_stock_new_fish_stress",
       "e_stock_new_fish_stress",
@@ -369,9 +392,11 @@
       "i_stock_feed_every_other_day_guidance",
       "t_chem_ph_test_once",
       "t_chem_gh_test_once",
-      "t_chem_kh_test_once"
+      "t_chem_kh_test_once",
+      "t_stock_fish_acclimate_day3",
+      "t_stock_shrimp_acclimate_day3"
     ],
-    "duration_days": 1
+    "duration_days": 3
   },
   {
     "key": "I1@102",
@@ -379,7 +404,7 @@
     "phase_name": "Fish-in Setup (Low Light)",
     "sequence": [
       "i_intro_fishin_light_setup_low",
-      "i_intro_duration_1_day",
+      "i_intro_duration_3_days",
       "t_sub_rinse_inert",
       "i_sub_no_rinse_aquasoil",
       "t_sub_place_slope",
@@ -407,16 +432,22 @@
       "e_hard_tannins_fungus",
       "i_equip_filter_on",
       "t_equip_heater_set_target",
-      "i_light_ramp_strategy",
-      "t_light_set_6h",
+      "i_light_basic_ramp_plan",
+      "i_light_dedicated_ramp_plan",
+      "i_light_high_perf_ramp_low_demand",
+      "i_light_high_perf_ramp_high_demand",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
       "i_co2_strategy_off_during_cycle",
       "i_co2_wait_for_fish",
       "i_cycle_ammonia_aquasoil_caution",
       "i_stock_add_in_batches_weekly",
+      "i_stock_fishin_wait_before_adding",
+      "i_stock_shrimp_wait_warning",
       "i_stock_fish_acclimation_guide",
       "i_stock_shrimp_acclimation_guide",
-      "t_stock_fish_acclimate",
-      "t_stock_shrimp_acclimate",
       "t_cycle_bacteria_dose_once",
       "i_stock_feed_every_other_day_guidance",
       "e_stock_new_fish_stress",
@@ -431,9 +462,11 @@
       "e_stock_new_shrimp_stress",
       "t_chem_ph_test_once",
       "t_chem_gh_test_once",
-      "t_chem_kh_test_once"
+      "t_chem_kh_test_once",
+      "t_stock_fish_acclimate_day3",
+      "t_stock_shrimp_acclimate_day3"
     ],
-    "duration_days": 1
+    "duration_days": 3
   },
   {
     "key": "I2@200",
@@ -446,7 +479,6 @@
       "e_plant_transition",
       "t_chem_ammonia_test_daily",
       "t_chem_nitrite_test_daily",
-      "t_stock_detoxifier_dose_daily",
       "i_stock_feed_every_other_day_guidance",
       "t_stock_feed_every_other_day",
       "t_cycle_bacteria_dose_daily",
@@ -467,7 +499,6 @@
       "i_intro_duration_14_days",
       "t_chem_nitrite_test_daily",
       "t_chem_ammonia_test_daily",
-      "t_stock_detoxifier_dose_daily",
       "t_maint_wc_nitrite_daily",
       "i_stock_fish_gasping_emergency",
       "i_maint_wc_nitrite_rule",
@@ -481,7 +512,11 @@
       "t_maint_wc_weekly",
       "t_fert_dose_maintenance_weekly",
       "e_cycle_diatoms_brown_algae",
-      "i_maint_filter_do_not_clean_early"
+      "i_maint_filter_do_not_clean_early",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
@@ -507,7 +542,11 @@
       "t_maint_wc_weekly",
       "t_fert_dose_full_weekly_transition",
       "t_stock_fish_acclimate",
-      "t_stock_shrimp_acclimate"
+      "t_stock_shrimp_acclimate",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
@@ -542,7 +581,10 @@
       "i_equip_filter_on",
       "t_equip_heater_set_target",
       "i_light_on_6h_for_plants",
-      "t_light_set_6h",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
       "i_co2_start_high_saturation_fishless",
       "t_co2_turn_on_initial_setup",
       "i_intro_silent_fert_aquasoil_delay",
@@ -552,7 +594,11 @@
       "t_chem_gh_test_once",
       "t_chem_kh_test_once",
       "e_water_cloudy_bloom",
-      "e_hard_tannins_fungus"
+      "e_hard_tannins_fungus",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
@@ -577,7 +623,11 @@
       "t_water_top_off_interval",
       "t_maint_trim_melting_plants",
       "t_maint_wc_aquasoil_frequent",
-      "i_maint_wc_inert_emergency"
+      "i_maint_wc_inert_emergency",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
@@ -614,7 +664,11 @@
       "e_stock_new_shrimp_stress",
       "e_stock_new_shrimp_stress",
       "e_stock_sudden_darting",
-      "e_stock_new_shrimp_stress"
+      "e_stock_new_shrimp_stress",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
@@ -625,7 +679,10 @@
     "sequence": [
       "i_intro_transition_maturity",
       "i_intro_duration_14_days",
-      "i_light_ramp_strategy",
+      "i_light_basic_ramp_plan",
+      "i_light_dedicated_ramp_plan",
+      "i_light_high_perf_ramp_low_demand",
+      "i_light_high_perf_ramp_high_demand",
       "t_light_ramp_weekly",
       "i_co2_monitor_stability",
       "i_stock_add_in_batches_weekly",
@@ -653,7 +710,11 @@
       "e_stock_new_shrimp_stress",
       "e_stock_new_shrimp_stress",
       "e_stock_sudden_darting",
-      "e_stock_new_shrimp_stress"
+      "e_stock_new_shrimp_stress",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
     ],
     "duration_days": 14
   },
