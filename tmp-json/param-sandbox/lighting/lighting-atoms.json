@@ -1,0 +1,127 @@
+{
+  "atom_library": {
+    "i_light_dark_rule": {
+      "type": "instruction",
+      "text_template": "Verify that all light sources are disabled. Light is the enemy of the Dark Start.",
+      "conditions": [
+        "modifiers.includes('light:off')"
+      ]
+    },
+    "i_light_on_6h_for_plants": {
+      "type": "instruction",
+      "text_template": "**Lights ON.** Set your lights to **6 hours daily**. Your plants need energy to consume the ammonia. Without light, they will starve and rot, causing an ammonia spike.",
+      "conditions": []
+    },
+    "i_light_basic_ramp_plan": {
+      "type": "instruction",
+      "text_template": "Basic light: Start with **6 hours**. Increase duration by **30 minutes per week**. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'basic'"
+      ]
+    },
+    "i_light_dedicated_ramp_plan": {
+      "type": "instruction",
+      "text_template": "Dedicated light: Start at **6 hours** at **60%** intensity. Ramp intensity first (~10% per week), then increase duration. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'dedicated'"
+      ]
+    },
+    "i_light_high_perf_ramp_low_demand": {
+      "type": "instruction",
+      "text_template": "High-performance light (no high-demand plants): Start at **6 hours** at **30%** intensity. Ramp intensity first to **60%**, then increase duration. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class != 'high'"
+      ]
+    },
+    "i_light_high_perf_ramp_high_demand": {
+      "type": "instruction",
+      "text_template": "High-performance light (high-demand plants): Start at **6 hours** at **50%** intensity. Ramp intensity first to **100%**, then increase duration. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class == 'high'"
+      ]
+    },
+    "t_light_confirm_off": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Confirm: Lights Unplugged/OFF.",
+      "conditions": [
+        "modifiers.includes('light:off')"
+      ]
+    },
+    "t_light_basic_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Basic light ramp: add 30 minutes to your photoperiod. If algae appears, pause the ramp.",
+      "conditions": [
+        "setup.lighting_system == 'basic'"
+      ]
+    },
+    "t_light_dedicated_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dedicated light ramp: increase intensity by 10% per week first. After that, add 30 minutes of duration. Pause if algae appears.",
+      "conditions": [
+        "setup.lighting_system == 'dedicated'"
+      ]
+    },
+    "t_light_high_perf_ramp_low_demand_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "High-performance ramp (no high-demand plants): increase intensity toward 60% first, then add 30 minutes of duration. Pause if algae appears.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class != 'high'"
+      ]
+    },
+    "t_light_high_perf_ramp_high_demand_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "High-performance ramp (high-demand plants): increase intensity toward 100% first, then add 30 minutes of duration. Pause if algae appears.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class == 'high'"
+      ]
+    },
+    "t_light_start_basic_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'basic'"
+      ]
+    },
+    "t_light_start_dedicated_60_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 60% intensity for 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'dedicated'"
+      ]
+    },
+    "t_light_start_high_perf_low_30_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 30% intensity for 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class != 'high'"
+      ]
+    },
+    "t_light_start_high_perf_high_50_6h": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Start light at 50% intensity for 6 hours.",
+      "conditions": [
+        "setup.lighting_system == 'high_performance'",
+        "setup.plant_demand_class == 'high'"
+      ]
+    },
+    "t_light_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Increase Light Intensity by 5–10% every week."
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "atom_library": {
+    "i_plant_dense_planting_advice": {
+      "type": "instruction",
+      "text_template": "Plant as densely as possible. The more plant mass you have, the safer your tank will be."
+    },
+    "i_plant_epiphytes_advice": {
+      "type": "instruction",
+      "text_template": "Planting Epiphytes (Anubias/Buce): Glue or tie them to hardscape. If you bury the rhizome in the substrate, they will rot.",
+      "conditions": [
+        "plants.has_epiphytes == true"
+      ]
+    },
+    "i_plant_mist_during_setup": {
+      "type": "instruction",
+      "text_template": "Keep a spray bottle handy and mist plants during setup so they don't dry out.",
+      "conditions": [
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "i_plant_prep_remove_wool": {
+      "type": "instruction",
+      "text_template": "Remove pots and rock wool from plants, then gently rinse the roots.",
+      "conditions": [
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "i_plant_stems_advice": {
+      "type": "instruction",
+      "text_template": "Planting Stems: Trim the bottom inch off and remove lower leaves. Plant in small bunches to encourage new root growth.",
+      "conditions": [
+        "plants.has_stems == true"
+      ]
+    },
+    "t_plant_epiphytes_attach": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Epiphytes on hardscape. Glue or tie them; never bury the rhizome.",
+      "conditions": [
+        "plants.has_epiphytes == true"
+      ]
+    },
+    "t_plant_root_tabs_insert": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Insert root tabs deep into the substrate beneath your heavy root feeders.",
+      "conditions": [
+        "plants.has_root_feeders == true"
+      ]
+    },
+    "t_plant_stems_plant": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Stems.",
+      "conditions": [
+        "plants.has_stems == true"
+      ]
+    }
+  }
+}

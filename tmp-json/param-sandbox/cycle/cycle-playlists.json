@@ -1,0 +1,159 @@
+[
+  {
+    "key": "F1@100",
+    "phase_id": "F1",
+    "phase_name": "Fishless Setup (Traditional)",
+    "sequence": [
+      "i_cycle_algae_light_warning",
+      {
+        "id": "i_cycle_ammonia_dose_inert",
+        "when": "setup.substrate_type == 'inert' && products.ammonia_source.selected == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.substrate_type == 'aquasoil'"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "F2@200",
+    "phase_id": "F2",
+    "phase_name": "Ammonia Phase (Fishless)",
+    "sequence": [
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      }
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "F3@300",
+    "phase_id": "F3",
+    "phase_name": "Nitrite Phase (Fishless)",
+    "sequence": [
+      "i_cycle_nitrite_spike_warning",
+      "i_cycle_nitrite_clear_goal",
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "F4@400",
+    "phase_id": "F4",
+    "phase_name": "Completion Test (Fishless)",
+    "sequence": [
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS1@101",
+    "phase_id": "DS1",
+    "phase_name": "Dark Start Setup",
+    "sequence": [
+      {
+        "id": "i_cycle_ammonia_dose_inert",
+        "when": "setup.substrate_type == 'inert' && products.ammonia_source.selected == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.substrate_type == 'aquasoil'"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS2@201",
+    "phase_id": "DS2",
+    "phase_name": "Ammonia Maintenance (Dark Start)",
+    "sequence": [
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_daily",
+        "when": "products.bacteria_starter.selected == true"
+      }
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "DS3@301",
+    "phase_id": "DS3",
+    "phase_name": "Nitrite Phase (Dark Start)",
+    "sequence": [
+      "i_cycle_nitrite_spike_warning",
+      "i_cycle_nitrite_clear_goal",
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "DS4@401",
+    "phase_id": "DS4",
+    "phase_name": "Completion Test (Dark Start)",
+    "sequence": [
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "I1@100",
+    "phase_id": "I1",
+    "phase_name": "Fish-in Setup",
+    "sequence": [
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "products.bacteria_starter.selected == true"
+      }
+    ],
+    "duration_days": 3
+  },
+  {
+    "key": "I2@200",
+    "phase_id": "I2",
+    "phase_name": "Fish-in Stabilization",
+    "sequence": [
+      {
+        "id": "t_cycle_bacteria_dose_daily",
+        "when": "products.bacteria_starter.selected == true"
+      }
+    ],
+    "duration_days": 7
+  }
+]

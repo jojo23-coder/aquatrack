@@ -1,0 +1,49 @@
+{
+  "atom_library": {
+    "i_hard_composition_tips": {
+      "type": "instruction",
+      "text_template": "Hardscape tip: use odd numbers and a strong focal point (rule of thirds). Keep the front open for depth."
+    },
+    "i_hard_prep": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "stone": "Rinse your stones to remove loose dust before placing them.",
+        "wood": "Soak your driftwood, glue it to rocks, or weigh it down. Dry wood floats!",
+        "mixed": "Rinse your stones to remove loose dust before placing them. Soak your driftwood, glue it to rocks, or weigh it down. Dry wood floats!"
+      },
+      "args_schema": {
+        "type": [
+          "stone",
+          "wood",
+          "mixed"
+        ]
+      }
+    },
+    "t_hard_finalize_layout": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Finalize your hardscape layout. Make sure it is stable and won't shift during planting."
+    },
+    "t_sub_place_slope": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Pour and slope the substrate (higher in the back, lower in the front) to create depth."
+    },
+    "t_sub_prep": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "inert": "Rinse your sand/gravel in a bucket until the water runs clear. This prevents permanent cloudiness.",
+        "aquasoil": "Handle your Aquasoil gently. Do NOT rinse it. Rinsing active soil breaks down the nutrient pellets and turns your tank into a mud bath."
+      },
+      "args_schema": {
+        "substrate": [
+          "inert",
+          "aquasoil"
+        ]
+      }
+    }
+  }
+}

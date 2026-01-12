@@ -1,0 +1,610 @@
+{
+  "sources": [
+    "tmp-json/param-sandbox/chem/chem-atoms.param.json",
+    "tmp-json/param-sandbox/co2/co2-atoms.param.json",
+    "tmp-json/param-sandbox/cycle/cycle-atoms.used.json",
+    "tmp-json/param-sandbox/expected/expected-atoms.param.json",
+    "tmp-json/param-sandbox/fertilizer/fertilizer-atoms.param.json",
+    "tmp-json/param-sandbox/hardscape-substrate/hardscape-substrate-atoms.used.json",
+    "tmp-json/param-sandbox/intros/intro-atoms.param.json",
+    "tmp-json/param-sandbox/lighting/lighting-atoms.param.json",
+    "tmp-json/param-sandbox/equipment/equipment-atoms.used.json",
+    "tmp-json/param-sandbox/maintenance/maintenance-atoms.used.json",
+    "tmp-json/param-sandbox/plants/plants-atoms.used.json",
+    "tmp-json/param-sandbox/stocking/stocking-atoms.used.json",
+    "tmp-json/param-sandbox/water/water-atoms.used.json"
+  ],
+  "introMap": {
+    "i_intro_fishless_light_cycle_setup": "i_intro_fishless_F1_setup",
+    "i_intro_fishless_light_ammonia_maintenance": "i_intro_fishless_F2_ammonia",
+    "i_intro_fishless_light_nitrite_watch": "i_intro_fishless_F3_nitrite",
+    "i_intro_fishless_light_cycle_verification": "i_intro_fishless_F4_completion",
+    "i_intro_fishless_light_transition_success": "i_intro_fishless_F5_transition",
+    "i_intro_fishless_dark_start": "i_intro_fishless_DS1_setup",
+    "i_intro_fishless_dark_ammonia_maintenance": "i_intro_fishless_DS2_ammonia",
+    "i_intro_fishless_dark_cycle_verification": "i_intro_fishless_DS4_completion",
+    "i_intro_fishless_dark_cycle_complete": "i_intro_fishless_DS5_exit",
+    "i_intro_fishin_light_setup": "i_intro_fishin_I1_setup",
+    "i_intro_fishin_light_toxin_watch": "i_intro_fishin_I2_stabilization",
+    "i_intro_fishin_light_nitrite_watch": "i_intro_fishin_I3_biofilter",
+    "i_intro_silent_setup": "i_intro_silent_PA1_setup",
+    "i_intro_silent_growth_watch": "i_intro_silent_PA2_growth_watch",
+    "i_intro_silent_ready_for_stocking": "i_intro_silent_PA3_stocking",
+    "i_intro_routine_forever": "i_intro_routine_R1_forever"
+  },
+  "durationMap": {
+    "i_intro_duration_1_day": "1",
+    "i_intro_duration_3_days": "3",
+    "i_intro_duration_7_days": "7",
+    "i_intro_duration_14_days": "14",
+    "i_intro_duration_28_days": "28",
+    "i_intro_duration_indefinite": "indefinite"
+  },
+  "chemTestMap": {
+    "t_chem_ph_test_once": {
+      "parameter": "ph",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "t_chem_gh_test_once": {
+      "parameter": "gh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "t_chem_kh_test_once": {
+      "parameter": "kh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "t_chem_ammonia_test_interval": {
+      "parameter": "ammonia",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "t_chem_nitrite_test_interval": {
+      "parameter": "nitrite",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "t_chem_nitrate_test_weekly": {
+      "parameter": "nitrate",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "t_chem_ph_test_weekly": {
+      "parameter": "ph",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "t_chem_ammonia_test_daily": {
+      "parameter": "ammonia",
+      "cadence": "daily",
+      "variant": "default"
+    },
+    "t_chem_nitrite_test_daily": {
+      "parameter": "nitrite",
+      "cadence": "daily",
+      "variant": "default"
+    },
+    "t_chem_ammonia_test_24h": {
+      "parameter": "ammonia",
+      "cadence": "per_event",
+      "variant": "after_24h",
+      "due_offset_days": 1
+    },
+    "t_chem_nitrite_test_24h": {
+      "parameter": "nitrite",
+      "cadence": "per_event",
+      "variant": "after_24h",
+      "due_offset_days": 1
+    }
+  },
+  "mappingRules": {
+    "intro_transition_maturity": "i_intro_transition_maturity -> i_intro_silent_PA4_transition if PA4 else i_intro_fishin_I4_transition",
+    "plants": {
+      "i_plant_dense_planting_advice": "i_plant_dense",
+      "i_plant_epiphytes_advice": {
+        "id": "i_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      "i_plant_stems_advice": {
+        "id": "i_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      "t_plant_epiphytes_attach": {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      "t_plant_stems_plant": {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      "t_plant_root_tabs_insert": {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "i_plant_prep_remove_wool": {
+        "id": "i_plants_prep",
+        "when": "setup.plants_present_in_plan == true"
+      },
+      "i_plant_mist_during_setup": "drop"
+    },
+    "hardscape_substrate": {
+      "t_sub_rinse_inert": {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      "i_sub_no_rinse_aquasoil": {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "i_hard_rinse_stones": {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      "i_hard_soak_driftwood": [
+        {
+          "id": "i_hard_prep",
+          "args": {
+            "type": "wood"
+          },
+          "when": "setup.hardscape_type == 'wood'"
+        },
+        {
+          "id": "i_hard_prep",
+          "args": {
+            "type": "mixed"
+          },
+          "when": "setup.hardscape_type == 'mixed'"
+        }
+      ]
+    },
+    "water": {
+      "i_water_chlorine_treat_full_volume": {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      "t_water_conditioner_dose_full_fill": {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      "t_water_gh_dose_full_fill": {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_ghkh_dose_full_fill": {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      "t_water_kh_dose_full_fill": {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      }
+    },
+    "maintenance": {
+      "t_maint_prep_conditioner_weekly": {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      "t_maint_prep_gh_weekly": {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_prep_ghkh_weekly": {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      "t_maint_prep_kh_weekly": {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_aquasoil_frequent": {
+        "id": "t_maint_wc_aquasoil_frequent",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_maint_wc_nitrite_daily": {
+        "id": "t_maint_wc_nitrite_daily",
+        "when": "setup.can_test_nitrite == true"
+      },
+      "i_maint_wc_inert_emergency": {
+        "id": "i_maint_wc_inert_emergency",
+        "when": "setup.substrate_type != 'aquasoil'"
+      },
+      "i_maint_wc_nitrite_rule": {
+        "id": "i_maint_wc_nitrite_rule",
+        "when": "livestock.has_fish == true || livestock.has_shrimp == true"
+      }
+    },
+    "fertilizer": {
+      "i_fert_start_half_dose_weekly": {
+        "id": "i_fert_start_dose",
+        "args": {
+          "dose": "half"
+        },
+        "when": "fertilizer_guard"
+      },
+      "t_fert_dose_half_weekly": {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "half"
+        },
+        "when": "fertilizer_guard"
+      },
+      "t_fert_dose_half_once": {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "one_time",
+          "dose": "half"
+        },
+        "when": "fertilizer_guard"
+      },
+      "t_fert_dose_full_weekly_transition": {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "one_time",
+          "dose": "full"
+        },
+        "when": "fertilizer_guard"
+      },
+      "t_fert_dose_maintenance_weekly": {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "fertilizer_guard"
+      },
+      "i_fert_increase_if_pale_leaves": {
+        "id": "i_fert_increase_if_pale_leaves",
+        "when": "fertilizer_guard"
+      },
+      "i_fert_increase_to_full": {
+        "id": "i_fert_increase_to_full",
+        "when": "fertilizer_guard"
+      }
+    },
+    "stocking": {
+      "i_stock_feed_every_other_day_guidance": {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      "i_stock_feed_every_other_day_long_haul": {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "long_haul"
+        }
+      },
+      "i_stock_fish_acclimation_guide": {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      "i_stock_shrimp_acclimation_guide": {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      "t_stock_fish_acclimate": {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      "t_stock_shrimp_acclimate": {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      "t_stock_fish_acclimate_day3": {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish",
+          "due_offset_days": 3
+        },
+        "when": "livestock.has_fish == true"
+      },
+      "t_stock_shrimp_acclimate_day3": {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp",
+          "due_offset_days": 3
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      "t_stock_feed_every_other_day": {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      },
+      "i_stock_shrimp_wait_warning": {
+        "id": "i_stock_shrimp_wait_warning",
+        "when": "livestock.has_shrimp == true"
+      },
+      "i_stock_fishin_wait_before_adding": {
+        "id": "i_stock_fishin_wait_before_adding",
+        "when": "livestock.has_fish == true"
+      },
+      "i_stock_fish_gasping_emergency": {
+        "id": "i_stock_fish_gasping_emergency",
+        "when": "livestock.has_fish == true"
+      },
+      "i_stock_detox_advice": {
+        "id": "i_stock_detox",
+        "when": "products.detoxifier_conditioner.selected == true"
+      },
+      "t_stock_detoxifier_dose_daily": {
+        "id": "t_stock_detox",
+        "when": "products.detoxifier_conditioner.selected == true"
+      }
+    },
+    "co2": {
+      "i_co2_target_dark_green_safe": {
+        "id": "i_co2_target",
+        "args": {
+          "target": "dark_green"
+        }
+      },
+      "i_co2_target_yellow_green_growth": {
+        "id": "i_co2_target",
+        "args": {
+          "target": "yellow_green"
+        }
+      },
+      "i_co2_lime_green_check_before_stocking": {
+        "id": "i_co2_target",
+        "args": {
+          "target": "lime_green"
+        }
+      },
+      "i_co2_start_high_saturation_fishless": {
+        "id": "i_co2_target",
+        "args": {
+          "target": "lime_green"
+        }
+      },
+      "i_co2_strategy_off_during_cycle": {
+        "id": "i_co2_off_guidance"
+      },
+      "i_co2_wait_for_fish": "drop",
+      "t_co2_turn_on_initial_setup": {
+        "id": "t_co2_turn_on"
+      }
+    },
+    "lighting": {
+      "i_light_basic_ramp_plan": {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      "i_light_dedicated_ramp_plan": {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      "i_light_high_perf_ramp_low_demand": {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      "i_light_high_perf_ramp_high_demand": {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      "t_light_start_basic_6h": {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      "t_light_start_dedicated_60_6h": {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      "t_light_start_high_perf_low_30_6h": {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      "t_light_start_high_perf_high_50_6h": {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      "t_light_basic_ramp_weekly": {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      "t_light_dedicated_ramp_weekly": {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      "t_light_high_perf_ramp_low_demand_weekly": {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      "t_light_high_perf_ramp_high_demand_weekly": {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      "t_light_ramp_weekly": {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      "i_light_on_6h_for_plants": {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      }
+    },
+    "equipment": {
+      "t_equip_heater_on": {
+        "id": "t_equip_heater_on",
+        "when": "setup.heater_installed == true"
+      },
+      "t_equip_heater_set_target": {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.heater_installed == true"
+      },
+      "i_equip_heater_target_reset": {
+        "id": "i_equip_heater_target_reset",
+        "when": "setup.heater_installed == true"
+      }
+    },
+    "cycle": {
+      "i_cycle_ammonia_aquasoil_caution": {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "i_cycle_ammonia_dose_inert": {
+        "id": "i_cycle_ammonia_dose_inert",
+        "when": "setup.substrate_type == 'inert' && products.ammonia_source.selected == true"
+      },
+      "t_cycle_ammonia_dose_when_zero": {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      },
+      "t_cycle_ammonia_dose_initial": {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      },
+      "t_cycle_bacteria_dose_daily": {
+        "id": "t_cycle_bacteria_dose_daily",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      "t_cycle_bacteria_dose_once": {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "products.bacteria_starter.selected == true"
+      }
+    },
+    "expected": {
+      "e_cycle_ph_crash_warning": "i_cycle_ph_crash_warning",
+      "e_hard_tannins_fungus": [
+        {
+          "id": "e_hardscape_expected",
+          "args": {
+            "type": "wood"
+          },
+          "when": "setup.hardscape_type == 'wood'"
+        },
+        {
+          "id": "e_hardscape_expected",
+          "args": {
+            "type": "mixed"
+          },
+          "when": "setup.hardscape_type == 'mixed'"
+        },
+        {
+          "id": "e_hardscape_expected",
+          "args": {
+            "type": "stone"
+          },
+          "when": "setup.hardscape_type == 'stone'"
+        }
+      ],
+      "stock_expected_group": [
+        {
+          "id": "e_stock_expected",
+          "args": {
+            "stock": "both"
+          },
+          "when": "livestock.has_fish == true && livestock.has_shrimp == true"
+        },
+        {
+          "id": "e_stock_expected",
+          "args": {
+            "stock": "fish"
+          },
+          "when": "livestock.has_fish == true && !livestock.has_shrimp"
+        },
+        {
+          "id": "e_stock_expected",
+          "args": {
+            "stock": "shrimp"
+          },
+          "when": "livestock.has_shrimp == true && !livestock.has_fish"
+        }
+      ]
+    }
+  },
+  "constants": {
+    "fertilizer_guard": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+  }
+}

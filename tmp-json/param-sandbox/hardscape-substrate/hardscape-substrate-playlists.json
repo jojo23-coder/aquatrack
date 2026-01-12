@@ -1,0 +1,186 @@
+[
+  {
+    "key": "F1@100",
+    "phase_id": "F1",
+    "phase_name": "Fishless Setup (Traditional)",
+    "sequence": [
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout"
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS1@101",
+    "phase_id": "DS1",
+    "phase_name": "Dark Start Setup",
+    "sequence": [
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout"
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "I1@100",
+    "phase_id": "I1",
+    "phase_name": "Fish-in Setup",
+    "sequence": [
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout"
+    ],
+    "duration_days": 3
+  },
+  {
+    "key": "PA1@100",
+    "phase_id": "PA1",
+    "phase_name": "Plant Assisted: Setup",
+    "sequence": [
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout"
+    ],
+    "duration_days": 14
+  }
+]

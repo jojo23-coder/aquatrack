@@ -1,0 +1,38 @@
+{
+  "atom_library": {
+    "i_plant_dense": {
+      "type": "instruction",
+      "text_template": "Plant as densely as possible. The more plant mass you have, the safer your tank will be."
+    },
+    "t_plant_epiphytes": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Epiphytes on hardscape. Glue or tie them; never bury the rhizome."
+    },
+    "t_plant_stems": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Stems."
+    },
+    "t_plant_root_tabs": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Insert root tabs deep into the substrate beneath your heavy root feeders."
+    },
+    "i_plant_epiphytes": {
+      "type": "instruction",
+      "text_template": "Planting Epiphytes (Anubias/Buce): Glue or tie them to hardscape. If you bury the rhizome in the substrate, they will rot."
+    },
+    "i_plant_stems": {
+      "type": "instruction",
+      "text_template": "Planting Stems: Trim the bottom inch off and remove lower leaves. Plant in small bunches to encourage new root growth."
+    },
+    "i_plants_prep": {
+      "type": "instruction",
+      "text_template": [
+        "Remove pots and rock wool from plants, then gently rinse the roots.",
+        "Keep a spray bottle handy and mist plants during setup so they don't dry out."
+      ]
+    }
+  }
+}

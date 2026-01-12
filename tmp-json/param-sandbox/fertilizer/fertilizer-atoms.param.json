@@ -1,0 +1,45 @@
+{
+  "atom_library": {
+    "i_fert_increase_if_pale_leaves": {
+      "type": "instruction",
+      "text_template": "If you see pale leaves or pinholes, increase your fertilizer dose."
+    },
+    "i_fert_increase_to_full": {
+      "type": "instruction",
+      "text_template": "You started on a reduced dose. Now increase to a full fertilizer dose."
+    },
+    "i_fert_start_dose": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "half": "Begin dosing your liquid fertilizer, but only use a Half Dose for now. Your plants are waking up, and full dosing combined with the ammonia you are adding can trigger algae. We'll increase to full strength after the cycle.",
+        "full": "Begin dosing your liquid fertilizer at a Full Dose. Your plants are ready for it, and we'll monitor for algae as the tank settles."
+      },
+      "args_schema": {
+        "dose": [
+          "half",
+          "full"
+        ]
+      }
+    },
+    "t_fert_dose": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "half": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
+        "full": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth)."
+      },
+      "args_schema": {
+        "cadence": [
+          "one_time",
+          "weekly"
+        ],
+        "dose": [
+          "half",
+          "full"
+        ]
+      }
+    }
+  }
+}

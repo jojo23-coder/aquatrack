@@ -1,0 +1,2711 @@
+[
+  {
+    "id": "i_intro_fishless_F1_setup",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 1
+    }
+  },
+  {
+    "id": "t_sub_prep",
+    "args": {
+      "substrate": {
+        "$expr": "setup.substrate_type"
+      }
+    }
+  },
+  {
+    "id": "t_sub_place_slope",
+    "args": {}
+  },
+  {
+    "id": "i_hard_prep",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "i_hard_composition_tips",
+    "args": {}
+  },
+  {
+    "id": "t_hard_finalize_layout",
+    "args": {}
+  },
+  {
+    "id": "i_plant_dense",
+    "args": {}
+  },
+  {
+    "id": "i_plants_prep",
+    "args": {},
+    "when": "setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_plant_epiphytes",
+    "args": {},
+    "when": "plants.has_epiphytes == true"
+  },
+  {
+    "id": "t_plant_stems",
+    "args": {},
+    "when": "plants.has_stems == true"
+  },
+  {
+    "id": "t_plant_root_tabs",
+    "args": {},
+    "when": "plants.has_root_feeders == true"
+  },
+  {
+    "id": "i_water_fill_prep_bag_or_plate",
+    "args": {}
+  },
+  {
+    "id": "i_water_chlorine_treat_full_volume",
+    "args": {},
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_tank",
+    "args": {}
+  },
+  {
+    "id": "t_equip_filter_turn_on",
+    "args": {}
+  },
+  {
+    "id": "e_water_cloudy_bloom",
+    "args": {}
+  },
+  {
+    "id": "e_hardscape_expected",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "i_equip_filter_on",
+    "args": {}
+  },
+  {
+    "id": "t_equip_heater_set_target",
+    "args": {},
+    "when": "setup.heater_installed == true"
+  },
+  {
+    "id": "i_cycle_algae_light_warning",
+    "args": {}
+  },
+  {
+    "id": "t_light_start",
+    "args": {
+      "light_type": {
+        "$expr": "setup.light_type"
+      },
+      "plant_demand": {
+        "$expr": "setup.plant_demand"
+      }
+    }
+  },
+  {
+    "id": "i_co2_target",
+    "args": {
+      "target": "yellow_green"
+    }
+  },
+  {
+    "id": "t_co2_turn_on",
+    "args": {}
+  },
+  {
+    "id": "i_cycle_ammonia_dose_inert",
+    "args": {},
+    "when": "setup.substrate_type == 'inert' && products.ammonia_source.selected"
+  },
+  {
+    "id": "t_cycle_bacteria_dose_once",
+    "args": {},
+    "when": "products.bacteria_starter.selected == true"
+  },
+  {
+    "id": "t_cycle_ammonia_dose_initial",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "i_cycle_ammonia_aquasoil_caution",
+    "args": {},
+    "when": "setup.substrate_type == 'aquasoil'"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ph",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ph == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "gh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_gh == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "kh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_kh == true"
+  },
+  {
+    "id": "i_intro_fishless_F2_ammonia",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 7
+    }
+  },
+  {
+    "id": "i_fert_start_dose",
+    "args": {
+      "dose": "half"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "e_plant_melt_high_ammonia",
+    "args": {}
+  },
+  {
+    "id": "i_chem_nitrite_watch",
+    "args": {},
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "e_water_cloudy_bloom",
+    "args": {}
+  },
+  {
+    "id": "e_water_surface_scum",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_ammonia_drop_speed",
+    "args": {}
+  },
+  {
+    "id": "e_bio_slimy_walls",
+    "args": {}
+  },
+  {
+    "id": "e_plant_transition",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "t_cycle_ammonia_dose_when_zero",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "t_maint_trim_melting_plants",
+    "args": {}
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "half"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "i_cycle_nitrite_spike_warning",
+    "args": {}
+  },
+  {
+    "id": "i_cycle_nitrite_clear_goal",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_purple_nitrite",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_ammonia_hunger",
+    "args": {}
+  },
+  {
+    "id": "i_cycle_ph_crash_warning",
+    "args": {}
+  },
+  {
+    "id": "e_bio_detritus_buildup",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_diatoms_brown_algae",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "t_cycle_ammonia_dose_when_zero",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "i_chem_nitrate_progress_check",
+    "args": {},
+    "when": "setup.can_test_nitrate == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrate",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "when": "setup.can_test_nitrate == true"
+  },
+  {
+    "id": "e_chem_nitrate_fert_high_note",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ph",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ph == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "half"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_maint_trim_melting_plants",
+    "args": {}
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "i_intro_fishless_F4_completion",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 1
+    }
+  },
+  {
+    "id": "t_cycle_ammonia_dose_initial",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "i_chem_wait_24h_before_test",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "per_event",
+      "variant": "after_24h",
+      "due_offset_days": 1
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "per_event",
+      "variant": "after_24h",
+      "due_offset_days": 1
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "i_chem_completion_test_fail_back",
+    "args": {}
+  },
+  {
+    "id": "i_intro_fishless_F5_transition",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 1
+    }
+  },
+  {
+    "id": "i_maint_wc_reset",
+    "args": {}
+  },
+  {
+    "id": "i_water_fill_prep_bag_or_plate",
+    "args": {}
+  },
+  {
+    "id": "i_water_chlorine_treat_full_volume",
+    "args": {},
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_reset",
+    "args": {}
+  },
+  {
+    "id": "i_co2_adjust_safe_before_stocking",
+    "args": {}
+  },
+  {
+    "id": "t_co2_adjust_safe",
+    "args": {}
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "one_time",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "i_stock_add_in_batches_weekly",
+    "args": {}
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "i_intro_fishless_DS1_setup",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 1
+    }
+  },
+  {
+    "id": "t_sub_prep",
+    "args": {
+      "substrate": {
+        "$expr": "setup.substrate_type"
+      }
+    }
+  },
+  {
+    "id": "t_sub_place_slope",
+    "args": {}
+  },
+  {
+    "id": "i_hard_prep",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "i_hard_composition_tips",
+    "args": {}
+  },
+  {
+    "id": "t_hard_finalize_layout",
+    "args": {}
+  },
+  {
+    "id": "i_water_fill_prep_bag_or_plate",
+    "args": {}
+  },
+  {
+    "id": "i_water_chlorine_treat_full_volume",
+    "args": {},
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_tank",
+    "args": {}
+  },
+  {
+    "id": "t_equip_filter_turn_on",
+    "args": {}
+  },
+  {
+    "id": "e_water_cloudy_bloom",
+    "args": {}
+  },
+  {
+    "id": "e_hardscape_expected",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "i_equip_filter_on",
+    "args": {}
+  },
+  {
+    "id": "t_equip_heater_on",
+    "args": {},
+    "when": "setup.heater_installed == true"
+  },
+  {
+    "id": "i_light_dark_rule",
+    "args": {}
+  },
+  {
+    "id": "t_light_confirm_off",
+    "args": {}
+  },
+  {
+    "id": "t_co2_confirm_off",
+    "args": {}
+  },
+  {
+    "id": "i_chem_baseline_ph_gh_kh",
+    "args": {}
+  },
+  {
+    "id": "i_cycle_ammonia_dose_inert",
+    "args": {},
+    "when": "setup.substrate_type == 'inert' && products.ammonia_source.selected"
+  },
+  {
+    "id": "t_cycle_bacteria_dose_once",
+    "args": {},
+    "when": "products.bacteria_starter.selected == true"
+  },
+  {
+    "id": "t_cycle_ammonia_dose_initial",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "i_cycle_ammonia_aquasoil_caution",
+    "args": {},
+    "when": "setup.substrate_type == 'aquasoil'"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ph",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ph == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "gh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_gh == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "kh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_kh == true"
+  },
+  {
+    "id": "i_intro_fishless_DS2_ammonia",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 7
+    }
+  },
+  {
+    "id": "e_water_cloudy_bloom",
+    "args": {}
+  },
+  {
+    "id": "e_water_surface_scum",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_ammonia_drop_speed",
+    "args": {}
+  },
+  {
+    "id": "e_bio_slimy_walls",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_nothing_happening",
+    "args": {}
+  },
+  {
+    "id": "i_chem_nitrite_watch",
+    "args": {},
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "t_cycle_ammonia_dose_when_zero",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "t_cycle_bacteria_dose_daily",
+    "args": {},
+    "when": "products.bacteria_starter.selected == true"
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "i_cycle_nitrite_spike_warning",
+    "args": {}
+  },
+  {
+    "id": "i_maint_filter_do_not_clean_early",
+    "args": {}
+  },
+  {
+    "id": "i_cycle_nitrite_clear_goal",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_purple_nitrite",
+    "args": {}
+  },
+  {
+    "id": "e_cycle_ammonia_hunger",
+    "args": {}
+  },
+  {
+    "id": "i_cycle_ph_crash_warning",
+    "args": {}
+  },
+  {
+    "id": "e_bio_detritus_buildup",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "t_cycle_ammonia_dose_when_zero",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "i_chem_nitrate_progress_check",
+    "args": {},
+    "when": "setup.can_test_nitrate == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrate",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "when": "setup.can_test_nitrate == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ph",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ph == true"
+  },
+  {
+    "id": "i_light_dark_rule",
+    "args": {}
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "i_intro_fishless_DS4_completion",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 1
+    }
+  },
+  {
+    "id": "t_cycle_ammonia_dose_initial",
+    "args": {},
+    "when": "products.ammonia_source.selected == true"
+  },
+  {
+    "id": "i_chem_wait_24h_before_test",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "per_event",
+      "variant": "after_24h",
+      "due_offset_days": 1
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "per_event",
+      "variant": "after_24h",
+      "due_offset_days": 1
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "i_chem_completion_test_fail_back",
+    "args": {}
+  },
+  {
+    "id": "i_intro_fishless_DS5_exit",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 28
+    }
+  },
+  {
+    "id": "i_water_drain_90_intro",
+    "args": {}
+  },
+  {
+    "id": "t_water_drain_90",
+    "args": {}
+  },
+  {
+    "id": "i_plant_epiphytes",
+    "args": {},
+    "when": "plants.has_epiphytes == true"
+  },
+  {
+    "id": "t_plant_epiphytes",
+    "args": {},
+    "when": "plants.has_epiphytes == true"
+  },
+  {
+    "id": "i_plant_stems",
+    "args": {},
+    "when": "plants.has_stems == true"
+  },
+  {
+    "id": "t_plant_stems",
+    "args": {},
+    "when": "plants.has_stems == true"
+  },
+  {
+    "id": "t_plant_root_tabs",
+    "args": {},
+    "when": "plants.has_root_feeders == true"
+  },
+  {
+    "id": "e_plant_transition",
+    "args": {}
+  },
+  {
+    "id": "i_water_fill_prep_bag_or_plate",
+    "args": {}
+  },
+  {
+    "id": "i_water_chlorine_treat_full_volume",
+    "args": {},
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_tank",
+    "args": {}
+  },
+  {
+    "id": "i_equip_heater_target_reset",
+    "args": {},
+    "when": "setup.heater_installed == true"
+  },
+  {
+    "id": "t_equip_heater_set_target",
+    "args": {},
+    "when": "setup.heater_installed == true"
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "t_light_start",
+    "args": {
+      "light_type": {
+        "$expr": "setup.light_type"
+      },
+      "plant_demand": {
+        "$expr": "setup.plant_demand"
+      }
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_co2_timer_on_off",
+    "args": {}
+  },
+  {
+    "id": "i_co2_target",
+    "args": {
+      "target": "dark_green"
+    }
+  },
+  {
+    "id": "t_co2_turn_on",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "one_time",
+      "dose": "half"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "i_stock_ds_timing",
+    "args": {}
+  },
+  {
+    "id": "i_stock_shrimp_wait_warning",
+    "args": {},
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrate",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "when": "setup.can_test_nitrate == true"
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_stock_feed_every_other_day",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "routine"
+    }
+  },
+  {
+    "id": "t_maint_trim_melting_plants",
+    "args": {}
+  },
+  {
+    "id": "i_stock_add_in_batches_weekly",
+    "args": {}
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "i_stock_detox",
+    "args": {},
+    "when": "products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "both"
+    },
+    "when": "livestock.has_fish && livestock.has_shrimp == true"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "fish"
+    },
+    "when": "livestock.has_fish && !livestock.has_shrimp"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "shrimp"
+    },
+    "when": "livestock.has_shrimp && !livestock.has_fish"
+  },
+  {
+    "id": "i_intro_fishin_I1_setup",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 3
+    }
+  },
+  {
+    "id": "t_sub_prep",
+    "args": {
+      "substrate": {
+        "$expr": "setup.substrate_type"
+      }
+    }
+  },
+  {
+    "id": "t_sub_place_slope",
+    "args": {}
+  },
+  {
+    "id": "i_hard_prep",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "i_hard_composition_tips",
+    "args": {}
+  },
+  {
+    "id": "t_hard_finalize_layout",
+    "args": {}
+  },
+  {
+    "id": "i_plant_dense",
+    "args": {}
+  },
+  {
+    "id": "i_plants_prep",
+    "args": {},
+    "when": "setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "i_plant_epiphytes",
+    "args": {},
+    "when": "plants.has_epiphytes == true"
+  },
+  {
+    "id": "t_plant_epiphytes",
+    "args": {},
+    "when": "plants.has_epiphytes == true"
+  },
+  {
+    "id": "i_plant_stems",
+    "args": {},
+    "when": "plants.has_stems == true"
+  },
+  {
+    "id": "t_plant_stems",
+    "args": {},
+    "when": "plants.has_stems == true"
+  },
+  {
+    "id": "t_plant_root_tabs",
+    "args": {},
+    "when": "plants.has_root_feeders == true"
+  },
+  {
+    "id": "i_water_fill_prep_bag_or_plate",
+    "args": {}
+  },
+  {
+    "id": "i_water_chlorine_treat_full_volume",
+    "args": {},
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_tank",
+    "args": {}
+  },
+  {
+    "id": "t_equip_filter_turn_on",
+    "args": {}
+  },
+  {
+    "id": "e_water_cloudy_bloom",
+    "args": {}
+  },
+  {
+    "id": "e_hardscape_expected",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "i_equip_filter_on",
+    "args": {}
+  },
+  {
+    "id": "t_equip_heater_set_target",
+    "args": {},
+    "when": "setup.heater_installed == true"
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "t_light_start",
+    "args": {
+      "light_type": {
+        "$expr": "setup.light_type"
+      },
+      "plant_demand": {
+        "$expr": "setup.plant_demand"
+      }
+    }
+  },
+  {
+    "id": "i_co2_off_guidance",
+    "args": {}
+  },
+  {
+    "id": "i_cycle_ammonia_aquasoil_caution",
+    "args": {},
+    "when": "setup.substrate_type == 'aquasoil'"
+  },
+  {
+    "id": "i_stock_add_in_batches_weekly",
+    "args": {}
+  },
+  {
+    "id": "i_stock_fishin_wait_before_adding",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_shrimp_wait_warning",
+    "args": {},
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "both"
+    },
+    "when": "livestock.has_fish && livestock.has_shrimp == true"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "fish"
+    },
+    "when": "livestock.has_fish && !livestock.has_shrimp"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "shrimp"
+    },
+    "when": "livestock.has_shrimp && !livestock.has_fish"
+  },
+  {
+    "id": "t_cycle_bacteria_dose_once",
+    "args": {},
+    "when": "products.bacteria_starter.selected == true"
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "routine"
+    }
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ph",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ph == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "gh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_gh == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "kh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_kh == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "fish",
+      "due_offset_days": 3
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "shrimp",
+      "due_offset_days": 3
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "i_intro_fishin_I2_stabilization",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 7
+    }
+  },
+  {
+    "id": "e_hardscape_expected",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "e_plant_transition",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "daily",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "daily",
+      "variant": "default"
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "routine"
+    }
+  },
+  {
+    "id": "t_stock_feed_every_other_day",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_cycle_bacteria_dose_daily",
+    "args": {},
+    "when": "products.bacteria_starter.selected == true"
+  },
+  {
+    "id": "i_stock_detox",
+    "args": {},
+    "when": "products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "i_chem_conditioner_binding_note",
+    "args": {}
+  },
+  {
+    "id": "t_maint_trim_melting_plants",
+    "args": {}
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "i_maint_wc_nitrite_rule",
+    "args": {},
+    "when": "livestock.has_fish || livestock.has_shrimp == true"
+  },
+  {
+    "id": "i_intro_fishin_I3_biofilter",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "daily",
+      "variant": "default"
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "daily",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_maint_wc_nitrite_daily",
+    "args": {},
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "i_stock_fish_gasping_emergency",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_maint_wc_nitrite_rule",
+    "args": {},
+    "when": "livestock.has_fish || livestock.has_shrimp == true"
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "routine"
+    }
+  },
+  {
+    "id": "t_stock_feed_every_other_day",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "e_cycle_diatoms_brown_algae",
+    "args": {}
+  },
+  {
+    "id": "i_maint_filter_do_not_clean_early",
+    "args": {}
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "i_intro_fishin_I4_transition",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_co2_target",
+    "args": {
+      "target": "dark_green"
+    }
+  },
+  {
+    "id": "t_co2_turn_on",
+    "args": {}
+  },
+  {
+    "id": "i_stock_add_in_batches_weekly",
+    "args": {}
+  },
+  {
+    "id": "i_stock_shrimp_wait_warning",
+    "args": {},
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "routine"
+    }
+  },
+  {
+    "id": "t_stock_feed_every_other_day",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "one_time",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "i_intro_silent_PA1_setup",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "t_sub_prep",
+    "args": {
+      "substrate": {
+        "$expr": "setup.substrate_type"
+      }
+    }
+  },
+  {
+    "id": "t_sub_place_slope",
+    "args": {}
+  },
+  {
+    "id": "i_hard_prep",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "i_plant_dense",
+    "args": {}
+  },
+  {
+    "id": "i_plants_prep",
+    "args": {},
+    "when": "setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "i_plant_epiphytes",
+    "args": {},
+    "when": "plants.has_epiphytes == true"
+  },
+  {
+    "id": "t_plant_epiphytes",
+    "args": {},
+    "when": "plants.has_epiphytes == true"
+  },
+  {
+    "id": "i_plant_stems",
+    "args": {},
+    "when": "plants.has_stems == true"
+  },
+  {
+    "id": "t_plant_stems",
+    "args": {},
+    "when": "plants.has_stems == true"
+  },
+  {
+    "id": "t_plant_root_tabs",
+    "args": {},
+    "when": "plants.has_root_feeders == true"
+  },
+  {
+    "id": "i_water_fill_prep_bag_or_plate",
+    "args": {}
+  },
+  {
+    "id": "i_water_chlorine_treat_full_volume",
+    "args": {},
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_dose",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_water_fill_tank",
+    "args": {}
+  },
+  {
+    "id": "t_equip_filter_turn_on",
+    "args": {}
+  },
+  {
+    "id": "i_equip_filter_on",
+    "args": {}
+  },
+  {
+    "id": "t_equip_heater_set_target",
+    "args": {},
+    "when": "setup.heater_installed == true"
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_start",
+    "args": {
+      "light_type": {
+        "$expr": "setup.light_type"
+      },
+      "plant_demand": {
+        "$expr": "setup.plant_demand"
+      }
+    }
+  },
+  {
+    "id": "i_co2_target",
+    "args": {
+      "target": "lime_green"
+    }
+  },
+  {
+    "id": "t_co2_turn_on",
+    "args": {}
+  },
+  {
+    "id": "i_intro_silent_PA1_fert_aquasoil_delay",
+    "args": {},
+    "when": "setup.substrate_type == 'aquasoil'"
+  },
+  {
+    "id": "i_intro_silent_PA1_fert_inert_start",
+    "args": {},
+    "when": "setup.substrate_type != 'aquasoil' && products.fertilizer_micros.selected"
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ph",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_ph == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "gh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_gh == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "kh",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_kh == true"
+  },
+  {
+    "id": "e_water_cloudy_bloom",
+    "args": {}
+  },
+  {
+    "id": "e_hardscape_expected",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "i_intro_silent_PA2_growth_watch",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "e_hardscape_expected",
+    "args": {
+      "type": {
+        "$expr": "setup.hardscape_type"
+      }
+    }
+  },
+  {
+    "id": "e_plant_transition",
+    "args": {}
+  },
+  {
+    "id": "i_maint_filter_do_not_clean_early",
+    "args": {}
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrite",
+      "cadence": "interval",
+      "variant": "default",
+      "every_days": 3
+    },
+    "when": "setup.can_test_nitrite == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_maint_trim_melting_plants",
+    "args": {}
+  },
+  {
+    "id": "t_maint_wc_aquasoil_frequent",
+    "args": {},
+    "when": "setup.substrate_type == 'aquasoil'"
+  },
+  {
+    "id": "i_maint_wc_inert_emergency",
+    "args": {},
+    "when": "setup.substrate_type != 'aquasoil'"
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "i_intro_silent_PA3_stocking",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "i_stock_cleanup_crew_start_light",
+    "args": {}
+  },
+  {
+    "id": "i_stock_add_in_batches_weekly",
+    "args": {}
+  },
+  {
+    "id": "i_co2_target",
+    "args": {
+      "target": "lime_green"
+    }
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "routine"
+    }
+  },
+  {
+    "id": "t_stock_feed_every_other_day",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_maint_trim_melting_plants",
+    "args": {}
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "both"
+    },
+    "when": "livestock.has_fish && livestock.has_shrimp == true"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "fish"
+    },
+    "when": "livestock.has_fish && !livestock.has_shrimp"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "shrimp"
+    },
+    "when": "livestock.has_shrimp && !livestock.has_fish"
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "i_intro_silent_PA4_transition",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 14
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "i_light_ramp_plan",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "i_co2_monitor_stability",
+    "args": {}
+  },
+  {
+    "id": "i_stock_add_in_batches_weekly",
+    "args": {}
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "routine"
+    }
+  },
+  {
+    "id": "t_stock_feed_every_other_day",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "i_stock_acclimation",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "fish"
+    },
+    "when": "livestock.has_fish == true"
+  },
+  {
+    "id": "t_stock_acclimate",
+    "args": {
+      "type": "shrimp"
+    },
+    "when": "livestock.has_shrimp == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "i_fert_increase_if_pale_leaves",
+    "args": {},
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_maint_trim_melting_plants",
+    "args": {}
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "both"
+    },
+    "when": "livestock.has_fish && livestock.has_shrimp == true"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "fish"
+    },
+    "when": "livestock.has_fish && !livestock.has_shrimp"
+  },
+  {
+    "id": "e_stock_expected",
+    "args": {
+      "stock": "shrimp"
+    },
+    "when": "livestock.has_shrimp && !livestock.has_fish"
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "basic",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "dedicated",
+      "plant_demand": "any"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "low"
+    }
+  },
+  {
+    "id": "t_light_ramp_weekly",
+    "args": {
+      "light_type": "high_performance",
+      "plant_demand": "high"
+    }
+  },
+  {
+    "id": "i_intro_routine_R1_forever",
+    "args": {}
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": "indefinite"
+    }
+  },
+  {
+    "id": "i_stock_feed_guidance",
+    "args": {
+      "phase": "long_haul"
+    }
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrate",
+      "cadence": "weekly",
+      "variant": "default"
+    },
+    "when": "setup.can_test_nitrate == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "conditioner"
+    },
+    "when": "source_water.has_chlorine && products.detoxifier_conditioner.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "gh"
+    },
+    "when": "products.gh_remineralizer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "ghkh"
+    },
+    "when": "products.gh_kh_remineralizer.selected == true"
+  },
+  {
+    "id": "t_maint_prep",
+    "args": {
+      "type": "kh"
+    },
+    "when": "products.kh_buffer.selected && !products.gh_kh_remineralizer.selected"
+  },
+  {
+    "id": "i_maint_long_haul_nitrate_report_card",
+    "args": {}
+  },
+  {
+    "id": "t_maint_wc_weekly",
+    "args": {}
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "full"
+    },
+    "when": "products.fertilizer_micros.selected && setup.plants_present_in_plan == true"
+  },
+  {
+    "id": "t_maint_filter_clean_monthly",
+    "args": {}
+  },
+  {
+    "id": "t_co2_maintenance_monthly",
+    "args": {}
+  },
+  {
+    "id": "t_water_top_off_interval",
+    "args": {}
+  },
+  {
+    "id": "t_stock_feed_every_other_day",
+    "args": {},
+    "when": "livestock.has_fish == true"
+  }
+]

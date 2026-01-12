@@ -1,0 +1,89 @@
+{
+  "atom_library": {
+    "i_stock_add_in_batches_weekly": {
+      "type": "instruction",
+      "text_template": "Add fish in small batches (e.g., 6–8 at a time) and wait one week between groups. Adding everyone at once creates a massive ammonia spike that your filter cannot process instantly. Gradual stocking keeps your water safe."
+    },
+    "i_stock_shrimp_wait_warning": {
+      "type": "instruction",
+      "text_template": "Planning to add shrimp? **Wait 2–4 weeks.** They need a mature tank with biofilm and algae to graze. Adding them too early is risky."
+    },
+    "t_stock_feed_every_other_day": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 2,
+      "text_template": "Feed a tiny pinch per fish (every other day)."
+    },
+    "i_stock_fishin_wait_before_adding": {
+      "type": "instruction",
+      "text_template": "Even though you're cycling with fish-in, it's wise to wait a couple of days before adding stock. It takes time to get everything running, and it's better to add fish to a working tank with stable temperature and flow."
+    },
+    "i_stock_fish_gasping_emergency": {
+      "type": "instruction",
+      "text_template": "Safety Check: Are your fish hanging near the surface or gasping? This is **Nitrite Poisoning** (suffocation), not hunger. If you see this, perform an immediate water change."
+    },
+    "i_stock_cleanup_crew_start_light": {
+      "type": "instruction",
+      "text_template": "We start with a 'Cleaning Crew' (Snails/Shrimp/Oto). Stock light!"
+    },
+    "i_stock_acclimation": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "fish": "To acclimate fish, turn off the light and float the sealed bag for 15 minutes to equalize temperature. Then, open the bag (or move fish to a bucket) and add a small cup of tank water every 5 minutes for 20 minutes. Finally, **net the fish out** into the tank. Never pour the store water into your aquarium.",
+        "shrimp": "Shrimp require **drip acclimation**. Place them in a container below the tank. Siphon tank water down using airline tubing, tying a knot in the tube to restrict flow to 1-2 drops per second. Let this run for 45-60 minutes (until the water volume triples) before netting them in."
+      },
+      "args_schema": {
+        "type": [
+          "fish",
+          "shrimp"
+        ]
+      }
+    },
+    "t_stock_acclimate": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "fish": "Acclimate fish before adding to tank.",
+        "shrimp": "Drip acclimate shrimp before adding them to tank."
+      },
+      "args_schema": {
+        "type": [
+          "fish",
+          "shrimp"
+        ],
+        "due_offset_days": [
+          3
+        ]
+      }
+    },
+    "i_stock_feed_guidance": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "routine": "Feed lightly — **every other day**. New fish will beg whenever they see you; ignore them. One tiny pinch per fish. If food hits the bottom, you fed too much.",
+        "long_haul": "Feeding Rule: **Every Other Day.** \n\n**Is this permanent?** \nYes! Adult community fish thrive on this schedule. It prevents obesity and keeps your water crystal clear. \n\n**Exceptions:** \nIf you have **Baby Fish** or **Nano species** (like Pea Puffers), you must feed daily. For everyone else, skip the guilt and skip the day."
+      },
+      "args_schema": {
+        "phase": [
+          "routine",
+          "long_haul"
+        ]
+      }
+    },
+    "i_stock_detox": {
+      "type": "instruction",
+      "text_template": "Safety tip: Use a conditioner that detoxifies ammonia/nitrite. It acts like an emergency brake for up to 24 hours while you fix the root cause."
+    },
+    "t_stock_detox": {
+      "type": "task",
+      "cadence": "daily",
+      "text_template": "Add {{doses.detoxifier_conditioner.emergency_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} (binds ammonia/nitrite)."
+    },
+    "i_stock_ds_timing": {
+      "type": "instruction",
+      "text_template": "Your filter is cycled and ready. You can add livestock immediately. However, if the water is very cloudy from planting, it is safer to wait 24 hours for the dust to settle."
+    }
+  }
+}

@@ -1,0 +1,1565 @@
+[
+  {
+    "key": "F1@100",
+    "phase_id": "F1",
+    "phase_name": "Fishless Setup (Traditional)",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_light_cycle_setup",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_1_day",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_rinse_inert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_sub_no_rinse_aquasoil",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_place_slope",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_rinse_stones",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_soak_driftwood",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_composition_tips",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_hard_finalize_layout",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_dense_planting_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_prep_remove_wool",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_mist_during_setup",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_epiphytes_attach",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_stems_plant",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_root_tabs_insert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_fill_prep_bag_or_plate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_conditioner_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_ghkh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_gh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_kh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_fill_tank",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_filter_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_water_cloudy_bloom",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_hard_tannins_fungus",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_equip_filter_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_cycle_algae_light_warning",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_basic_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_dedicated_60_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_low_30_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_high_50_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "yellow_green"
+        },
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_co2_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_cycle_ammonia_dose_inert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_ph_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_gh_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_kh_test_once",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "F5@500",
+    "phase_id": "F5",
+    "phase_name": "Fishless Transition: Stocking",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_light_transition_success",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_1_day",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_maint_wc_reset",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_fill_prep_bag_or_plate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_conditioner_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_ghkh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_gh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_kh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_wc_reset",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_adjust_safe_before_stocking",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_co2_adjust_safe",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_full_weekly_transition",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_add_in_batches_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_fish_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_fish_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_shrimp_acclimate",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS1@101",
+    "phase_id": "DS1",
+    "phase_name": "Dark Start Setup",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_dark_start",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_1_day",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_rinse_inert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_sub_no_rinse_aquasoil",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_place_slope",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_rinse_stones",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_soak_driftwood",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_composition_tips",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_hard_finalize_layout",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_fill_prep_bag_or_plate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_conditioner_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_ghkh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_gh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_kh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_fill_tank",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_filter_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_water_cloudy_bloom",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_hard_tannins_fungus",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_equip_filter_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_heater_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_dark_rule",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_confirm_off",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_co2_confirm_off",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_chem_baseline_ph_gh_kh",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_cycle_ammonia_dose_inert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_ph_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_gh_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_kh_test_once",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS5@501",
+    "phase_id": "DS5",
+    "phase_name": "Dark Start Exit: The Awakening",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_dark_cycle_complete",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_28_days",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_drain_90_intro",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_drain_90",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_epiphytes_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_epiphytes_attach",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_stems_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_stems_plant",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_root_tabs_insert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_plant_transition",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_fill_prep_bag_or_plate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_conditioner_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_ghkh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_gh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_kh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_fill_tank",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_equip_heater_target_reset",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_basic_ramp_plan",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_dedicated_ramp_plan",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_high_perf_ramp_low_demand",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_high_perf_ramp_high_demand",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_basic_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_dedicated_60_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_low_30_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_high_50_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_timer_on_off",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "dark_green"
+        },
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_co2_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_half_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_ds_timing",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_wait_warning",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_conditioner_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_gh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_ghkh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_kh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_wc_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_maintenance_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_nitrate_test_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_top_off_interval",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_feed_every_other_day_guidance",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_trim_melting_plants",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_add_in_batches_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_fish_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_detox_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_fish_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_shrimp_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_shrimp_molt",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 28
+  },
+  {
+    "key": "I1@100",
+    "phase_id": "I1",
+    "phase_name": "Fish-in Setup",
+    "sequence": [
+      {
+        "id": "i_intro_fishin_light_setup",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_3_days",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_rinse_inert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_sub_no_rinse_aquasoil",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_place_slope",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_rinse_stones",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_soak_driftwood",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_composition_tips",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_hard_finalize_layout",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_dense_planting_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_prep_remove_wool",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_mist_during_setup",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_epiphytes_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_epiphytes_attach",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_stems_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_stems_plant",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_root_tabs_insert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_fill_prep_bag_or_plate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_conditioner_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_ghkh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_gh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_kh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_fill_tank",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_filter_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_water_cloudy_bloom",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_hard_tannins_fungus",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_equip_filter_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_basic_ramp_plan",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_dedicated_ramp_plan",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_high_perf_ramp_low_demand",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_high_perf_ramp_high_demand",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_basic_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_dedicated_60_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_low_30_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_high_50_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_off_guidance",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_off_guidance",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_add_in_batches_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_fishin_wait_before_adding",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_wait_warning",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_fish_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_shrimp_molt",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_feed_every_other_day_guidance",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_ph_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_gh_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_kh_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_fish_acclimate_day3",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_shrimp_acclimate_day3",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 3
+  },
+  {
+    "key": "I4@500",
+    "phase_id": "I4",
+    "phase_name": "Fish-in Transition: Maturity",
+    "sequence": [
+      {
+        "id": "i_intro_transition_maturity",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_14_days",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "dark_green"
+        },
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_co2_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_add_in_batches_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_wait_warning",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_feed_every_other_day_guidance",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_top_off_interval",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_conditioner_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_gh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_ghkh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_kh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_wc_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_full_weekly_transition",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_fish_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_shrimp_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_basic_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_dedicated_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_low_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_high_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA1@100",
+    "phase_id": "PA1",
+    "phase_name": "Plant Assisted: Setup",
+    "sequence": [
+      {
+        "id": "i_intro_silent_setup",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_14_days",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_rinse_inert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_sub_no_rinse_aquasoil",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_sub_place_slope",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_rinse_stones",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_hard_soak_driftwood",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_dense_planting_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_prep_remove_wool",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_mist_during_setup",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_epiphytes_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_epiphytes_attach",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_plant_stems_advice",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_stems_plant",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_plant_root_tabs_insert",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_fill_prep_bag_or_plate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_conditioner_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_ghkh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_gh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_kh_dose_full_fill",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_fill_tank",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_filter_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_equip_filter_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_on_6h_for_plants",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_basic_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_dedicated_60_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_low_30_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_start_high_perf_high_50_6h",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "lime_green"
+        },
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_co2_turn_on",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_silent_fert_aquasoil_delay",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_silent_fert_inert_start",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_maintenance_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_ph_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_gh_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_kh_test_once",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_water_cloudy_bloom",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_hard_tannins_fungus",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_basic_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_dedicated_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_low_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_high_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA3@300",
+    "phase_id": "PA3",
+    "phase_name": "Plant-assisted Stocking",
+    "sequence": [
+      {
+        "id": "i_intro_silent_ready_for_stocking",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_14_days",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_cleanup_crew_start_light",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_add_in_batches_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "lime_green"
+        },
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_feed_every_other_day_guidance",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_fish_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_fish_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_shrimp_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_conditioner_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_gh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_ghkh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_kh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_wc_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_maintenance_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_top_off_interval",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_trim_melting_plants",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_shrimp_molt",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_basic_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_dedicated_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_low_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_high_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA4@500",
+    "phase_id": "PA4",
+    "phase_name": "Plant-assisted Transition",
+    "sequence": [
+      {
+        "id": "i_intro_transition_maturity",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_14_days",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_basic_ramp_plan",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_dedicated_ramp_plan",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_high_perf_ramp_low_demand",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_light_high_perf_ramp_high_demand",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_co2_monitor_stability",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_add_in_batches_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_feed_every_other_day_guidance",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_fish_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_shrimp_acclimation_guide",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_fish_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_shrimp_acclimate",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_conditioner_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_gh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_ghkh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_kh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_wc_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_maintenance_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_fert_increase_if_pale_leaves",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_top_off_interval",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_trim_melting_plants",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_fish_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_shrimp_molt",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_sudden_darting",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "e_stock_new_shrimp_stress",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_basic_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_dedicated_ramp_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_low_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_light_high_perf_ramp_high_demand_weekly",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "R1@600",
+    "phase_id": "R1",
+    "phase_name": "Routine: The Long Haul",
+    "sequence": [
+      {
+        "id": "i_intro_routine_forever",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_intro_duration_indefinite",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_stock_feed_every_other_day_long_haul",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_chem_nitrate_test_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_conditioner_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_gh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_ghkh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_prep_kh_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "i_maint_long_haul_nitrate_report_card",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_wc_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_fert_dose_maintenance_weekly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_maint_filter_clean_monthly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_co2_maintenance_monthly",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_water_top_off_interval",
+        "when": "setup.co2_enabled == true"
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "setup.co2_enabled == true"
+      }
+    ],
+    "duration_days": null
+  }
+]

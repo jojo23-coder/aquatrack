@@ -1,0 +1,110 @@
+{
+  "atom_library": {
+    "i_intro_duration": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "1": "This phase is short and focused. Plan for about 1 day.",
+        "3": "This phase is short and focused. Plan for about 3 days.",
+        "7": "Plan for about 7 days for this phase.",
+        "14": "Plan for about 14 days for this phase.",
+        "28": "Plan for about 28 days for this phase.",
+        "indefinite": "This phase has no fixed end date. Continue until you choose to move on."
+      },
+      "args_schema": {
+        "days": [
+          "1",
+          "3",
+          "7",
+          "14",
+          "28",
+          "indefinite"
+        ]
+      }
+    },
+    "i_intro_fishin_I1_setup": {
+      "type": "instruction",
+      "text_template": "You are cycling with fish ('Fish-in'). This requires daily attention. You are the safety net for your fish until the bacteria grow."
+    },
+    "i_intro_fishin_I2_stabilization": {
+      "type": "instruction",
+      "text_template": "Your primary job right now is to keep toxins low. If Ammonia or Nitrite rises above 0.5ppm, the fish are suffering and need your help immediately."
+    },
+    "i_intro_fishin_I3_biofilter": {
+      "type": "instruction",
+      "text_template": "If you are seeing consistent 0 ppm Ammonia readings, your first bacteria colony is working! Now watch for the 'Nitrite Spike'."
+    },
+    "i_intro_fishin_I4_transition": {
+      "type": "instruction",
+      "text_template": "Your ecosystem is established! Tests are stable and the water is clean. We can now optimize the tank for maximum growth."
+    },
+    "i_intro_fishless_DS1_setup": {
+      "type": "instruction",
+      "text_template": "You are doing a 'Dark Start'. By keeping lights OFF and plants OUT, we prevent algae while the filter matures. It requires patience but guarantees a cleaner start."
+    },
+    "i_intro_fishless_DS2_ammonia": {
+      "type": "instruction",
+      "text_template": "We are now maintaining the ammonia levels while waiting for the bacteria to catch up. Keep the tank dark."
+    },
+    "i_intro_fishless_DS3_nitrite": {
+      "type": "instruction",
+      "text_template": "The cycle seems finished. Let's verify before we unmask the tank. We need to be 100% sure the filter can handle the bioload."
+    },
+    "i_intro_fishless_DS4_completion": {
+      "type": "instruction",
+      "text_template": "The cycle looks complete, but we will run a final confirmation test while keeping the tank dark."
+    },
+    "i_intro_fishless_DS5_exit": {
+      "type": "instruction",
+      "text_template": "Congratulations! Your tank is cycled and ready for the next step."
+    },
+    "i_intro_fishless_F1_setup": {
+      "type": "instruction",
+      "text_template": "You are performing a traditional Fishless Cycle. You will dose ammonia to build the filter, but with lights (and plants) running."
+    },
+    "i_intro_fishless_F2_ammonia": {
+      "type": "instruction",
+      "text_template": "We are now maintaining the ammonia levels while waiting for the bacteria to catch up. **Continue your daily lighting schedule.**"
+    },
+    "i_intro_fishless_F3_nitrite": {
+      "type": "instruction",
+      "text_template": "Nitrite is now taking over. This phase is often the longest part of the cycle. Stay consistent and keep dosing ammonia as directed until Nitrite starts to fall."
+    },
+    "i_intro_fishless_F4_completion": {
+      "type": "instruction",
+      "text_template": "The cycle seems finished. Let's verify before moving forward. We need to be 100% sure the filter can handle the bioload."
+    },
+    "i_intro_fishless_F5_transition": {
+      "type": "instruction",
+      "text_template": "Your Fishless Cycle is complete! The bacteria can process ammonia and nitrite instantly. It is time to make the tank safe for fish."
+    },
+    "i_intro_routine_R1_forever": {
+      "type": "instruction",
+      "text_template": "Welcome to the 'Forever' phase. Consistency is key. Regular maintenance prevents 'Old Tank Syndrome' and keeps algae away."
+    },
+    "i_intro_silent_PA1_fert_aquasoil_delay": {
+      "type": "instruction",
+      "text_template": "Plants are hungry, but if you are using Aquasoil, **do NOT dose liquid fertilizer for the first 2 weeks**. The soil leaches excess nutrients already."
+    },
+    "i_intro_silent_PA1_fert_inert_start": {
+      "type": "instruction",
+      "text_template": "You are using inert substrate, so start liquid fertilizer dosing immediately."
+    },
+    "i_intro_silent_PA1_setup": {
+      "type": "instruction",
+      "text_template": "We are using 'Silent Cycling'. By planting heavily from Day 1, the plants will consume the ammonia directly."
+    },
+    "i_intro_silent_PA2_growth_watch": {
+      "type": "instruction",
+      "text_template": "The goal of a Silent Cycle is... silence. If the plants are healthy, you should see 0 Ammonia and 0 Nitrite continuously."
+    },
+    "i_intro_silent_PA3_stocking": {
+      "type": "instruction",
+      "text_template": "If your tests show 0 ppm Ammonia and Nitrite, and your plants are showing new growth, the tank is ready for the first inhabitants."
+    },
+    "i_intro_silent_PA4_transition": {
+      "type": "instruction",
+      "text_template": "Your ecosystem is established! Tests are stable and the water is clean. We can now optimize the tank for maximum growth."
+    }
+  }
+}

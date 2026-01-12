@@ -1,0 +1,138 @@
+{
+  "atom_library": {
+    "t_chem_ph_test_once": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Measure and log pH.",
+      "parameter": "pH",
+      "conditions": [
+        "setup.can_test_ph == true"
+      ]
+    },
+    "t_chem_gh_test_once": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Measure and log GH.",
+      "parameter": "gh",
+      "conditions": [
+        "setup.can_test_gh == true"
+      ]
+    },
+    "t_chem_kh_test_once": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Measure and log KH.",
+      "parameter": "kh",
+      "conditions": [
+        "setup.can_test_kh == true"
+      ]
+    },
+    "i_chem_nitrite_watch": {
+      "type": "instruction",
+      "text_template": "Start checking Nitrite. It will likely be 0 ppm for a while, but as soon as it registers on the test (turns purple), we have officially entered the next phase.",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "t_chem_ammonia_test_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Measure and log Ammonia.",
+      "parameter": "ammonia",
+      "conditions": [
+        "setup.can_test_ammonia == true"
+      ]
+    },
+    "t_chem_nitrite_test_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Measure and log Nitrite.",
+      "parameter": "nitrite",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "i_chem_nitrate_progress_check": {
+      "type": "instruction",
+      "text_template": "Check Nitrates once a week. If Nitrates are rising, it confirms your bacteria are successfully converting the toxic Nitrite.",
+      "conditions": [
+        "setup.can_test_nitrate == true"
+      ]
+    },
+    "t_chem_nitrate_test_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Measure and log Nitrates.",
+      "parameter": "nitrate",
+      "conditions": [
+        "setup.can_test_nitrate == true"
+      ]
+    },
+    "t_chem_ph_test_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Measure and log pH.",
+      "parameter": "pH",
+      "conditions": [
+        "setup.can_test_ph == true"
+      ]
+    },
+    "i_chem_wait_24h_before_test": {
+      "type": "instruction",
+      "text_template": "Wait exactly 24 hours after dosing ammonia before performing the final tests. Do not test early."
+    },
+    "t_chem_ammonia_test_24h": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Measure and log Ammonia after 24 hours.",
+      "parameter": "ammonia",
+      "conditions": [
+        "setup.can_test_ammonia == true"
+      ],
+      "due_offset_days": 1
+    },
+    "t_chem_nitrite_test_24h": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "Measure and log Nitrite after 24 hours.",
+      "parameter": "nitrite",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ],
+      "due_offset_days": 1
+    },
+    "i_chem_completion_test_fail_back": {
+      "type": "instruction",
+      "text_template": "If the test fails (ammonia or nitrite above 0), return to the previous phase and keep cycling for a few more days."
+    },
+    "i_chem_baseline_ph_gh_kh": {
+      "type": "instruction",
+      "text_template": "Measure your baseline pH, GH, and KH so we know your starting water chemistry.",
+      "conditions": []
+    },
+    "t_chem_ammonia_test_daily": {
+      "type": "task",
+      "cadence": "daily",
+      "text_template": "Measure and log Ammonia.",
+      "parameter": "ammonia",
+      "conditions": [
+        "setup.can_test_ammonia == true"
+      ]
+    },
+    "t_chem_nitrite_test_daily": {
+      "type": "task",
+      "cadence": "daily",
+      "text_template": "Measure and log Nitrite.",
+      "parameter": "nitrite",
+      "conditions": [
+        "setup.can_test_nitrite == true"
+      ]
+    },
+    "i_chem_conditioner_binding_note": {
+      "type": "instruction",
+      "text_template": "Note: Water conditioners only 'bind' ammonia for ~24 hours to protect fish; they do not remove it. You must keep testing."
+    }
+  }
+}

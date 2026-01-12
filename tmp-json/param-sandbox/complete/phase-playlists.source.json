@@ -1,0 +1,2609 @@
+[
+  {
+    "key": "F1@100",
+    "phase_id": "F1",
+    "phase_name": "Fishless Setup (Traditional)",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_F1_setup"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "1"
+        }
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout",
+      "i_plant_dense",
+      {
+        "id": "i_plants_prep",
+        "when": "setup.plants_present_in_plan == true"
+      },
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank",
+      "t_equip_filter_turn_on",
+      "e_water_cloudy_bloom",
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      "i_equip_filter_on",
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.heater_installed == true"
+      },
+      "i_cycle_algae_light_warning",
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "yellow_green"
+        }
+      },
+      "t_co2_turn_on",
+      {
+        "id": "i_cycle_ammonia_dose_inert",
+        "when": "setup.substrate_type == 'inert' && products.ammonia_source.selected == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ph",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ph == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "gh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_gh == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "kh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_kh == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "F2@200",
+    "phase_id": "F2",
+    "phase_name": "Ammonia Phase (Fishless)",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_F2_ammonia"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "7"
+        }
+      },
+      {
+        "id": "i_fert_start_dose",
+        "args": {
+          "dose": "half"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "e_plant_melt_high_ammonia",
+      {
+        "id": "i_chem_nitrite_watch",
+        "when": "setup.can_test_nitrite == true"
+      },
+      "e_water_cloudy_bloom",
+      "e_water_surface_scum",
+      "e_cycle_ammonia_drop_speed",
+      "e_bio_slimy_walls",
+      "e_plant_transition",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_ammonia == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      },
+      "t_maint_trim_melting_plants",
+      "t_water_top_off_interval",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "half"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      }
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "F3@300",
+    "phase_id": "F3",
+    "phase_name": "Nitrite Phase (Fishless)",
+    "sequence": [
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      "i_cycle_nitrite_spike_warning",
+      "i_cycle_nitrite_clear_goal",
+      "e_cycle_purple_nitrite",
+      "e_cycle_ammonia_hunger",
+      "i_cycle_ph_crash_warning",
+      "e_bio_detritus_buildup",
+      "e_cycle_diatoms_brown_algae",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_ammonia == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "i_chem_nitrate_progress_check",
+        "when": "setup.can_test_nitrate == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrate",
+          "cadence": "weekly",
+          "variant": "default"
+        },
+        "when": "setup.can_test_nitrate == true"
+      },
+      "e_chem_nitrate_fert_high_note",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ph",
+          "cadence": "weekly",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ph == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "half"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "t_maint_trim_melting_plants",
+      "t_water_top_off_interval",
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "F4@400",
+    "phase_id": "F4",
+    "phase_name": "Completion Test (Fishless)",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_F4_completion"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "1"
+        }
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      },
+      "i_chem_wait_24h_before_test",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "per_event",
+          "variant": "after_24h",
+          "due_offset_days": 1
+        },
+        "when": "setup.can_test_ammonia == true",
+        "due_offset_days": 1
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "per_event",
+          "variant": "after_24h",
+          "due_offset_days": 1
+        },
+        "when": "setup.can_test_nitrite == true",
+        "due_offset_days": 1
+      },
+      "i_chem_completion_test_fail_back"
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "F5@500",
+    "phase_id": "F5",
+    "phase_name": "Fishless Transition: Stocking",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_F5_transition"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "1"
+        }
+      },
+      "i_maint_wc_reset",
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_reset",
+      "i_co2_adjust_safe_before_stocking",
+      "t_co2_adjust_safe",
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "one_time",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "i_stock_add_in_batches_weekly",
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS1@101",
+    "phase_id": "DS1",
+    "phase_name": "Dark Start Setup",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_DS1_setup"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "1"
+        }
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout",
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank",
+      "t_equip_filter_turn_on",
+      "e_water_cloudy_bloom",
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      "i_equip_filter_on",
+      {
+        "id": "t_equip_heater_on",
+        "when": "setup.heater_installed == true"
+      },
+      "i_light_dark_rule",
+      "t_light_confirm_off",
+      "t_co2_confirm_off",
+      "i_chem_baseline_ph_gh_kh",
+      {
+        "id": "i_cycle_ammonia_dose_inert",
+        "when": "setup.substrate_type == 'inert' && products.ammonia_source.selected == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ph",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ph == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "gh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_gh == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "kh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_kh == true"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS2@201",
+    "phase_id": "DS2",
+    "phase_name": "Ammonia Maintenance (Dark Start)",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_DS2_ammonia"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "7"
+        }
+      },
+      "e_water_cloudy_bloom",
+      "e_water_surface_scum",
+      "e_cycle_ammonia_drop_speed",
+      "e_bio_slimy_walls",
+      "e_cycle_nothing_happening",
+      {
+        "id": "i_chem_nitrite_watch",
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_ammonia == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_daily",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "DS3@301",
+    "phase_id": "DS3",
+    "phase_name": "Nitrite Phase (Dark Start)",
+    "sequence": [
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      "i_cycle_nitrite_spike_warning",
+      "i_maint_filter_do_not_clean_early",
+      "i_cycle_nitrite_clear_goal",
+      "e_cycle_purple_nitrite",
+      "e_cycle_ammonia_hunger",
+      "i_cycle_ph_crash_warning",
+      "e_bio_detritus_buildup",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_ammonia == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "t_cycle_ammonia_dose_when_zero",
+        "when": "products.ammonia_source.selected == true"
+      },
+      {
+        "id": "i_chem_nitrate_progress_check",
+        "when": "setup.can_test_nitrate == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrate",
+          "cadence": "weekly",
+          "variant": "default"
+        },
+        "when": "setup.can_test_nitrate == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ph",
+          "cadence": "weekly",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ph == true"
+      },
+      "i_light_dark_rule",
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "DS4@401",
+    "phase_id": "DS4",
+    "phase_name": "Completion Test (Dark Start)",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_DS4_completion"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "1"
+        }
+      },
+      {
+        "id": "t_cycle_ammonia_dose_initial",
+        "when": "products.ammonia_source.selected == true"
+      },
+      "i_chem_wait_24h_before_test",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "per_event",
+          "variant": "after_24h",
+          "due_offset_days": 1
+        },
+        "when": "setup.can_test_ammonia == true",
+        "due_offset_days": 1
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "per_event",
+          "variant": "after_24h",
+          "due_offset_days": 1
+        },
+        "when": "setup.can_test_nitrite == true",
+        "due_offset_days": 1
+      },
+      "i_chem_completion_test_fail_back"
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS5@501",
+    "phase_id": "DS5",
+    "phase_name": "Dark Start Exit: The Awakening",
+    "sequence": [
+      {
+        "id": "i_intro_fishless_DS5_exit"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "28"
+        }
+      },
+      "i_water_drain_90_intro",
+      "t_water_drain_90",
+      {
+        "id": "i_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "i_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "e_plant_transition",
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank",
+      {
+        "id": "i_equip_heater_target_reset",
+        "when": "setup.heater_installed == true"
+      },
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.heater_installed == true"
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      "i_co2_timer_on_off",
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "dark_green"
+        }
+      },
+      "t_co2_turn_on",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "one_time",
+          "dose": "half"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "i_stock_ds_timing",
+      {
+        "id": "i_stock_shrimp_wait_warning",
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrate",
+          "cadence": "weekly",
+          "variant": "default"
+        },
+        "when": "setup.can_test_nitrate == true"
+      },
+      "t_water_top_off_interval",
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      "t_maint_trim_melting_plants",
+      "i_stock_add_in_batches_weekly",
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "i_stock_detox",
+        "when": "products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "both"
+        },
+        "when": "livestock.has_fish == true && livestock.has_shrimp == true"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "fish"
+        },
+        "when": "livestock.has_fish == true && !livestock.has_shrimp"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true && !livestock.has_fish"
+      }
+    ],
+    "duration_days": 28
+  },
+  {
+    "key": "I1@100",
+    "phase_id": "I1",
+    "phase_name": "Fish-in Setup",
+    "sequence": [
+      {
+        "id": "i_intro_fishin_I1_setup"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "3"
+        }
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout",
+      "i_plant_dense",
+      {
+        "id": "i_plants_prep",
+        "when": "setup.plants_present_in_plan == true"
+      },
+      {
+        "id": "i_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "i_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank",
+      "t_equip_filter_turn_on",
+      "e_water_cloudy_bloom",
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      "i_equip_filter_on",
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.heater_installed == true"
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      {
+        "id": "i_co2_off_guidance"
+      },
+      {
+        "id": "i_cycle_ammonia_aquasoil_caution",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "i_stock_add_in_batches_weekly",
+      {
+        "id": "i_stock_fishin_wait_before_adding",
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_shrimp_wait_warning",
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "both"
+        },
+        "when": "livestock.has_fish == true && livestock.has_shrimp == true"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "fish"
+        },
+        "when": "livestock.has_fish == true && !livestock.has_shrimp"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true && !livestock.has_fish"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_once",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ph",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ph == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "gh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_gh == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "kh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_kh == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish",
+          "due_offset_days": 3
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp",
+          "due_offset_days": 3
+        },
+        "when": "livestock.has_shrimp == true"
+      }
+    ],
+    "duration_days": 3
+  },
+  {
+    "key": "I2@200",
+    "phase_id": "I2",
+    "phase_name": "Fish-in Stabilization",
+    "sequence": [
+      {
+        "id": "i_intro_fishin_I2_stabilization"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "7"
+        }
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      "e_plant_transition",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "daily",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ammonia == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "daily",
+          "variant": "default"
+        },
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "t_cycle_bacteria_dose_daily",
+        "when": "products.bacteria_starter.selected == true"
+      },
+      {
+        "id": "i_stock_detox",
+        "when": "products.detoxifier_conditioner.selected == true"
+      },
+      "i_chem_conditioner_binding_note",
+      "t_maint_trim_melting_plants",
+      "t_water_top_off_interval",
+      {
+        "id": "i_maint_wc_nitrite_rule",
+        "when": "livestock.has_fish == true || livestock.has_shrimp == true"
+      }
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "I3@300",
+    "phase_id": "I3",
+    "phase_name": "Fish-in Biofilter Build",
+    "sequence": [
+      {
+        "id": "i_intro_fishin_I3_biofilter"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "daily",
+          "variant": "default"
+        },
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "daily",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ammonia == true"
+      },
+      {
+        "id": "t_maint_wc_nitrite_daily",
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "i_stock_fish_gasping_emergency",
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_maint_wc_nitrite_rule",
+        "when": "livestock.has_fish == true || livestock.has_shrimp == true"
+      },
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      },
+      "t_water_top_off_interval",
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "e_cycle_diatoms_brown_algae",
+      "i_maint_filter_do_not_clean_early",
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "I4@500",
+    "phase_id": "I4",
+    "phase_name": "Fish-in Transition: Maturity",
+    "sequence": [
+      {
+        "id": "i_intro_fishin_I4_transition"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "dark_green"
+        }
+      },
+      "t_co2_turn_on",
+      "i_stock_add_in_batches_weekly",
+      {
+        "id": "i_stock_shrimp_wait_warning",
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      },
+      "t_water_top_off_interval",
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "one_time",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA1@100",
+    "phase_id": "PA1",
+    "phase_name": "Plant Assisted: Setup",
+    "sequence": [
+      {
+        "id": "i_intro_silent_PA1_setup"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "inert"
+        },
+        "when": "setup.substrate_type == 'inert'"
+      },
+      {
+        "id": "t_sub_prep",
+        "args": {
+          "substrate": "aquasoil"
+        },
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      "t_sub_place_slope",
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "i_hard_prep",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      "i_plant_dense",
+      {
+        "id": "i_plants_prep",
+        "when": "setup.plants_present_in_plan == true"
+      },
+      {
+        "id": "i_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "i_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank",
+      "t_equip_filter_turn_on",
+      "i_equip_filter_on",
+      {
+        "id": "t_equip_heater_set_target",
+        "when": "setup.heater_installed == true"
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_start",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "lime_green"
+        }
+      },
+      {
+        "id": "t_co2_turn_on"
+      },
+      {
+        "id": "i_intro_silent_PA1_fert_aquasoil_delay",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      {
+        "id": "i_intro_silent_PA1_fert_inert_start",
+        "when": "setup.substrate_type != 'aquasoil' && products.fertilizer_micros.selected == true"
+      },
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ph",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_ph == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "gh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_gh == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "kh",
+          "cadence": "one_time",
+          "variant": "default"
+        },
+        "when": "setup.can_test_kh == true"
+      },
+      "e_water_cloudy_bloom",
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA2@200",
+    "phase_id": "PA2",
+    "phase_name": "Silent Cycle: The Growth Watch",
+    "sequence": [
+      {
+        "id": "i_intro_silent_PA2_growth_watch"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "wood"
+        },
+        "when": "setup.hardscape_type == 'wood'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "mixed"
+        },
+        "when": "setup.hardscape_type == 'mixed'"
+      },
+      {
+        "id": "e_hardscape_expected",
+        "args": {
+          "type": "stone"
+        },
+        "when": "setup.hardscape_type == 'stone'"
+      },
+      "e_plant_transition",
+      "i_maint_filter_do_not_clean_early",
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "ammonia",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_ammonia == true"
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrite",
+          "cadence": "interval",
+          "variant": "default",
+          "every_days": 3
+        },
+        "when": "setup.can_test_nitrite == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "t_water_top_off_interval",
+      "t_maint_trim_melting_plants",
+      {
+        "id": "t_maint_wc_aquasoil_frequent",
+        "when": "setup.substrate_type == 'aquasoil'"
+      },
+      {
+        "id": "i_maint_wc_inert_emergency",
+        "when": "setup.substrate_type != 'aquasoil'"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA3@300",
+    "phase_id": "PA3",
+    "phase_name": "Plant-assisted Stocking",
+    "sequence": [
+      {
+        "id": "i_intro_silent_PA3_stocking"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      "i_stock_cleanup_crew_start_light",
+      "i_stock_add_in_batches_weekly",
+      {
+        "id": "i_co2_target",
+        "args": {
+          "target": "lime_green"
+        }
+      },
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "t_water_top_off_interval",
+      "t_maint_trim_melting_plants",
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "both"
+        },
+        "when": "livestock.has_fish == true && livestock.has_shrimp == true"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "fish"
+        },
+        "when": "livestock.has_fish == true && !livestock.has_shrimp"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true && !livestock.has_fish"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA4@500",
+    "phase_id": "PA4",
+    "phase_name": "Plant-assisted Transition",
+    "sequence": [
+      {
+        "id": "i_intro_silent_PA4_transition"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "14"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "i_light_ramp_plan",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      "i_co2_monitor_stability",
+      "i_stock_add_in_batches_weekly",
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "routine"
+        }
+      },
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "i_stock_acclimation",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "fish"
+        },
+        "when": "livestock.has_fish == true"
+      },
+      {
+        "id": "t_stock_acclimate",
+        "args": {
+          "type": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      {
+        "id": "i_fert_increase_if_pale_leaves",
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "t_water_top_off_interval",
+      "t_maint_trim_melting_plants",
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "both"
+        },
+        "when": "livestock.has_fish == true && livestock.has_shrimp == true"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "fish"
+        },
+        "when": "livestock.has_fish == true && !livestock.has_shrimp"
+      },
+      {
+        "id": "e_stock_expected",
+        "args": {
+          "stock": "shrimp"
+        },
+        "when": "livestock.has_shrimp == true && !livestock.has_fish"
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "basic",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "dedicated",
+          "plant_demand": "any"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "low"
+        }
+      },
+      {
+        "id": "t_light_ramp_weekly",
+        "args": {
+          "light_type": "high_performance",
+          "plant_demand": "high"
+        }
+      }
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "R1@600",
+    "phase_id": "R1",
+    "phase_name": "Routine: The Long Haul",
+    "sequence": [
+      {
+        "id": "i_intro_routine_R1_forever"
+      },
+      {
+        "id": "i_intro_duration",
+        "args": {
+          "days": "indefinite"
+        }
+      },
+      {
+        "id": "i_stock_feed_guidance",
+        "args": {
+          "phase": "long_haul"
+        }
+      },
+      {
+        "id": "t_chem_test",
+        "args": {
+          "parameter": "nitrate",
+          "cadence": "weekly",
+          "variant": "default"
+        },
+        "when": "setup.can_test_nitrate == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_maint_prep",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "i_maint_long_haul_nitrate_report_card",
+      "t_maint_wc_weekly",
+      {
+        "id": "t_fert_dose",
+        "args": {
+          "cadence": "weekly",
+          "dose": "full"
+        },
+        "when": "products.fertilizer_micros.selected == true && setup.plants_present_in_plan == true"
+      },
+      "t_maint_filter_clean_monthly",
+      "t_co2_maintenance_monthly",
+      "t_water_top_off_interval",
+      {
+        "id": "t_stock_feed_every_other_day",
+        "when": "livestock.has_fish == true"
+      }
+    ],
+    "duration_days": null
+  }
+]

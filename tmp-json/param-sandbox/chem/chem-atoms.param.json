@@ -1,0 +1,61 @@
+{
+  "atom_library": {
+    "i_chem_baseline_ph_gh_kh": {
+      "type": "instruction",
+      "text_template": "Measure your baseline pH, GH, and KH so we know your starting water chemistry.",
+      "conditions": []
+    },
+    "i_chem_nitrate_progress_check": {
+      "type": "instruction",
+      "text_template": "Check Nitrates once a week. If Nitrates are rising, it confirms your bacteria are successfully converting the toxic Nitrite."
+    },
+    "i_chem_nitrite_watch": {
+      "type": "instruction",
+      "text_template": "Start checking Nitrite. It will likely be 0 ppm for a while, but as soon as it registers on the test (turns purple), we have officially entered the next phase."
+    },
+    "i_chem_conditioner_binding_note": {
+      "type": "instruction",
+      "text_template": "Note: Water conditioners only 'bind' ammonia for ~24 hours to protect fish; they do not remove it. You must keep testing."
+    },
+    "i_chem_wait_24h_before_test": {
+      "type": "instruction",
+      "text_template": "Wait exactly 24 hours after dosing ammonia before performing the final tests. Do not test early."
+    },
+    "i_chem_completion_test_fail_back": {
+      "type": "instruction",
+      "text_template": "If the test fails (ammonia or nitrite above 0), return to the previous phase and keep cycling for a few more days."
+    },
+    "t_chem_test": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "default": "Measure and log {{parameter_label}}.",
+        "after_24h": "Measure and log {{parameter_label}} after 24 hours."
+      },
+      "args_schema": {
+        "parameter": [
+          "ammonia",
+          "nitrite",
+          "nitrate",
+          "ph",
+          "gh",
+          "kh"
+        ],
+        "cadence": [
+          "one_time",
+          "daily",
+          "weekly",
+          "interval",
+          "per_event"
+        ],
+        "variant": [
+          "default",
+          "after_24h"
+        ],
+        "every_days": "number"
+      },
+      "conditions": []
+    }
+  }
+}

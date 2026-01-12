@@ -1,0 +1,51 @@
+[
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "nitrate",
+      "cadence": "one_time",
+      "variant": "default"
+    },
+    "when": "setup.can_test_nitrate == true"
+  },
+  {
+    "id": "t_chem_test",
+    "args": {
+      "parameter": "ammonia",
+      "cadence": "per_event",
+      "variant": "after_24h"
+    },
+    "when": "setup.can_test_ammonia == true"
+  },
+  {
+    "id": "i_intro_duration",
+    "args": {
+      "days": 7
+    }
+  },
+  {
+    "id": "t_fert_dose",
+    "args": {
+      "cadence": "weekly",
+      "dose": "half"
+    }
+  },
+  {
+    "id": "t_sub_prep",
+    "args": {
+      "substrate": {
+        "$expr": "setup.substrate_type"
+      }
+    },
+    "when": "setup.substrate_type == 'aquasoil'"
+  },
+  {
+    "id": "t_sub_prep",
+    "args": {
+      "substrate": {
+        "$expr": "setup.substrate_type"
+      }
+    },
+    "when": "!(setup.substrate_type == 'aquasoil')"
+  }
+]

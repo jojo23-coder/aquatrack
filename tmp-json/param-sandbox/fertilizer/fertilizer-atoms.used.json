@@ -1,0 +1,55 @@
+{
+  "atom_library": {
+    "i_fert_start_half_dose_weekly": {
+      "type": "instruction",
+      "text_template": "Begin dosing your liquid fertilizer, but only use a **Half Dose** for now. \n\n**Why?** Your plants are waking up, but full dosing combined with the ammonia you are adding can trigger algae. We will increase to full strength after the cycle.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true",
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "t_fert_dose_half_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
+      "conditions": [
+        "products.fertilizer_micros.selected == true",
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "t_fert_dose_full_weekly_transition": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Increase to Full Fertilizer Dose. {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}}.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true",
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "t_fert_dose_half_once": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
+      "conditions": [
+        "products.fertilizer_micros.selected == true"
+      ]
+    },
+    "t_fert_dose_maintenance_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth).",
+      "conditions": [
+        "products.fertilizer_micros.selected == true",
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "i_fert_increase_if_pale_leaves": {
+      "type": "instruction",
+      "text_template": "If you see pale leaves or pinholes, increase your fertilizer dose.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true",
+        "setup.plants_present_in_plan == true"
+      ]
+    }
+  }
+}

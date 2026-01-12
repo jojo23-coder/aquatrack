@@ -1,0 +1,355 @@
+[
+  {
+    "key": "F1@100",
+    "phase_id": "F1",
+    "phase_name": "Fishless Setup (Traditional)",
+    "sequence": [
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank"
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "F2@200",
+    "phase_id": "F2",
+    "phase_name": "Ammonia Phase (Fishless)",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "F3@300",
+    "phase_id": "F3",
+    "phase_name": "Nitrite Phase (Fishless)",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "F5@500",
+    "phase_id": "F5",
+    "phase_name": "Fishless Transition: Stocking",
+    "sequence": [
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      }
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS1@101",
+    "phase_id": "DS1",
+    "phase_name": "Dark Start Setup",
+    "sequence": [
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank"
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS2@201",
+    "phase_id": "DS2",
+    "phase_name": "Ammonia Maintenance (Dark Start)",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "DS3@301",
+    "phase_id": "DS3",
+    "phase_name": "Nitrite Phase (Dark Start)",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "DS5@501",
+    "phase_id": "DS5",
+    "phase_name": "Dark Start Exit: The Awakening",
+    "sequence": [
+      "i_water_drain_90_intro",
+      "t_water_drain_90",
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank",
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 28
+  },
+  {
+    "key": "I1@100",
+    "phase_id": "I1",
+    "phase_name": "Fish-in Setup",
+    "sequence": [
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank"
+    ],
+    "duration_days": 3
+  },
+  {
+    "key": "I2@200",
+    "phase_id": "I2",
+    "phase_name": "Fish-in Stabilization",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 7
+  },
+  {
+    "key": "I3@300",
+    "phase_id": "I3",
+    "phase_name": "Fish-in Biofilter Build",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "I4@500",
+    "phase_id": "I4",
+    "phase_name": "Fish-in Transition: Maturity",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA1@100",
+    "phase_id": "PA1",
+    "phase_name": "Plant Assisted: Setup",
+    "sequence": [
+      "i_water_fill_prep_bag_or_plate",
+      {
+        "id": "i_water_chlorine_treat_full_volume",
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "conditioner"
+        },
+        "when": "source_water.has_chlorine == true && products.detoxifier_conditioner.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "ghkh"
+        },
+        "when": "products.gh_kh_remineralizer.selected == true"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "gh"
+        },
+        "when": "products.gh_remineralizer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      {
+        "id": "t_water_fill_dose",
+        "args": {
+          "type": "kh"
+        },
+        "when": "products.kh_buffer.selected == true && !products.gh_kh_remineralizer.selected"
+      },
+      "t_water_fill_tank"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA2@200",
+    "phase_id": "PA2",
+    "phase_name": "Silent Cycle: The Growth Watch",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA3@300",
+    "phase_id": "PA3",
+    "phase_name": "Plant-assisted Stocking",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "PA4@500",
+    "phase_id": "PA4",
+    "phase_name": "Plant-assisted Transition",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": 14
+  },
+  {
+    "key": "R1@600",
+    "phase_id": "R1",
+    "phase_name": "Routine: The Long Haul",
+    "sequence": [
+      "t_water_top_off_interval"
+    ],
+    "duration_days": null
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "atom_library": {
+    "i_co2_adjust_safe_before_stocking": {
+      "type": "instruction",
+      "text_template": "IMPORTANT: Dial back your CO2 injection. We need the drop checker to read a solid **Lime Green** (not yellow) before the fish arrive to ensure they have enough oxygen."
+    },
+    "i_co2_monitor_stability": {
+      "type": "instruction",
+      "text_template": "Stability is key. Your CO2 is already optimized (Lime Green). Monitor fish for gasping; if they are fine, do not change the settings."
+    },
+    "i_co2_off_guidance": {
+      "type": "instruction",
+      "text_template": "Keep CO2 OFF for now to protect fish. During cycling and early stocking, oxygen is limited and CO2 can make that worse. We'll turn CO2 on once the tank is stable."
+    },
+    "i_co2_target": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "dark_green": "Start CO2 (~{{doses.co2.bps_dark_green}} BPS). Check drop checker after 2-3 hours. Aim for **Dark Green** (Safe).",
+        "yellow_green": "Since there are no fish, you can run CO2 slightly higher than normal (~{{doses.co2.bps_lime_green}} BPS) target **Yellow-Green** color on the drop checker. This maximizes plant growth and suppresses algae during the ammonia spikes.",
+        "lime_green": "CO2 safety check before stocking: ensure the drop checker is **Lime Green**, not Yellow. If it is Yellow, dial it back and wait 2 hours before adding fish."
+      },
+      "args_schema": {
+        "target": [
+          "dark_green",
+          "yellow_green",
+          "lime_green"
+        ]
+      }
+    },
+    "i_co2_timer_on_off": {
+      "type": "instruction",
+      "text_template": "Set CO2 timer: ON 1 hour before lights and OFF 1 hour before lights out."
+    },
+    "t_co2_adjust_safe": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dial back CO2 to a solid Lime Green on the drop checker."
+    },
+    "t_co2_confirm_off": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Confirm: CO2 OFF."
+    },
+    "t_co2_maintenance_monthly": {
+      "type": "task",
+      "cadence": "monthly",
+      "text_template": "CO2 Maintenance: Change drop checker fluid and clean diffuser."
+    },
+    "t_co2_turn_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on CO2 system."
+    }
+  }
+}

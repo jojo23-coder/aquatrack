@@ -1,0 +1,99 @@
+{
+  "atom_library": {
+    "e_cycle_diatoms_brown_algae": {
+      "type": "expected_behaviour",
+      "text_template": "Expect brown algae (diatoms) as a dusty coating on glass, plants, and hardscape. It's the classic ugly phase and a normal sign your cycle is maturing. Don't deep clean it; it fades on its own.",
+      "conditions": []
+    },
+    "e_water_cloudy_bloom": {
+      "type": "expected_behaviour",
+      "text_template": "Cloudy or milky water is normal early on. It can be substrate dust, microbubbles, or a bacterial bloom. Unless we say otherwise, don't chase it with big water changes.",
+      "conditions": []
+    },
+    "e_hard_tannins_fungus": {
+      "type": "expected_behaviour",
+      "text_template": "Tea-colored water from tannins and white fuzzy fungus on driftwood are both normal early on. They are harmless and fade over time.",
+      "conditions": [
+        "setup.hardscape_type == 'wood' || setup.hardscape_type == 'mixed'"
+      ]
+    },
+    "e_stock_new_fish_stress": {
+      "type": "expected_behaviour",
+      "text_template": "New fish often hide, go pale, glass-surf, or huddle tightly for a day or two. That's normal settling-in behavior; give them time and keep the lights calm.",
+      "conditions": [
+        "livestock.has_fish == true || livestock.has_schooling == true"
+      ]
+    },
+    "e_stock_new_shrimp_stress": {
+      "type": "expected_behaviour",
+      "text_template": "New shrimp may hide, look pale, or 'play dead' for a few minutes after release. That's normal shock; they usually perk up once settled.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "e_stock_sudden_darting": {
+      "type": "expected_behaviour",
+      "text_template": "Corys/loaches may dash to the surface and back, and shrimp may do quick 'zoomies.' That's usually normal. If all shrimp are racing near the surface, check your CO2.",
+      "conditions": [
+        "livestock.has_bottom_dwellers == true || livestock.has_shrimp == true"
+      ]
+    },
+    "e_water_surface_scum": {
+      "type": "expected_behaviour",
+      "text_template": "You might see an oily film or foam on the water surface. This is protein biofilm. It is harmless and will be removed when we install the skimmer or do water changes later."
+    },
+    "e_cycle_ammonia_drop_speed": {
+      "type": "expected_behaviour",
+      "text_template": "Initially, ammonia will drop very slowly. As the colony grows, you will notice it dropping faster, requiring more frequent redosing. This acceleration is the goal."
+    },
+    "e_bio_slimy_walls": {
+      "type": "expected_behaviour",
+      "text_template": "The glass and heater might feel slimy to the touch. This is the bacteria colonizing surfaces. Do not scrub it off yet."
+    },
+    "e_cycle_nothing_happening": {
+      "type": "expected_behaviour",
+      "text_template": "Visually, the tank looks boring and nothing seems to be happening. Trust the chemistry. The most important growth is invisible to the naked eye."
+    },
+    "e_plant_transition": {
+      "type": "expected_behaviour",
+      "text_template": "You may see some plants melting or losing leaves while others grow new roots. This transition is normal as they adapt to your water. Trim melting leaves so they don't rot."
+    },
+    "e_cycle_purple_nitrite": {
+      "type": "expected_behaviour",
+      "text_template": "Your Nitrite test will likely turn bright purple immediately and stay off the charts for weeks. This is not a stall; it is just a very high peak. Keep going."
+    },
+    "e_cycle_ammonia_hunger": {
+      "type": "expected_behaviour",
+      "text_template": "Your Ammonia will now drop to 0 ppm very quickly (often within 24 hours). This is great. The first half of your filter is complete. You must keep feeding it while waiting for the Nitrite to drop."
+    },
+    "e_cycle_ph_crash_warning": {
+      "type": "expected_behaviour",
+      "text_template": "Cycle stall warning: If your pH drops below 6.0, the bacteria will stop working. If this happens, perform a 50% water change to restore minerals (KH) and restart the process."
+    },
+    "e_bio_detritus_buildup": {
+      "type": "expected_behaviour",
+      "text_template": "You may see brown fluff or debris settling on the bottom. This is dead bacterial biomass and is a normal byproduct of a heavy cycle. We will vacuum it out later."
+    },
+    "e_stock_shrimp_molt": {
+      "type": "expected_behaviour",
+      "text_template": "Panic check: You might see a white, transparent ghost of a shrimp on the bottom. This is a molt (exoskeleton), not a dead shrimp. Leave it in the tank; they will eat it for calcium.",
+      "conditions": [
+        "livestock.has_shrimp == true"
+      ]
+    },
+    "e_plant_melt_high_ammonia": {
+      "type": "expected_behaviour",
+      "text_template": "Note: High ammonia (>2ppm) can sometimes melt delicate plant tissues. Monitor them closely and do a small water change if melting is severe.",
+      "conditions": [
+        "setup.plants_present_in_plan == true"
+      ]
+    },
+    "e_chem_nitrate_fert_high_note": {
+      "type": "expected_behaviour",
+      "text_template": "Note: If your fertilizer contains Nitrogen (check the label for 'N'), your Nitrate tests will read artificially high. Rely on Ammonia and Nitrite dropping to 0 to confirm your cycle is finished.",
+      "conditions": [
+        "products.fertilizer_micros.selected == true"
+      ]
+    }
+  }
+}

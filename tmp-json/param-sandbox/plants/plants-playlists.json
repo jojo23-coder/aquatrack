@@ -1,0 +1,302 @@
+[
+  {
+    "key": "F1@100",
+    "phase_id": "F1",
+    "phase_name": "Fishless Setup (Traditional)",
+    "sequence": [
+      "i_intro_fishless_light_cycle_setup",
+      "i_intro_duration_1_day",
+      "t_sub_rinse_inert",
+      "i_sub_no_rinse_aquasoil",
+      "t_sub_place_slope",
+      "i_hard_rinse_stones",
+      "i_hard_soak_driftwood",
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout",
+      {
+        "id": "i_plants_prep",
+        "when": "setup.plants_present_in_plan == true"
+      },
+      "i_plant_dense",
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "i_water_fill_prep_bag_or_plate",
+      "i_water_chlorine_treat_full_volume",
+      "t_water_conditioner_dose_full_fill",
+      "t_water_ghkh_dose_full_fill",
+      "t_water_gh_dose_full_fill",
+      "t_water_kh_dose_full_fill",
+      "t_water_fill_tank",
+      "t_equip_filter_turn_on",
+      "e_water_cloudy_bloom",
+      "e_hard_tannins_fungus",
+      "i_equip_filter_on",
+      "t_equip_heater_set_target",
+      "i_cycle_algae_light_warning",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
+      "i_co2_target_yellow_green_growth",
+      "t_co2_turn_on",
+      "i_cycle_ammonia_dose_inert",
+      "t_cycle_bacteria_dose_once",
+      "t_cycle_ammonia_dose_initial",
+      "i_cycle_ammonia_aquasoil_caution",
+      "t_chem_ph_test_once",
+      "t_chem_gh_test_once",
+      "t_chem_kh_test_once"
+    ],
+    "duration_days": 1
+  },
+  {
+    "key": "DS5@501",
+    "phase_id": "DS5",
+    "phase_name": "Dark Start Exit: The Awakening",
+    "sequence": [
+      "i_intro_fishless_dark_cycle_complete",
+      "i_intro_duration_28_days",
+      "i_water_drain_90_intro",
+      "t_water_drain_90",
+      {
+        "id": "i_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "i_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "e_plant_transition",
+      "i_water_fill_prep_bag_or_plate",
+      "i_water_chlorine_treat_full_volume",
+      "t_water_conditioner_dose_full_fill",
+      "t_water_ghkh_dose_full_fill",
+      "t_water_gh_dose_full_fill",
+      "t_water_kh_dose_full_fill",
+      "t_water_fill_tank",
+      "i_equip_heater_target_reset",
+      "t_equip_heater_set_target",
+      "i_light_basic_ramp_plan",
+      "i_light_dedicated_ramp_plan",
+      "i_light_high_perf_ramp_low_demand",
+      "i_light_high_perf_ramp_high_demand",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
+      "t_light_ramp_weekly",
+      "i_co2_timer_on_off",
+      "i_co2_target_dark_green_safe",
+      "t_co2_turn_on",
+      "t_fert_dose_half_once",
+      "i_stock_ds_timing",
+      "i_stock_shrimp_wait_warning",
+      "t_maint_prep_conditioner_weekly",
+      "t_maint_prep_gh_weekly",
+      "t_maint_prep_ghkh_weekly",
+      "t_maint_prep_kh_weekly",
+      "t_maint_wc_weekly",
+      "t_fert_dose_maintenance_weekly",
+      "t_chem_nitrate_test_weekly",
+      "t_water_top_off_interval",
+      "t_stock_feed_every_other_day",
+      "i_stock_feed_every_other_day_guidance",
+      "t_maint_trim_melting_plants",
+      "i_stock_add_in_batches_weekly",
+      "i_stock_fish_acclimation_guide",
+      "i_stock_shrimp_acclimation_guide",
+      "i_stock_detox_advice",
+      "t_stock_fish_acclimate",
+      "t_stock_shrimp_acclimate",
+      "e_stock_new_fish_stress",
+      "e_stock_new_fish_stress",
+      "e_stock_new_fish_stress",
+      "e_stock_new_fish_stress",
+      "e_stock_sudden_darting",
+      "e_stock_shrimp_molt",
+      "e_stock_new_shrimp_stress",
+      "e_stock_new_shrimp_stress",
+      "e_stock_sudden_darting",
+      "e_stock_new_shrimp_stress"
+    ],
+    "duration_days": 28
+  },
+  {
+    "key": "I1@100",
+    "phase_id": "I1",
+    "phase_name": "Fish-in Setup",
+    "sequence": [
+      "i_intro_fishin_light_setup",
+      "i_intro_duration_3_days",
+      "t_sub_rinse_inert",
+      "i_sub_no_rinse_aquasoil",
+      "t_sub_place_slope",
+      "i_hard_rinse_stones",
+      "i_hard_soak_driftwood",
+      "i_hard_composition_tips",
+      "t_hard_finalize_layout",
+      {
+        "id": "i_plants_prep",
+        "when": "setup.plants_present_in_plan == true"
+      },
+      "i_plant_dense",
+      {
+        "id": "i_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "i_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "i_water_fill_prep_bag_or_plate",
+      "i_water_chlorine_treat_full_volume",
+      "t_water_conditioner_dose_full_fill",
+      "t_water_ghkh_dose_full_fill",
+      "t_water_gh_dose_full_fill",
+      "t_water_kh_dose_full_fill",
+      "t_water_fill_tank",
+      "t_equip_filter_turn_on",
+      "e_water_cloudy_bloom",
+      "e_hard_tannins_fungus",
+      "i_equip_filter_on",
+      "t_equip_heater_set_target",
+      "i_light_basic_ramp_plan",
+      "i_light_dedicated_ramp_plan",
+      "i_light_high_perf_ramp_low_demand",
+      "i_light_high_perf_ramp_high_demand",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
+      "i_co2_strategy_off_during_cycle",
+      "i_co2_wait_for_fish",
+      "i_cycle_ammonia_aquasoil_caution",
+      "i_stock_add_in_batches_weekly",
+      "i_stock_fishin_wait_before_adding",
+      "i_stock_shrimp_wait_warning",
+      "i_stock_fish_acclimation_guide",
+      "i_stock_shrimp_acclimation_guide",
+      "e_stock_new_fish_stress",
+      "e_stock_new_fish_stress",
+      "e_stock_new_fish_stress",
+      "e_stock_new_fish_stress",
+      "e_stock_sudden_darting",
+      "e_stock_shrimp_molt",
+      "e_stock_new_shrimp_stress",
+      "e_stock_new_shrimp_stress",
+      "e_stock_sudden_darting",
+      "e_stock_new_shrimp_stress",
+      "t_cycle_bacteria_dose_once",
+      "i_stock_feed_every_other_day_guidance",
+      "t_chem_ph_test_once",
+      "t_chem_gh_test_once",
+      "t_chem_kh_test_once",
+      "t_stock_fish_acclimate_day3",
+      "t_stock_shrimp_acclimate_day3"
+    ],
+    "duration_days": 3
+  },
+  {
+    "key": "PA1@100",
+    "phase_id": "PA1",
+    "phase_name": "Plant Assisted: Setup",
+    "sequence": [
+      "i_intro_silent_setup",
+      "i_intro_duration_14_days",
+      "t_sub_rinse_inert",
+      "i_sub_no_rinse_aquasoil",
+      "t_sub_place_slope",
+      "i_hard_rinse_stones",
+      "i_hard_soak_driftwood",
+      {
+        "id": "i_plants_prep",
+        "when": "setup.plants_present_in_plan == true"
+      },
+      "i_plant_dense",
+      {
+        "id": "i_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "t_plant_epiphytes",
+        "when": "plants.has_epiphytes == true"
+      },
+      {
+        "id": "i_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_stems",
+        "when": "plants.has_stems == true"
+      },
+      {
+        "id": "t_plant_root_tabs",
+        "when": "plants.has_root_feeders == true"
+      },
+      "i_water_fill_prep_bag_or_plate",
+      "i_water_chlorine_treat_full_volume",
+      "t_water_conditioner_dose_full_fill",
+      "t_water_ghkh_dose_full_fill",
+      "t_water_gh_dose_full_fill",
+      "t_water_kh_dose_full_fill",
+      "t_water_fill_tank",
+      "t_equip_filter_turn_on",
+      "i_equip_filter_on",
+      "t_equip_heater_set_target",
+      "i_light_on_6h_for_plants",
+      "t_light_start_basic_6h",
+      "t_light_start_dedicated_60_6h",
+      "t_light_start_high_perf_low_30_6h",
+      "t_light_start_high_perf_high_50_6h",
+      "i_co2_start_high_saturation_fishless",
+      "t_co2_turn_on_initial_setup",
+      "i_intro_silent_fert_aquasoil_delay",
+      "i_intro_silent_fert_inert_start",
+      "t_fert_dose_maintenance_weekly",
+      "t_chem_ph_test_once",
+      "t_chem_gh_test_once",
+      "t_chem_kh_test_once",
+      "e_water_cloudy_bloom",
+      "e_hard_tannins_fungus",
+      "t_light_basic_ramp_weekly",
+      "t_light_dedicated_ramp_weekly",
+      "t_light_high_perf_ramp_low_demand_weekly",
+      "t_light_high_perf_ramp_high_demand_weekly"
+    ],
+    "duration_days": 14
+  }
+]

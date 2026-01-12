@@ -1,0 +1,75 @@
+{
+  "atom_library": {
+    "i_water_chlorine_treat_full_volume": {
+      "type": "instruction",
+      "text_template": "Since you have chlorine/chloramine, we must treat the full tank volume. If using a hose, add the conditioner to the tank *before* filling.",
+      "conditions": [
+        "source_water.has_chlorine == true",
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "i_water_drain_90_intro": {
+      "type": "instruction",
+      "text_template": "Drain the tank down to about 90% to remove built-up waste before planting.",
+      "conditions": []
+    },
+    "i_water_fill_prep_bag_or_plate": {
+      "type": "instruction",
+      "text_template": "Time to fill! Place a plastic bag or plate on the substrate and pour water onto **that** to prevent clouding."
+    },
+    "t_water_conditioner_dose_full_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{doses.detoxifier_conditioner.fullfill_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}}.",
+      "conditions": [
+        "source_water.has_chlorine == true",
+        "products.detoxifier_conditioner.selected == true"
+      ]
+    },
+    "t_water_drain_90": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Drain the tank almost fully (90%) to remove accumulated Nitrates.",
+      "conditions": []
+    },
+    "t_water_fill_tank": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Fill the tank with water.",
+      "conditions": []
+    },
+    "t_water_gh_dose_full_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dissolve {{doses.gh_remineralizer.fullfill_dose_amount}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in bucket before filling.",
+      "conditions": [
+        "products.gh_remineralizer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_water_ghkh_dose_full_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dissolve {{doses.gh_kh_remineralizer.fullfill_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} in bucket before filling.",
+      "conditions": [
+        "products.gh_kh_remineralizer.selected == true"
+      ]
+    },
+    "t_water_kh_dose_full_fill": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dissolve {{doses.kh_buffer.fullfill_dose_amount}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in bucket before filling.",
+      "conditions": [
+        "products.kh_buffer.selected == true",
+        "!products.gh_kh_remineralizer.selected"
+      ]
+    },
+    "t_water_top_off_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Top off evaporated water with freshwater.",
+      "conditions": []
+    }
+  }
+}

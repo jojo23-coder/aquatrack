@@ -1,0 +1,6 @@
+# Sample playlist DSL
+if setup.can_test_nitrate: t_chem_test(parameter=nitrate, cadence=one_time, variant=default)
+if setup.can_test_ammonia: t_chem_test(parameter=ammonia, cadence=per_event, variant=after_24h)
+i_intro_duration(days=7)
+t_fert_dose(cadence=weekly, dose=half)
+if setup.substrate_type == 'aquasoil': t_sub_prep(substrate=setup.substrate_type) else: t_sub_prep(substrate=setup.substrate_type)

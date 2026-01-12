@@ -1,0 +1,111 @@
+{
+  "atom_library": {
+    "i_intro_fishless_light_cycle_setup": {
+      "type": "instruction",
+      "text_template": "You are performing a traditional Fishless Cycle. You will dose ammonia to build the filter, but with lights (and plants) running.",
+      "conditions": []
+    },
+    "i_intro_duration_1_day": {
+      "type": "instruction",
+      "text_template": "This phase is short and focused. Plan for about 1 day."
+    },
+    "i_intro_fishless_light_ammonia_maintenance": {
+      "type": "instruction",
+      "text_template": "We are now maintaining the ammonia levels while waiting for the bacteria to catch up. **Continue your daily lighting schedule.**"
+    },
+    "i_intro_duration_7_days": {
+      "type": "instruction",
+      "text_template": "This phase typically runs for about 7 days. Stay consistent and let the routine do the work."
+    },
+    "i_intro_duration_14_days": {
+      "type": "instruction",
+      "text_template": "This phase usually runs for about 14 days. Keep the weekly rhythm steady and patient."
+    },
+    "i_intro_fishless_light_cycle_verification": {
+      "type": "instruction",
+      "text_template": "The cycle seems finished. Let's verify before moving forward. We need to be 100% sure the filter can handle the bioload."
+    },
+    "i_intro_fishless_light_transition_success": {
+      "type": "instruction",
+      "text_template": "Your Fishless Cycle is complete! The bacteria can process ammonia and nitrite instantly. It is time to make the tank safe for fish.",
+      "conditions": []
+    },
+    "i_intro_fishless_dark_start": {
+      "type": "instruction",
+      "text_template": "You are doing a 'Dark Start'. By keeping lights OFF and plants OUT, we prevent algae while the filter matures. It requires patience but guarantees a cleaner start."
+    },
+    "i_intro_fishless_dark_ammonia_maintenance": {
+      "type": "instruction",
+      "text_template": "We are now maintaining the ammonia levels while waiting for the bacteria to catch up. Keep the tank dark."
+    },
+    "i_intro_fishless_dark_cycle_verification": {
+      "type": "instruction",
+      "text_template": "The cycle seems finished. Let's verify before we unmask the tank. We need to be 100% sure the filter can handle the bioload."
+    },
+    "i_intro_fishless_dark_cycle_complete": {
+      "type": "instruction",
+      "text_template": "Congratulations! Your tank is cycled and ready for the next step.",
+      "conditions": []
+    },
+    "i_intro_duration_28_days": {
+      "type": "instruction",
+      "text_template": "This phase usually runs for about 28 days. Ramp slowly and keep the weekly rhythm steady."
+    },
+    "i_intro_fishin_light_setup": {
+      "type": "instruction",
+      "text_template": "You are cycling with fish ('Fish-in'). This requires daily attention. You are the safety net for your fish until the bacteria grow."
+    },
+    "i_intro_duration_3_days": {
+      "type": "instruction",
+      "text_template": "This phase is short and focused. Plan for about 3 days."
+    },
+    "i_intro_fishin_light_toxin_watch": {
+      "type": "instruction",
+      "text_template": "Your primary job right now is to keep toxins low. If Ammonia or Nitrite rises above 0.5ppm, the fish are suffering and need your help immediately."
+    },
+    "i_intro_fishin_light_nitrite_watch": {
+      "type": "instruction",
+      "text_template": "If you are seeing consistent 0 ppm Ammonia readings, your first bacteria colony is working! Now watch for the 'Nitrite Spike'."
+    },
+    "i_intro_transition_maturity": {
+      "type": "instruction",
+      "text_template": "Your ecosystem is established! Tests are stable and the water is clean. We can now optimize the tank for maximum growth.",
+      "conditions": []
+    },
+    "i_intro_silent_setup": {
+      "type": "instruction",
+      "text_template": "We are using 'Silent Cycling'. By planting heavily from Day 1, the plants will consume the ammonia directly."
+    },
+    "i_intro_silent_fert_aquasoil_delay": {
+      "type": "instruction",
+      "text_template": "Plants are hungry, but if you are using Aquasoil, **do NOT dose liquid fertilizer for the first 2 weeks**. The soil leaches excess nutrients already.",
+      "conditions": [
+        "setup.substrate_type == 'aquasoil'"
+      ]
+    },
+    "i_intro_silent_fert_inert_start": {
+      "type": "instruction",
+      "text_template": "You are using inert substrate, so start liquid fertilizer dosing immediately.",
+      "conditions": [
+        "setup.substrate_type != 'aquasoil'",
+        "products.fertilizer_micros.selected == true"
+      ]
+    },
+    "i_intro_silent_growth_watch": {
+      "type": "instruction",
+      "text_template": "The goal of a Silent Cycle is... silence. If the plants are healthy, you should see 0 Ammonia and 0 Nitrite continuously."
+    },
+    "i_intro_silent_ready_for_stocking": {
+      "type": "instruction",
+      "text_template": "If your tests show 0 ppm Ammonia and Nitrite, and your plants are showing new growth, the tank is ready for the first inhabitants."
+    },
+    "i_intro_routine_forever": {
+      "type": "instruction",
+      "text_template": "Welcome to the 'Forever' phase. Consistency is key. Regular maintenance prevents 'Old Tank Syndrome' and keeps algae away."
+    },
+    "i_intro_duration_indefinite": {
+      "type": "instruction",
+      "text_template": "This is the long-haul routine. It continues indefinitely as your steady maintenance phase."
+    }
+  }
+}

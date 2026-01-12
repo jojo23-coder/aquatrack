@@ -1,0 +1,81 @@
+{
+  "atom_library": {
+    "i_light_dark_rule": {
+      "type": "instruction",
+      "text_template": "Verify that all light sources are disabled. Light is the enemy of the Dark Start."
+    },
+    "t_light_confirm_off": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Confirm: Lights Unplugged/OFF."
+    },
+    "i_light_ramp_plan": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "basic:any": "Start with **6 hours**. Increase duration by **30 minutes per week**. If algae appears, pause the ramp.",
+        "dedicated:any": "Start at **6 hours** at **60%** intensity. Ramp intensity first (~10% per week), then increase duration. If algae appears, pause the ramp.",
+        "high_performance:low": "Start at **6 hours** at **30%** intensity. Ramp intensity first (~10% per week) to **60%**, then increase duration. If algae appears, pause the ramp.",
+        "high_performance:high": "Start at **6 hours** at **50%** intensity. Ramp intensity first (~10% per week) to **100%**, then increase duration. If algae appears, pause the ramp."
+      },
+      "args_schema": {
+        "light_type": [
+          "basic",
+          "dedicated",
+          "high_performance"
+        ],
+        "plant_demand": [
+          "low",
+          "high",
+          "any"
+        ]
+      }
+    },
+    "t_light_start": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "basic:any": "Start light at 6 hours.",
+        "dedicated:any": "Start light at 60% intensity for 6 hours.",
+        "high_performance:low": "Start light at 30% intensity for 6 hours.",
+        "high_performance:high": "Start light at 50% intensity for 6 hours."
+      },
+      "args_schema": {
+        "light_type": [
+          "basic",
+          "dedicated",
+          "high_performance"
+        ],
+        "plant_demand": [
+          "low",
+          "high",
+          "any"
+        ]
+      }
+    },
+    "t_light_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "basic:any": "Add 30 minutes to your photoperiod.",
+        "dedicated:any": "Increase intensity by 10% per week first. After that, add 30 minutes of duration.",
+        "high_performance:low": "Increase intensity toward 60% first, then add 30 minutes of duration.",
+        "high_performance:high": "Increase intensity toward 100% first, then add 30 minutes of duration."
+      },
+      "args_schema": {
+        "light_type": [
+          "basic",
+          "dedicated",
+          "high_performance"
+        ],
+        "plant_demand": [
+          "low",
+          "high",
+          "any"
+        ]
+      }
+    }
+  }
+}

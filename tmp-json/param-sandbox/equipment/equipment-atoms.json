@@ -1,0 +1,36 @@
+{
+  "atom_library": {
+    "i_equip_filter_on": {
+      "type": "instruction",
+      "text_template": "Run the filter 24/7. Oxygen is vital for the bacteria."
+    },
+    "t_equip_filter_turn_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on the filter and confirm steady flow."
+    },
+    "i_equip_heater_target_reset": {
+      "type": "instruction",
+      "text_template": "Reset your heater to your target temperature ({{targets.temperature_target_c}}°C). We no longer need the elevated incubation temperature.",
+      "conditions": [
+        "setup.heater_installed == true"
+      ]
+    },
+    "t_equip_heater_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on heater (aim for 24-26°C).",
+      "conditions": [
+        "setup.heater_installed == true"
+      ]
+    },
+    "t_equip_heater_set_target": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Set heater to {{targets.temperature_target_c}}°C.",
+      "conditions": [
+        "setup.heater_installed == true"
+      ]
+    }
+  }
+}
