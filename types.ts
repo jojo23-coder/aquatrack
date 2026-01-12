@@ -155,6 +155,8 @@ export interface EngineSetup {
       per_volume_l_kh?: number;
       effect_value_kh?: number;
       bicarbonate?: boolean;
+      contains_nitrogen?: boolean;
+      contains_potassium?: boolean;
       ammonia_solution_percent?: number;
       pure_ammonia?: boolean;
     }>;

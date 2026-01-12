@@ -381,7 +381,9 @@ const App: React.FC = () => {
           dose_amount: 0,
           dose_unit: 'mL',
           per_volume_l: 0,
-          effect_value: 0
+          effect_value: 0,
+          contains_nitrogen: false,
+          contains_potassium: false
         },
         {
           role: 'ammonia_source',
@@ -2837,6 +2839,7 @@ const App: React.FC = () => {
                     const isKhBuffer = def.role === 'kh_buffer';
                     const isCombo = def.role === 'gh_kh_remineralizer';
                     const isAmmonia = def.role === 'ammonia_source';
+                    const isFertilizerMicros = def.role === 'fertilizer_micros';
                     const useBicarbonate = isKhBuffer && product.bicarbonate;
                     const usePureAmmonia = isAmmonia && product.pure_ammonia;
                     const hasEffect = Boolean(def.effectLabel)
@@ -3029,6 +3032,39 @@ const App: React.FC = () => {
                                   onChange={e => updateProduct(def.role, current => ({ ...current, name: e.target.value }))}
                                   className={setupInputClasses}
                                 />
+                              </div>
+                            )}
+                            {isFertilizerMicros && (
+                              <div className="space-y-2 text-[10px] text-slate-400 border border-slate-800 rounded-2xl p-2">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Contains</div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <button
+                                    onClick={() => updateProduct(def.role, current => ({
+                                      ...current,
+                                      contains_nitrogen: !current.contains_nitrogen
+                                    }))}
+                                    className={`py-2 rounded-xl border font-bold uppercase tracking-wide ${
+                                      product.contains_nitrogen
+                                        ? 'bg-slate-100 text-slate-950 border-slate-100'
+                                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                                    }`}
+                                  >
+                                    Nitrogen (N)
+                                  </button>
+                                  <button
+                                    onClick={() => updateProduct(def.role, current => ({
+                                      ...current,
+                                      contains_potassium: !current.contains_potassium
+                                    }))}
+                                    className={`py-2 rounded-xl border font-bold uppercase tracking-wide ${
+                                      product.contains_potassium
+                                        ? 'bg-slate-100 text-slate-950 border-slate-100'
+                                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                                    }`}
+                                  >
+                                    Potassium (K)
+                                  </button>
+                                </div>
                               </div>
                             )}
                             {usePureAmmonia && (

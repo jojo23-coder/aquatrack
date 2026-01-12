@@ -323,15 +323,29 @@ const buildTemplateContext = ({
   const hasBottomDwellers = fishNameList.some((name) =>
     name.includes('corydoras') || name.includes('loach') || name.includes('pleco') || name.includes('otocinclus')
   );
+  const lightingSystem = normalizedSetup.tank_profile.lighting_system;
+  const lightType = ['basic', 'dedicated', 'high_performance'].includes(lightingSystem)
+    ? lightingSystem
+    : 'basic';
+  const plantSpecies = normalizedSetup.biology_profile.plants?.species || [];
+  const plantDemandClass = normalizedSetup.biology_profile.plants?.demand_class ?? 'auto';
+  const hasHighDemandPlant = plantSpecies.some((name) => {
+    const group = plantSpeciesIndex.get(name);
+    const lightLevels = group?.typical_requirements?.light || [];
+    return lightLevels.includes('high');
+  });
+  const plantDemand = hasHighDemandPlant || plantDemandClass === 'high' ? 'high' : 'low';
   const setupContext = {
     substrate_type: normalizedSetup.tank_profile.substrate.type,
     hardscape_type: normalizedSetup.tank_profile.hardscape.type,
     co2_enabled: normalizedSetup.tank_profile.co2.enabled,
     heater_installed: normalizedSetup.tank_profile.heater_installed,
     lighting_system: normalizedSetup.tank_profile.lighting_system,
+    light_type: lightType,
     plants_present: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
     plants_present_in_plan: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
     plant_demand_class: normalizedSetup.biology_profile.plants?.demand_class ?? 'auto',
+    plant_demand: plantDemand,
     can_test_ammonia: normalizedSetup.testing.can_test_ammonia,
     can_test_nitrite: normalizedSetup.testing.can_test_nitrite,
     can_test_nitrate: normalizedSetup.testing.can_test_nitrate,
@@ -344,6 +358,9 @@ const buildTemplateContext = ({
   const doses = {};
   const comboProduct = (normalizedSetup.product_stack.user_products || []).find(
     (product) => product.role === 'gh_kh_remineralizer' && product.enabled
+  );
+  const fertilizerUserProduct = (normalizedSetup.product_stack.user_products || []).find(
+    (product) => product.role === 'fertilizer_micros' && product.enabled
   );
   const wcVolumes = derived.weekly_water_change_volume_l_range || [];
   const wcVolumeTarget = averageRange(wcVolumes);
@@ -365,6 +382,10 @@ const buildTemplateContext = ({
       dose_unit: doseUnit,
       dose_text: doseText
     };
+    if (role === 'fertilizer_micros') {
+      products[role].contains_nitrogen = !!fertilizerUserProduct?.contains_nitrogen;
+      products[role].contains_potassium = !!fertilizerUserProduct?.contains_potassium;
+    }
     if (perVolume) {
       const fullAmount = (derived.net_water_volume_l / doseModel.per_volume_l) * doseModel.amount;
       const wcAmounts = wcVolumes.map(volume => (volume / doseModel.per_volume_l) * doseModel.amount);
