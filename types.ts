@@ -69,11 +69,6 @@ export interface ReminderSettings {
 export interface EngineSetup {
   user_preferences: {
     cycling_mode_preference: 'auto' | 'fishless_ammonia' | 'dark_start' | 'fish_in' | 'plant_assisted';
-    risk_tolerance: 'low' | 'medium' | 'high';
-    goal_profile: 'stability_first' | 'growth_first' | 'balanced';
-    photoperiod_hours_initial: number;
-    photoperiod_hours_post_cycle: number;
-    units: 'metric';
   };
   protocol_preferences: {
     cycling: boolean;

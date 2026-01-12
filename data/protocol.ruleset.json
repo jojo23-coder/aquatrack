@@ -101,7 +101,7 @@
       "phase_ids": ["startup"],
       "when": { "cycling_mode_in": ["fishless_ammonia", "fish_in", "plant_assisted"] },
       "instructions": [
-        { "text": "Set photoperiod to {photoperiod_hours_initial} hours." }
+        { "text": "Start with a low photoperiod and keep it consistent during the first week." }
       ],
       "objectives": ["setup"]
     },
@@ -337,7 +337,7 @@
       "id": "r_maintenance_photoperiod",
       "phase_ids": ["maintenance"],
       "instructions": [
-        { "text": "Maintain photoperiod at {photoperiod_hours_post_cycle} hours." }
+        { "text": "Keep a steady photoperiod; adjust only if algae or plant health demands it." }
       ],
       "objectives": ["maintenance"]
     },

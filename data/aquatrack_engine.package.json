@@ -15,12 +15,7 @@
       "version": "0.1",
       "fields": {
         "user_preferences": {
-          "cycling_mode_preference": { "type": "string", "enum": ["auto", "fishless_ammonia", "dark_start", "fish_in", "plant_assisted"], "default": "auto" },
-          "risk_tolerance": { "type": "string", "enum": ["low", "medium", "high"], "default": "low" },
-          "goal_profile": { "type": "string", "enum": ["stability_first", "growth_first", "balanced"], "default": "stability_first" },
-          "photoperiod_hours_initial": { "type": "number", "default": 6 },
-          "photoperiod_hours_post_cycle": { "type": "number", "default": 8 },
-          "units": { "type": "string", "enum": ["metric"], "default": "metric" }
+          "cycling_mode_preference": { "type": "string", "enum": ["auto", "fishless_ammonia", "dark_start", "fish_in", "plant_assisted"], "default": "auto" }
         },
         "tank_profile": {
           "tank_volume_l_gross": { "type": "number", "required": true },
@@ -172,16 +167,13 @@
         "selection": {
           "recommended_cycling_mode": "string",
           "user_selected_cycling_mode": "string",
-          "risk_score_1_to_5": "number",
           "reason_codes": "array",
           "override_acknowledged": "boolean"
         },
         "derived": {
           "net_water_volume_l": "number",
         "weekly_water_change_percent_range": "number",
-        "weekly_water_change_volume_l_range": "number",
-          "photoperiod_hours_initial": "number",
-          "photoperiod_hours_post_cycle": "number"
+        "weekly_water_change_volume_l_range": "number"
         },
         "global_reference": { "targets": "object", "parameter_limits": "object", "dosing_reference": "object" },
         "phases": "array",
@@ -193,6 +185,396 @@
   },
 
   "decision_tables": {
+    "waterfall.table.json": {
+      "version": "0.1",
+      "source": "data/waterfall-table.csv",
+      "rules": [
+        {
+          "priority": 1,
+          "rule_name": "PHYSICS_ERROR",
+          "conditions": {
+            "substrate": "Inert",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "Soil_Leech",
+            "selected_method": "ANY"
+          },
+          "status": "FAIL STATE",
+          "message": "Impossible Physics. Inert substrate cannot leech ammonia. You must select Liquid Ammonia."
+        },
+        {
+          "priority": 2,
+          "rule_name": "CRUELTY_RISK",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "None",
+            "selected_method": "FISH-IN"
+          },
+          "status": "CRITICAL RISK",
+          "message": "Animal Cruelty. With no soil or liquid ammonia, you are forcing fish to generate the cycle waste in a sterile tank."
+        },
+        {
+          "priority": 3,
+          "rule_name": "MISSING_FUEL",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "None",
+            "selected_method": "FISHLESS"
+          },
+          "status": "FAIL STATE",
+          "message": "Missing Fuel. You cannot run a fishless cycle without an ammonia source (Liquid or Soil)."
+        },
+        {
+          "priority": 4,
+          "rule_name": "DOUBLE_DOSE",
+          "conditions": {
+            "substrate": "Aquasoil",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "Liquid",
+            "selected_method": "FISHLESS"
+          },
+          "status": "CRITICAL RISK",
+          "message": "Toxicity Spike. Aquasoil already releases ammonia. Dosing liquid ammonia on top will create toxic levels."
+        },
+        {
+          "priority": 5,
+          "rule_name": "LIGHT_INSUFFICIENT",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "Basic",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "High",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "ANY"
+          },
+          "status": "FAIL STATE",
+          "message": "Hardware Failure. You selected High Light Demand plants but only have Basic Lights. They will die regardless of the cycle."
+        },
+        {
+          "priority": 6,
+          "rule_name": "SILENT_REQ_SOIL",
+          "conditions": {
+            "substrate": "Inert",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "SILENT CYCLE"
+          },
+          "status": "FAIL STATE",
+          "message": "Method Failure. Silent Cycle relies on soil nutrients to feed roots. Inert sand cannot support this."
+        },
+        {
+          "priority": 7,
+          "rule_name": "SILENT_REQ_BIOMASS",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "Low",
+            "ammonia_src": "ANY",
+            "selected_method": "SILENT CYCLE"
+          },
+          "status": "FAIL STATE",
+          "message": "Biology Failure. Silent Cycle requires High Plant Density to consume ammonia immediately. Low density results in algae."
+        },
+        {
+          "priority": 8,
+          "rule_name": "SILENT_REQ_SPEED",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "Slow",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "SILENT CYCLE"
+          },
+          "status": "FAIL STATE",
+          "message": "Biology Failure. Slow plants (Buce/Anubias) cannot metabolize ammonia fast enough for a Silent Cycle. You need Fast Stems."
+        },
+        {
+          "priority": 9,
+          "rule_name": "SILENT_REQ_CO2",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "FALSE",
+            "growth_speed": "ANY",
+            "plant_light_demand": "High",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "SILENT CYCLE"
+          },
+          "status": "FAIL STATE",
+          "message": "Metabolic Failure. High Demand plants without CO2 cannot grow fast enough to absorb the ammonia spike."
+        },
+        {
+          "priority": 10,
+          "rule_name": "SILENT_REQ_LIGHT",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "Basic",
+            "co2": "ANY",
+            "growth_speed": "Fast",
+            "plant_light_demand": "Low",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "SILENT CYCLE"
+          },
+          "status": "WARNING",
+          "message": "Energy Bottleneck. Even for low-demand weeds, basic lights might be too weak to drive the *rapid* growth needed for a Silent Cycle."
+        },
+        {
+          "priority": 11,
+          "rule_name": "ALGAE_BOMB_CHECK",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "High_Performance",
+            "co2": "FALSE",
+            "growth_speed": "ANY",
+            "plant_light_demand": "Low",
+            "plant_density": "ANY",
+            "ammonia_src": "Liquid",
+            "selected_method": "FISHLESS"
+          },
+          "status": "CONDITIONAL",
+          "message": "Algae Risk. High Light + Low Demand Plants + No CO2 = Algae Farm. You must DIM lights to <30%."
+        },
+        {
+          "priority": 12,
+          "rule_name": "DARK_START_INEFFICIENT",
+          "conditions": {
+            "substrate": "Aquasoil",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "Fast",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "Soil_Leech",
+            "selected_method": "DARK START"
+          },
+          "status": "WARNING",
+          "message": "Wasted Potential. Fast plants need nutrients immediately. A Dark Start removes the initial soil ammonia spike they crave."
+        },
+        {
+          "priority": 13,
+          "rule_name": "DARK_START_POINTLESS",
+          "conditions": {
+            "substrate": "Inert",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "None",
+            "selected_method": "DARK START"
+          },
+          "status": "FAIL STATE",
+          "message": "Pointless. Inert substrate with no ammonia source is just a bucket of water. Darkness achieves nothing."
+        },
+        {
+          "priority": 14,
+          "rule_name": "FAST_PLANT_STARVATION",
+          "conditions": {
+            "substrate": "Inert",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "Fast",
+            "plant_light_demand": "High",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "ANY"
+          },
+          "status": "FAIL STATE",
+          "message": "Starvation. High Demand Fast plants need Soil or Water Column dosing + High Light. On Inert sand, they will die."
+        },
+        {
+          "priority": 15,
+          "rule_name": "FAST_PLANT_HUNGER",
+          "conditions": {
+            "substrate": "Inert",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "Fast",
+            "plant_light_demand": "Low",
+            "plant_density": "ANY",
+            "ammonia_src": "Liquid",
+            "selected_method": "FISHLESS"
+          },
+          "status": "WARNING",
+          "message": "Nutrient Gap. Low Demand Fast plants (weeds) survive light levels, but starve on Inert sand. You MUST add Liquid Fertilizer daily."
+        },
+        {
+          "priority": 16,
+          "rule_name": "OPTIMAL_SILENT",
+          "conditions": {
+            "substrate": "Aquasoil",
+            "light": "High_Performance",
+            "co2": "TRUE",
+            "growth_speed": "Fast",
+            "plant_light_demand": "High",
+            "plant_density": "High",
+            "ammonia_src": "Soil_Leech",
+            "selected_method": "SILENT CYCLE"
+          },
+          "status": "RECOMMENDED",
+          "message": "Optimal Match. High energy, high demand, and high biomass will consume the soil ammonia instantly."
+        },
+        {
+          "priority": 17,
+          "rule_name": "OPTIMAL_DARK_START",
+          "conditions": {
+            "substrate": "Aquasoil",
+            "light": "High_Performance",
+            "co2": "TRUE",
+            "growth_speed": "Slow",
+            "plant_light_demand": "Low",
+            "plant_density": "ANY",
+            "ammonia_src": "Soil_Leech",
+            "selected_method": "DARK START"
+          },
+          "status": "RECOMMENDED",
+          "message": "Optimal Match. High light + Slow plants usually equals algae. Dark start avoids this risk perfectly."
+        },
+        {
+          "priority": 18,
+          "rule_name": "OPTIMAL_LOW_TECH_SOIL",
+          "conditions": {
+            "substrate": "Aquasoil",
+            "light": "Basic",
+            "co2": "FALSE",
+            "growth_speed": "Slow",
+            "plant_light_demand": "Low",
+            "plant_density": "ANY",
+            "ammonia_src": "Soil_Leech",
+            "selected_method": "FISHLESS"
+          },
+          "status": "RECOMMENDED",
+          "message": "Optimal Low Tech. Soil provides nutrients, low light prevents algae, and water changes manage the cycle."
+        },
+        {
+          "priority": 19,
+          "rule_name": "OPTIMAL_INERT_DOSING",
+          "conditions": {
+            "substrate": "Inert",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "Slow",
+            "plant_light_demand": "Low",
+            "plant_density": "ANY",
+            "ammonia_src": "Liquid",
+            "selected_method": "FISHLESS"
+          },
+          "status": "RECOMMENDED",
+          "message": "Optimal Control. Dosing liquid ammonia allows precise control for delicate/slow plants. Safe and reliable."
+        },
+        {
+          "priority": 20,
+          "rule_name": "VALID_DARK_START_INERT",
+          "conditions": {
+            "substrate": "Inert",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "Liquid",
+            "selected_method": "DARK START"
+          },
+          "status": "VALID",
+          "message": "Biologically Valid. Dosing ammonia in the dark cycles the bacteria safely without any algae risk."
+        },
+        {
+          "priority": 21,
+          "rule_name": "DEFAULT_SILENT",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "SILENT CYCLE"
+          },
+          "status": "FAIL STATE",
+          "message": "Configuration Mismatch. You selected Silent Cycle but lack the specific Hardware/Plant combination to make it safe."
+        },
+        {
+          "priority": 22,
+          "rule_name": "DEFAULT_DARK_START",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "DARK START"
+          },
+          "status": "RECOMMENDED",
+          "message": "Safe Fallback. Dark Start is rarely 'wrong', just sometimes slow."
+        },
+        {
+          "priority": 23,
+          "rule_name": "DEFAULT_FISHLESS",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "FISHLESS"
+          },
+          "status": "RECOMMENDED",
+          "message": "Standard Method. If no other warnings triggered, Fishless Cycling is the standard recommendation."
+        },
+        {
+          "priority": 24,
+          "rule_name": "DEFAULT_FISH_IN",
+          "conditions": {
+            "substrate": "ANY",
+            "light": "ANY",
+            "co2": "ANY",
+            "growth_speed": "ANY",
+            "plant_light_demand": "ANY",
+            "plant_density": "ANY",
+            "ammonia_src": "ANY",
+            "selected_method": "FISH-IN"
+          },
+          "status": "WARNING",
+          "message": "Suboptimal. Fishless methods are objectively safer. Proceed only if you are experienced."
+        }
+      ]
+    },
     "cycling_mode.decision_table.json": {
       "version": "0.1",
       "derived_fields_logic": {
@@ -213,12 +595,12 @@
         },
         {
           "id": "R_shrimp_low_risk",
-          "if": { "cycling_mode_preference": "auto", "shrimp_planned": true, "risk_tolerance": "low" },
+          "if": { "cycling_mode_preference": "auto", "shrimp_planned": true },
           "then": {
             "recommended_cycling_mode": "fishless_ammonia",
             "risk_score_1_to_5": 1,
             "requires_override_acknowledgement": false,
-            "reason_codes": ["SHRIMP_PLANNED", "LOW_RISK_TOLERANCE"]
+            "reason_codes": ["SHRIMP_PLANNED"]
           }
         },
         {
@@ -243,12 +625,12 @@
         },
         {
           "id": "R_auto_fish_in_if_no_ammonia_and_high_risk",
-          "if": { "cycling_mode_preference": "auto", "ammonia_available": false, "risk_tolerance": "high" },
+          "if": { "cycling_mode_preference": "auto", "ammonia_available": false },
           "then": {
             "recommended_cycling_mode": "fish_in",
             "risk_score_1_to_5": 4,
             "requires_override_acknowledgement": true,
-            "reason_codes": ["NO_AMMONIA_SOURCE", "USER_ACCEPTS_RISK"]
+            "reason_codes": ["NO_AMMONIA_SOURCE"]
           }
         }
       ]
@@ -346,7 +728,7 @@
           "instruction_atoms": [
             { "id": "p1_a", "cadence": "one_time", "text_template": "Assemble hardscape/substrate; attach epiphytes (do not bury rhizomes)." },
             { "id": "p1_b", "cadence": "one_time", "text_template": "Fill tank. Dose GH remineralizer {gh_full_fill_g_range} g to reach GH {target_gh_range} dGH. Dose KH buffer {kh_full_fill_g} g to reach KH {target_kh_dkh} dKH." },
-            { "id": "p1_c", "cadence": "one_time", "text_template": "Set lights to {photoperiod_hours_initial} h/day. Run filter 24/7. Keep CO2 OFF." }
+            { "id": "p1_c", "cadence": "one_time", "text_template": "Set lights to a low, steady photoperiod. Run filter 24/7. Keep CO2 OFF." }
           ],
           "expected_behavior_atoms": [
             "Slight cloudiness is normal.",
@@ -365,7 +747,7 @@
           "instruction_atoms": [
             { "id": "p2_a", "cadence": "one_time", "text_template": "Dose ammonia to {cycle_ammonia_target_range} ppm: {ammonia_ml_range} mL (solution {ammonia_solution_percent}% in {net_volume_l} L)." },
             { "id": "p2_b", "cadence": "daily", "text_template": "Dose bacteria starter daily (per label)." },
-            { "id": "p2_c", "cadence": "daily", "text_template": "Keep lights {photoperiod_hours_initial} h/day. No fertilizer yet. CO2 OFF or very low (optional)." }
+            { "id": "p2_c", "cadence": "daily", "text_template": "Keep lights low and steady. No fertilizer yet. CO2 OFF or very low (optional)." }
           ],
           "expected_behavior_atoms": [
             "Bacterial haze and diatoms may appear.",
@@ -405,7 +787,7 @@
             { "id": "p4_a", "cadence": "one_time", "text_template": "Completion test: dose ammonia to {cycle_ammonia_target_range} ppm and confirm ammonia=0 and nitrite=0 within 24h." },
             { "id": "p4_b", "cadence": "one_time", "text_template": "Do a 50% water change. Stop ammonia dosing." },
             { "id": "p4_c", "cadence": "weekly", "text_template": "Start fertilizer micros at {fertilizer_start_ml_week} mL/week (start factor {fertilizer_start_factor})." },
-            { "id": "p4_d", "cadence": "one_time", "text_template": "Keep photoperiod at {photoperiod_hours_initial} h for 1 week, then ramp toward {photoperiod_hours_post_cycle} h by +0.5–1 h/week if algae remains controlled." }
+            { "id": "p4_d", "cadence": "one_time", "text_template": "Hold a low photoperiod for 1 week, then only increase if algae remains controlled." }
           ],
           "expected_behavior_atoms": [
             "Stability improves; plant growth may begin."

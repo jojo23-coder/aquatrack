@@ -114,6 +114,35 @@ const formatDisplayValue = (value) => {
     .replace(/\b\w/g, char => char.toUpperCase());
 };
 
+const getWaterfallTone = (status?: string) => {
+  if (status === 'RECOMMENDED' || status === 'VALID') {
+    return {
+      box: 'bg-emerald-950/30 border-emerald-800/40',
+      text: 'text-emerald-200',
+      label: 'text-emerald-300'
+    };
+  }
+  if (status === 'WARNING' || status === 'CONDITIONAL') {
+    return {
+      box: 'bg-amber-950/30 border-amber-800/40',
+      text: 'text-amber-200',
+      label: 'text-amber-300'
+    };
+  }
+  if (status === 'CRITICAL RISK' || status === 'FAIL STATE') {
+    return {
+      box: 'bg-red-950/30 border-red-800/40',
+      text: 'text-red-200',
+      label: 'text-red-300'
+    };
+  }
+  return {
+    box: 'bg-slate-900/60 border-slate-800',
+    text: 'text-slate-200',
+    label: 'text-slate-400'
+  };
+};
+
 const renderBoldText = (text: string) => {
   const parts = text.split(/\*\*(.+?)\*\*/g);
   return parts.map((part, index) => {
@@ -204,7 +233,7 @@ const App: React.FC = () => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(PROTOCOL_RESET_MODAL_KEY) === 'true';
   });
-  const [activeSetupSection, setActiveSetupSection] = useState<'tank' | 'water' | 'biology' | 'preferences' | 'products' | 'protocol' | 'alerts' | 'data'>('tank');
+  const [activeSetupSection, setActiveSetupSection] = useState<'tank' | 'water' | 'biology' | 'products' | 'protocol' | 'alerts' | 'data'>('tank');
   const [selectedFishToAdd, setSelectedFishToAdd] = useState(fishOptions[0] || '');
   const [selectedShrimpToAdd, setSelectedShrimpToAdd] = useState(shrimpOptions[0] || '');
   const [selectedPlantToAdd, setSelectedPlantToAdd] = useState(plantOptions[0] || '');
@@ -229,12 +258,7 @@ const App: React.FC = () => {
 
   const defaultEngineSetup: EngineSetup = {
     user_preferences: {
-      cycling_mode_preference: 'auto',
-      risk_tolerance: 'low',
-      goal_profile: 'stability_first',
-      photoperiod_hours_initial: 6,
-      photoperiod_hours_post_cycle: 8,
-      units: 'metric'
+      cycling_mode_preference: 'auto'
     },
     protocol_preferences: {
       cycling: true,
@@ -909,7 +933,7 @@ const App: React.FC = () => {
         currentPhase: phaseId,
         phaseStartDates: {
           ...prev.phaseStartDates,
-          [phaseId]: prev.phaseStartDates?.[phaseId] || phaseStartKey
+          [phaseId]: phaseStartKey
         }
       };
     });
@@ -1450,7 +1474,6 @@ const App: React.FC = () => {
       (product) => (product.role === 'gh_remineralizer' || product.role === 'gh_kh_remineralizer') && product.enabled
     );
     const co2Enabled = aquarium.engineSetup.tank_profile.co2.enabled;
-    const photoperiodInitial = aquarium.engineSetup.user_preferences.photoperiod_hours_initial;
     const waterChangePercent = aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target;
 
     if (tapKh === null || tapKh === undefined) {
@@ -1571,20 +1594,6 @@ const App: React.FC = () => {
       });
     }
 
-    if (aquarium.engineSetup.biology_profile.plants.demand_class === 'high' && photoperiodInitial < 6) {
-      issues.push({
-        title: 'Low photoperiod for high demand plants',
-        detail: 'High demand plants typically need a longer photoperiod. Consider 7–8 hours or adjust plant demand.'
-      });
-    }
-
-    if (aquarium.engineSetup.biology_profile.plants.demand_class === 'low' && photoperiodInitial > 9) {
-      issues.push({
-        title: 'High photoperiod for low demand plants',
-        detail: 'Long photoperiods can increase algae risk with low demand plants.'
-      });
-    }
-
     if (waterChangePercent < 10) {
       issues.push({
         title: 'Low water change volume',
@@ -1599,12 +1608,12 @@ const App: React.FC = () => {
       });
     }
 
-    if (recommendedProtocolPlan?.selection?.recommended_cycling_mode
-      && aquarium.engineSetup.user_preferences.cycling_mode_preference !== 'auto'
-      && aquarium.engineSetup.user_preferences.cycling_mode_preference !== recommendedProtocolPlan.selection.recommended_cycling_mode) {
+    const missingCycleTests = ['can_test_ammonia', 'can_test_nitrite', 'can_test_ph']
+      .filter((key) => !aquarium.engineSetup.testing[key]);
+    if (missingCycleTests.length > 0) {
       issues.push({
-        title: 'Cycling mode override',
-        detail: `Recommended mode is ${formatDisplayValue(recommendedProtocolPlan.selection.recommended_cycling_mode)}. Overriding can increase cycle instability risk.`
+        title: 'Essential cycling tests missing',
+        detail: 'Cycling safely requires ammonia, nitrite, and pH testing. Without them, it can be difficult or dangerous for livestock.'
       });
     }
 
@@ -1736,8 +1745,7 @@ const App: React.FC = () => {
       startDate: phaseStartKey,
       currentPhase: firstPhaseId,
       phaseStartDates: {
-        ...prev.phaseStartDates,
-        [firstPhaseId]: prev.phaseStartDates?.[firstPhaseId] || phaseStartKey
+        [firstPhaseId]: phaseStartKey
       }
     }));
     openManual();
@@ -2213,7 +2221,6 @@ const App: React.FC = () => {
           { id: 'tank', label: 'Tank' },
           { id: 'biology', label: 'Biology' },
           { id: 'water', label: 'Water' },
-          { id: 'preferences', label: 'Preferences' },
           { id: 'products', label: 'Products' },
           { id: 'protocol', label: 'Protocol' },
           { id: 'alerts', label: 'Alerts' },
@@ -2362,6 +2369,25 @@ const App: React.FC = () => {
                         <option value="aquasoil">Aquasoil</option>
                       </select>
                     </div>
+                    <div className="space-y-1.5">
+                      <label className={setupLabelClasses}>Water Change %</label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={getSetupDraftValue('weekly_wc_percent', aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target)}
+                        onChange={e => commitSetupDraftNumber('weekly_wc_percent', e.target.value, (value) => {
+                          updateEngineSetup(prev => ({
+                            ...prev,
+                            water_source_profile: {
+                              ...prev.water_source_profile,
+                              weekly_water_change_percent_target: value
+                            }
+                          }));
+                        })}
+                        onBlur={() => clearSetupDraft('weekly_wc_percent')}
+                        className={setupInputClasses}
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
@@ -2452,6 +2478,24 @@ const App: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
+                    <label className={setupLabelClasses}>Disinfectant</label>
+                    <select
+                      value={aquarium.engineSetup.water_source_profile.disinfectant}
+                      onChange={e => updateEngineSetup(prev => ({
+                        ...prev,
+                        water_source_profile: { ...prev.water_source_profile, disinfectant: e.target.value as EngineSetup['water_source_profile']['disinfectant'] }
+                      }))}
+                      className={`${setupInputClasses} appearance-none`}
+                    >
+                      <option value="unknown">Unknown</option>
+                      <option value="none">None</option>
+                      <option value="chlorine">Chlorine</option>
+                      <option value="chloramine">Chloramine</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
                     <label className={setupLabelClasses}>Tap GH (dGH)</label>
                     <input
                       type="text"
@@ -2467,8 +2511,6 @@ const App: React.FC = () => {
                       className={setupInputClasses}
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className={setupLabelClasses}>Tap KH (dKH)</label>
                     <input
@@ -2485,59 +2527,25 @@ const App: React.FC = () => {
                       className={setupInputClasses}
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className={setupLabelClasses}>Water Change %</label>
+                    <label className={setupLabelClasses}>Tap Ammonia (ppm)</label>
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={getSetupDraftValue('weekly_wc_percent', aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target)}
-                      onChange={e => commitSetupDraftNumber('weekly_wc_percent', e.target.value, (value) => {
+                      value={getSetupDraftValue('tap_ammonia_ppm', aquarium.engineSetup.water_source_profile.tap_ammonia_ppm)}
+                      onChange={e => commitSetupDraftNumber('tap_ammonia_ppm', e.target.value, (value) => {
                         updateEngineSetup(prev => ({
                           ...prev,
-                          water_source_profile: {
-                            ...prev.water_source_profile,
-                            weekly_water_change_percent_target: value
-                          }
+                          water_source_profile: { ...prev.water_source_profile, tap_ammonia_ppm: value }
                         }));
                       })}
-                      onBlur={() => clearSetupDraft('weekly_wc_percent')}
+                      onBlur={() => clearSetupDraft('tap_ammonia_ppm')}
                       className={setupInputClasses}
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className={setupLabelClasses}>Tap Ammonia (ppm)</label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={getSetupDraftValue('tap_ammonia_ppm', aquarium.engineSetup.water_source_profile.tap_ammonia_ppm)}
-                        onChange={e => commitSetupDraftNumber('tap_ammonia_ppm', e.target.value, (value) => {
-                          updateEngineSetup(prev => ({
-                            ...prev,
-                            water_source_profile: { ...prev.water_source_profile, tap_ammonia_ppm: value }
-                          }));
-                        })}
-                        onBlur={() => clearSetupDraft('tap_ammonia_ppm')}
-                        className={setupInputClasses}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className={setupLabelClasses}>Disinfectant</label>
-                      <select
-                        value={aquarium.engineSetup.water_source_profile.disinfectant}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          water_source_profile: { ...prev.water_source_profile, disinfectant: e.target.value as EngineSetup['water_source_profile']['disinfectant'] }
-                        }))}
-                        className={`${setupInputClasses} appearance-none`}
-                      >
-                        <option value="unknown">Unknown</option>
-                        <option value="none">None</option>
-                        <option value="chlorine">Chlorine</option>
-                        <option value="chloramine">Chloramine</option>
-                      </select>
-                    </div>
+                  <div />
                 </div>
 
                 <div className="pt-4 border-t border-slate-800 space-y-3">
@@ -2549,9 +2557,9 @@ const App: React.FC = () => {
                     {[
                       { id: 'temperature', label: 'Temp Target (°C)', key: 'temperature', step: 0.1 },
                       { id: 'pH', label: 'pH Target', key: 'pH', step: 0.1 },
-                      { id: 'nitrate', label: 'Nitrate Target (ppm)', key: 'nitrate', step: 1 },
                       { id: 'gh', label: 'GH Target (dGH)', key: 'gh', step: 0.1 },
-                      { id: 'kh', label: 'KH Target (dKH)', key: 'kh', step: 0.1 }
+                      { id: 'kh', label: 'KH Target (dKH)', key: 'kh', step: 0.1 },
+                      { id: 'nitrate', label: 'Nitrate Target (ppm)', key: 'nitrate', step: 1 }
                     ].map(target => (
                       <div key={target.id} className="space-y-1">
                         <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">{target.label}</label>
@@ -2572,34 +2580,6 @@ const App: React.FC = () => {
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Ammonia Max</label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={getSetupDraftValue('target_ammonia', aquarium.targets.ammonia)}
-                        onChange={e => commitSetupDraftNumber('target_ammonia', e.target.value, (value) => {
-                          updateTarget('ammonia', 'val', value);
-                        })}
-                        onBlur={() => clearSetupDraft('target_ammonia')}
-                        className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-600 uppercase mb-1 block ml-1">Nitrite Max</label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={getSetupDraftValue('target_nitrite', aquarium.targets.nitrite)}
-                        onChange={e => commitSetupDraftNumber('target_nitrite', e.target.value, (value) => {
-                          updateTarget('nitrite', 'val', value);
-                        })}
-                        onBlur={() => clearSetupDraft('target_nitrite')}
-                        className="w-full bg-slate-800/50 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -2809,100 +2789,6 @@ const App: React.FC = () => {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3" />
                 </div>
-              </div>
-            )}
-
-            {activeSetupSection === 'preferences' && (
-              <div className="space-y-5">
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-5">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Preferences</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className={setupLabelClasses}>Risk Tolerance</label>
-                      <select
-                        value={aquarium.engineSetup.user_preferences.risk_tolerance}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          user_preferences: { ...prev.user_preferences, risk_tolerance: e.target.value as EngineSetup['user_preferences']['risk_tolerance'] }
-                        }))}
-                        className={`${setupInputClasses} appearance-none`}
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className={setupLabelClasses}>Goal Profile</label>
-                      <select
-                        value={aquarium.engineSetup.user_preferences.goal_profile}
-                        onChange={e => updateEngineSetup(prev => ({
-                          ...prev,
-                          user_preferences: { ...prev.user_preferences, goal_profile: e.target.value as EngineSetup['user_preferences']['goal_profile'] }
-                        }))}
-                        className={`${setupInputClasses} appearance-none`}
-                      >
-                        <option value="stability_first">Stability First</option>
-                        <option value="growth_first">Growth First</option>
-                        <option value="balanced">Balanced</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Units</label>
-                        <select
-                          value={aquarium.engineSetup.user_preferences.units}
-                          onChange={e => updateEngineSetup(prev => ({
-                            ...prev,
-                            user_preferences: { ...prev.user_preferences, units: e.target.value as EngineSetup['user_preferences']['units'] }
-                          }))}
-                          className={`${setupInputClasses} appearance-none`}
-                        >
-                          <option value="metric">Metric</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Photoperiod Start</label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={getSetupDraftValue('photoperiod_hours_initial', aquarium.engineSetup.user_preferences.photoperiod_hours_initial)}
-                          onChange={e => commitSetupDraftNumber('photoperiod_hours_initial', e.target.value, (value) => {
-                            updateEngineSetup(prev => ({
-                              ...prev,
-                              user_preferences: { ...prev.user_preferences, photoperiod_hours_initial: value }
-                            }));
-                          })}
-                          onBlur={() => clearSetupDraft('photoperiod_hours_initial')}
-                          className={setupInputClasses}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Photoperiod Post</label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={getSetupDraftValue('photoperiod_hours_post_cycle', aquarium.engineSetup.user_preferences.photoperiod_hours_post_cycle)}
-                          onChange={e => commitSetupDraftNumber('photoperiod_hours_post_cycle', e.target.value, (value) => {
-                            updateEngineSetup(prev => ({
-                              ...prev,
-                              user_preferences: { ...prev.user_preferences, photoperiod_hours_post_cycle: value }
-                            }));
-                          })}
-                          onBlur={() => clearSetupDraft('photoperiod_hours_post_cycle')}
-                          className={setupInputClasses}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             )}
 
@@ -3274,25 +3160,6 @@ const App: React.FC = () => {
 
             {activeSetupSection === 'protocol' && (
               <div className="space-y-5">
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Protocol Summary</h3>
-                    <span className="text-[10px] text-slate-500">Engine-guided</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">Start the protocol to set your timeline and generate the checklist.</p>
-                  <button
-                    onClick={handleStartProtocol}
-                    disabled={!protocolPlan}
-                    className={`w-full py-3 rounded-2xl text-xs font-bold border transition-all ${
-                      protocolPlan
-                        ? 'bg-slate-100 text-slate-950 border-slate-100 active:scale-[0.98]'
-                        : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
-                    }`}
-                  >
-                    Start Protocol
-                  </button>
-                </div>
-
                 {aquarium.engineSetup.protocol_preferences.cycling && (
                   <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex items-center justify-between">
@@ -3306,9 +3173,8 @@ const App: React.FC = () => {
                             onClick={() => setInfoModal({
                               title: 'Cycling Recommendation',
                               content: [
-                                recommendedProtocolPlan?.selection?.method_motivation,
-                                recommendedProtocolPlan?.selection?.spectrum_motivation
-                              ].filter(Boolean).join('\n')
+                                recommendedProtocolPlan?.selection?.recommendation?.message
+                              ].filter(Boolean).join('\n') || 'No recommendation details available.'
                             })}
                             className="p-1 text-slate-500 hover:text-slate-300 transition-colors"
                             aria-label="Why this cycling recommendation"
@@ -3326,24 +3192,6 @@ const App: React.FC = () => {
                             : formatDisplayValue(aquarium.engineSetup.user_preferences.cycling_mode_preference)}
                         </span>
                       </div>
-                      {typeof protocolPlan?.selection?.risk_score_1_to_5 === 'number' && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1">
-                            <span className="text-slate-500">Risk</span>
-                            <button
-                              onClick={() => setInfoModal({
-                                title: 'Risk Score',
-                                content: protocolPlan?.selection?.risk_motivation || 'No specific risk guidance available.'
-                              })}
-                              className="p-1 text-slate-500 hover:text-slate-300 transition-colors"
-                              aria-label="Why this risk score"
-                            >
-                              <Info className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                          <span className="text-slate-200 font-semibold">{protocolPlan.selection.risk_score_1_to_5}/5</span>
-                        </div>
-                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -3364,52 +3212,19 @@ const App: React.FC = () => {
                       </select>
                     </div>
 
-                    {aquarium.engineSetup.user_preferences.cycling_mode_preference !== 'auto'
-                      && recommendedProtocolPlan?.selection?.recommended_cycling_mode
-                      && aquarium.engineSetup.user_preferences.cycling_mode_preference !== recommendedProtocolPlan.selection.recommended_cycling_mode && (
-                      <div className="bg-amber-950/30 border border-amber-800/40 p-3 rounded-2xl text-[10px] text-amber-300">
-                        Deviating from the recommended cycling mode can increase risk. Monitor ammonia and nitrite closely in the first weeks.
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {aquarium.engineSetup.protocol_preferences.maintenance && (
-                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Maintenance Protocol</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className={setupLabelClasses}>Water Change %</label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={getSetupDraftValue('weekly_wc_percent_protocol', aquarium.engineSetup.water_source_profile.weekly_water_change_percent_target)}
-                          onChange={e => commitSetupDraftNumber('weekly_wc_percent_protocol', e.target.value, (value) => {
-                            updateEngineSetup(prev => ({
-                              ...prev,
-                              water_source_profile: {
-                                ...prev.water_source_profile,
-                                weekly_water_change_percent_target: value
-                              }
-                            }));
-                          })}
-                          onBlur={() => clearSetupDraft('weekly_wc_percent_protocol')}
-                          className={setupInputClasses}
-                        />
-                      </div>
-                      <div className="flex items-end pb-3 text-[10px] text-slate-500">
-                        Targets stay aligned to your Water + Biology settings.
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {aquarium.engineSetup.protocol_preferences.alerts && (
-                  <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl space-y-3">
-                    <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Alerts Protocol</h4>
-                    <p className="text-[11px] text-slate-500">Notifications follow your Alerts setup.</p>
+                    {protocolPlan?.selection?.consequence?.message && (() => {
+                      const tone = getWaterfallTone(protocolPlan.selection.consequence.status);
+                      return (
+                        <div className={`border p-3 rounded-2xl text-[10px] space-y-1 ${tone.box}`}>
+                          {protocolPlan.selection.consequence.status && (
+                            <p className={`uppercase tracking-widest text-[9px] font-semibold ${tone.label}`}>
+                              {protocolPlan.selection.consequence.status}
+                            </p>
+                          )}
+                          <p className={`${tone.text}`}>{protocolPlan.selection.consequence.message}</p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -3426,6 +3241,18 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                <button
+                  onClick={handleStartProtocol}
+                  disabled={!protocolPlan}
+                  className={`w-full py-3 rounded-2xl text-xs font-bold border transition-all ${
+                    protocolPlan
+                      ? 'bg-slate-100 text-slate-950 border-slate-100 active:scale-[0.98]'
+                      : 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
+                  }`}
+                >
+                  Start Protocol
+                </button>
 
                 {!protocolPlan && (
                   <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl text-[11px] text-slate-500">

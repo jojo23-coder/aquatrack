@@ -9,12 +9,7 @@ const loadEnginePackage = async () => {
 
 const baseSetup = {
   user_preferences: {
-    cycling_mode_preference: 'auto',
-    risk_tolerance: 'low',
-    goal_profile: 'stability_first',
-    photoperiod_hours_initial: 6,
-    photoperiod_hours_post_cycle: 8,
-    units: 'metric'
+    cycling_mode_preference: 'auto'
   },
   tank_profile: {
     tank_volume_l_gross: 60,

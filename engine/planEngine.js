@@ -1,3 +1,5 @@
+import biologyCatalog from '../data/biologyCatalog.js';
+
 const DEFAULT_GENERATED_AT_ISO = '1970-01-01T00:00:00.000Z';
 
 const ROLE_CATEGORIES = {
@@ -20,6 +22,17 @@ const TRIGGER_ONLY_KEYWORDS = [
   { role: 'water_clarifier', match: /clarifier/i },
   { role: 'water_quality_support', match: /water quality/i }
 ];
+
+const plantSpeciesIndex = new Map();
+
+const registerPlantGroup = (group) => {
+  plantSpeciesIndex.set(group.display_name, group);
+  group.common_examples.forEach(name => {
+    plantSpeciesIndex.set(name, group);
+  });
+};
+
+biologyCatalog.plant_groups.forEach(registerPlantGroup);
 
 const formatNumber = (value, decimals = 2) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -89,45 +102,6 @@ const evaluateDecisionTable = (table, context) => {
     }
   }
   return result;
-};
-
-const evaluateOverridePolicy = (policy, context) => {
-  const conditions = policy?.requires_acknowledgement_when || [];
-  return conditions.some((expression) => evaluateExpression(expression, context));
-};
-
-const evaluateExpression = (expression, context) => {
-  if (!expression) return false;
-  return expression.split(' AND ').every((clause) => evaluateClause(clause.trim(), context));
-};
-
-const evaluateClause = (clause, context) => {
-  const match = clause.match(/^([a-zA-Z0-9_]+)\s*(==|!=|>=|<=|>|<)\s*('?[^']*'?|\d+(\.\d+)?)$/);
-  if (!match) return false;
-  const [, key, operator, rawValue] = match;
-  const left = context[key];
-  let right;
-  if (rawValue.startsWith("'") && rawValue.endsWith("'")) {
-    right = rawValue.slice(1, -1);
-  } else {
-    right = Number(rawValue);
-  }
-  switch (operator) {
-    case '==':
-      return left === right;
-    case '!=':
-      return left !== right;
-    case '>=':
-      return Number(left) >= right;
-    case '<=':
-      return Number(left) <= right;
-    case '>':
-      return Number(left) > right;
-    case '<':
-      return Number(left) < right;
-    default:
-      return false;
-  }
 };
 
 const selectProductsByRole = (productCatalog, selectedIds, notes) => {
@@ -261,8 +235,6 @@ const buildPlaceholderMap = (data) => {
 
   return {
     net_volume_l: formatNumber(derived.net_water_volume_l, 1),
-    photoperiod_hours_initial: formatNumber(derived.photoperiod_hours_initial, 1),
-    photoperiod_hours_post_cycle: formatNumber(derived.photoperiod_hours_post_cycle, 1),
     cycle_ammonia_target_range: formatRange(calculatorDefaults.cycle_ammonia_target_ppm_range, 1),
     cycle_ammonia_max: formatNumber(calculatorDefaults.cycle_ammonia_max_ppm, 1),
     ammonia_ml_range: formatRange(dosingReference.ammonia_ml_range, 2),
@@ -357,8 +329,6 @@ const buildTemplateContext = ({
     co2_enabled: normalizedSetup.tank_profile.co2.enabled,
     heater_installed: normalizedSetup.tank_profile.heater_installed,
     lighting_system: normalizedSetup.tank_profile.lighting_system,
-    photoperiod_hours_initial: normalizedSetup.user_preferences.photoperiod_hours_initial,
-    photoperiod_hours_post_cycle: normalizedSetup.user_preferences.photoperiod_hours_post_cycle,
     plants_present: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
     plants_present_in_plan: (normalizedSetup.biology_profile.plants?.species || []).length > 0,
     plant_demand_class: normalizedSetup.biology_profile.plants?.demand_class ?? 'auto',
@@ -749,9 +719,6 @@ const matchesCondition = (when, context) => {
   if (when.shrimp_planned !== undefined && context.shrimp_planned !== when.shrimp_planned) {
     return false;
   }
-  if (when.risk_tolerance_in && !matchValue(context.risk_tolerance, when.risk_tolerance_in)) {
-    return false;
-  }
   if (when.tap_kh_status_in && !matchValue(context.tap_kh_status, when.tap_kh_status_in)) {
     return false;
   }
@@ -862,38 +829,17 @@ const generatePhaseList = ({
 }) => {
   const normalizedSetup = normalizeSetup(setup, []);
   const shrimpPlanned = (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0;
-  const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none';
-
-  const lightingIntensityMap = {
-    basic: 'low',
-    dedicated: 'medium',
-    high_performance: 'high'
-  };
-  const userProfile = {
-    substrate_type: normalizedSetup.tank_profile.substrate.type,
-    plant_density: normalizedSetup.biology_profile.plants.density,
-    lighting_intensity: lightingIntensityMap[normalizedSetup.tank_profile.lighting_system] || 'medium',
-    co2_system: normalizedSetup.tank_profile.co2.enabled,
-    stocking_sensitivity: (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0
-      || normalizedSetup.biology_profile.livestock_traits.is_sensitive
-      ? 'sensitive'
-      : 'hardy',
-    product_ammonia: ammoniaAvailable,
-    user_priority: normalizedSetup.user_preferences.goal_profile === 'stability_first'
-      ? 'stability'
-      : normalizedSetup.user_preferences.goal_profile === 'growth_first'
-        ? 'growth'
-        : 'speed',
-    risk_tolerance: normalizedSetup.user_preferences.risk_tolerance
-  };
-  const cycleRecommendation = recommendCycleMethod(userProfile);
-  const recommendedCyclingMode = cycleRecommendation.recommended_method_id === 'I1'
-    ? 'fish_in'
-    : cycleRecommendation.recommended_method_id === 'PA1'
-      ? 'plant_assisted'
-      : cycleRecommendation.recommended_method_id === 'DS1'
-        ? 'dark_start'
-        : 'fishless_ammonia';
+  const enabledUserProducts = normalizedSetup.product_stack.user_products?.filter((product) => product.enabled) || [];
+  const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none'
+    || enabledUserProducts.some((product) => product.role === 'ammonia_source');
+  const waterfallRules = getWaterfallRules(enginePackage);
+  const waterfallContext = deriveWaterfallContext({ normalizedSetup, ammoniaAvailable });
+  const recommendationRule = selectRecommendationRule({
+    rules: waterfallRules,
+    context: waterfallContext
+  });
+  const recommendedCyclingMode = WATERFALL_METHOD_TO_CYCLING_MODE[recommendationRule?.conditions?.selected_method]
+    || 'fishless_ammonia';
   const userSelectedCyclingMode =
     normalizedSetup.user_preferences.cycling_mode_preference !== 'auto'
       ? normalizedSetup.user_preferences.cycling_mode_preference
@@ -1187,12 +1133,7 @@ const generatePhasesFromPlaylists = ({
 const normalizeSetup = (setup, notes) => {
   const normalized = {
     user_preferences: {
-      cycling_mode_preference: setup?.user_preferences?.cycling_mode_preference ?? 'auto',
-      risk_tolerance: setup?.user_preferences?.risk_tolerance ?? 'low',
-      goal_profile: setup?.user_preferences?.goal_profile ?? 'stability_first',
-      photoperiod_hours_initial: setup?.user_preferences?.photoperiod_hours_initial ?? 6,
-      photoperiod_hours_post_cycle: setup?.user_preferences?.photoperiod_hours_post_cycle ?? 8,
-      units: setup?.user_preferences?.units ?? 'metric'
+      cycling_mode_preference: setup?.user_preferences?.cycling_mode_preference ?? 'auto'
     },
     tank_profile: {
       tank_volume_l_gross: setup?.tank_profile?.tank_volume_l_gross ?? 0,
@@ -1284,132 +1225,167 @@ const normalizeSetup = (setup, notes) => {
   return normalized;
 };
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-
-const getMethodRiskDelta = (methodId, substrateType) => {
-  if (methodId === 'DS1' && substrateType === 'inert') return -0.5;
-  if (methodId === 'DS1') return -2;
-  if (methodId === 'PA1') return -1;
-  if (methodId === 'I1') return 2;
-  return 0;
+const WATERFALL_METHOD_TO_CYCLING_MODE = {
+  'FISHLESS': 'fishless_ammonia',
+  'DARK START': 'dark_start',
+  'FISH-IN': 'fish_in',
+  'SILENT CYCLE': 'plant_assisted'
 };
 
-const getMethodRiskReason = (methodId, substrateType) => {
-  if (methodId === 'DS1' && substrateType === 'inert') {
-    return 'With inert substrate, Dark Start offers only a small safety benefit and delays plant establishment.';
-  }
-  if (methodId === 'DS1') {
-    return 'The Dark Start isolates the ammonia spike in the dark, neutralizing algae risk and protecting livestock completely.';
-  }
-  if (methodId === 'PA1') {
-    return 'Heavy planting acts as a biological safety net, consuming ammonia and outcompeting algae.';
-  }
-  if (methodId === 'I1') {
-    return 'Cycling with fish introduces a significant risk of mortality or stress, even in stable tanks.';
-  }
-  return 'Standard Fishless cycling is safe for fish, though algae is still a risk if lights are too bright.';
+const CYCLING_MODE_TO_WATERFALL_METHOD = {
+  fishless_ammonia: 'FISHLESS',
+  dark_start: 'DARK START',
+  fish_in: 'FISH-IN',
+  plant_assisted: 'SILENT CYCLE'
 };
 
-const buildRiskMotivation = (baseRiskScore, methodId, substrateType) => {
-  const methodRiskDelta = getMethodRiskDelta(methodId, substrateType);
-  const finalRiskScore = clamp(baseRiskScore + methodRiskDelta, 1, 5);
-  const roundedFinalRisk = roundTo(finalRiskScore, 1);
-  const roundedBaseRisk = roundTo(baseRiskScore, 1);
-  const reason = getMethodRiskReason(methodId, substrateType);
-  if (methodRiskDelta !== 0) {
-    const directionText = methodRiskDelta > 0 ? 'increase' : 'reduce';
-    return {
-      finalRisk: roundedFinalRisk,
-      motivation: `Your setup has a Base Risk of ${roundedBaseRisk}/5. The selected method will ${directionText} the risk to ${roundedFinalRisk}/5. ${reason}`
-    };
+const WATERFALL_MATCH_KEYS = [
+  'substrate',
+  'light',
+  'co2',
+  'growth_speed',
+  'plant_light_demand',
+  'plant_density',
+  'ammonia_src'
+];
+
+const normalizeGrowthSpeed = (growthRate) => {
+  if (!growthRate) return null;
+  if (growthRate === 'fast') return 'Fast';
+  if (growthRate === 'medium' || growthRate === 'slow' || growthRate === 'slow_to_medium') {
+    return 'Slow';
   }
+  return null;
+};
+
+const derivePlantSignals = (plants) => {
+  const species = plants?.species || [];
+  const groups = species
+    .map(name => plantSpeciesIndex.get(name))
+    .filter(Boolean);
+  const lightDemandValues = new Set();
+  const growthSpeedValues = new Set();
+  groups.forEach((group) => {
+    const lightLevels = group.typical_requirements?.light || [];
+    lightLevels.forEach((level) => lightDemandValues.add(level));
+    const normalizedGrowth = normalizeGrowthSpeed(group.typical_requirements?.growth_rate);
+    if (normalizedGrowth) {
+      growthSpeedValues.add(normalizedGrowth);
+    }
+  });
+
+  const hasHighLight = lightDemandValues.has('high');
+  const hasMediumLight = lightDemandValues.has('medium');
+  const hasLowLight = lightDemandValues.has('low');
+  const fallbackDemand = plants?.demand_class || 'auto';
+  const plantLightDemand = hasHighLight
+    ? 'High'
+    : (hasMediumLight || hasLowLight)
+      ? 'Low'
+      : fallbackDemand === 'high'
+        ? 'High'
+        : fallbackDemand === 'medium' || fallbackDemand === 'low'
+          ? 'Low'
+          : 'ANY';
+
+  const hasFastGrowth = growthSpeedValues.has('Fast');
+  const hasSlowGrowth = growthSpeedValues.has('Slow');
+  const growthSpeed = hasFastGrowth
+    ? 'Fast'
+    : hasSlowGrowth
+      ? 'Slow'
+      : 'ANY';
+
+  return { plantLightDemand, growthSpeed };
+};
+
+const deriveWaterfallContext = ({ normalizedSetup, ammoniaAvailable }) => {
+  const substrate = normalizedSetup.tank_profile.substrate.type === 'aquasoil' ? 'Aquasoil' : 'Inert';
+  const light = normalizedSetup.tank_profile.lighting_system === 'high_performance' ? 'High_Performance' : 'Basic';
+  const co2 = normalizedSetup.tank_profile.co2.enabled ? 'TRUE' : 'FALSE';
+  const { plantLightDemand, growthSpeed } = derivePlantSignals(normalizedSetup.biology_profile.plants);
+  const plantDensity = normalizedSetup.biology_profile.plants.density === 'heavy' ? 'High' : 'Low';
+  const ammoniaSrc = ammoniaAvailable
+    ? 'Liquid'
+    : normalizedSetup.tank_profile.substrate.type === 'aquasoil'
+      ? 'Soil_Leech'
+      : 'None';
   return {
-    finalRisk: roundedFinalRisk,
-    motivation: `Your setup has a Base Risk of ${roundedBaseRisk}/5. The selected method keeps the Final Risk at ${roundedFinalRisk}/5. ${reason}`
+    substrate,
+    light,
+    co2,
+    growth_speed: growthSpeed,
+    plant_light_demand: plantLightDemand,
+    plant_density: plantDensity,
+    ammonia_src: ammoniaSrc
   };
 };
 
-const recommendCycleMethod = (profile) => {
-  const baseRiskScore = clamp(
-    1
-      + (profile.substrate_type === 'aquasoil' ? 2 : 0)
-      + (profile.lighting_intensity === 'high' ? 1 : 0)
-      + (profile.stocking_sensitivity === 'sensitive' ? 1 : 0)
-      + (profile.co2_system ? 0.5 : 0)
-      - (profile.plant_density === 'heavy' ? 1 : 0)
-      - (profile.lighting_intensity === 'low' ? 0.5 : 0),
-    1,
-    5
-  );
-  let spectrumMotivation = 'Your setup balances moderate growth with ecosystem stability.';
-  if (profile.substrate_type === 'inert' && profile.lighting_intensity === 'low') {
-    spectrumMotivation = 'Your setup prioritizes safety and low maintenance over rapid plant growth.';
-  } else if (profile.substrate_type === 'aquasoil' || profile.lighting_intensity === 'high' || profile.co2_system) {
-    spectrumMotivation = 'Your setup is a high energy system designed for rapid results, but it requires diligent testing to prevent crashes.';
-  }
+const getWaterfallRules = (enginePackage) => {
+  const table = enginePackage?.decision_tables?.['waterfall.table.json'];
+  if (!table?.rules?.length) return [];
+  return [...table.rules].sort((a, b) => (a.priority || 0) - (b.priority || 0));
+};
 
-  let recommendedMethod = 'F1';
-  let methodMotivation = 'Inert soil does not leech ammonia, so a dark start is unnecessary. You can cycle with lights on to establish roots.';
-  const modifiers = [];
+const matchWaterfallValue = (ruleValue, contextValue) => {
+  if (!ruleValue || ruleValue === 'ANY') return true;
+  if (!contextValue || contextValue === 'ANY') return false;
+  return ruleValue === contextValue;
+};
 
-  const silentCycleEligible = profile.plant_density === 'heavy'
-    && profile.co2_system
-    && profile.user_priority === 'growth';
-
-  if (!profile.product_ammonia) {
-    recommendedMethod = 'I1';
-    methodMotivation = 'Without liquid ammonia, we cannot feed the bacteria artificially. We must carefully cycle with fish.';
-    if (profile.stocking_sensitivity === 'sensitive') {
-      methodMotivation += ' Warning: Sensitive livestock are highly risky for fish-in cycling.';
-    }
-  } else if (profile.substrate_type === 'aquasoil') {
-    recommendedMethod = 'DS1';
-    methodMotivation = 'Aquasoil leeches ammonia. Dark Start is the safest way to cycle without algae.';
-    if (silentCycleEligible) {
-      recommendedMethod = 'PA1';
-      methodMotivation = 'Your heavy plant mass plus CO2 enables a Silent Cycle, allowing you to skip the Dark Start safely while prioritizing growth.';
-    } else if (profile.plant_density !== 'heavy' && profile.risk_tolerance === 'high') {
-      recommendedMethod = 'F1';
-      methodMotivation = "You have chosen the Hot Start. You are skipping the Dark Start to run lights immediately. This is risky: you must perform frequent water changes to remove leaching ammonia, or algae will take over.";
-      modifiers.push('maintenance:aggressive');
-    }
-  } else if (profile.substrate_type === 'inert') {
-    recommendedMethod = 'F1';
-    methodMotivation = 'Inert soil does not leech ammonia, so a Dark Start is unnecessary. You can cycle with lights on to establish roots.';
-    if (silentCycleEligible) {
-      recommendedMethod = 'PA1';
-      methodMotivation = "With heavy planting and CO2, you can perform a Silent Cycle where plants consume the ammonia directly to prioritize growth.";
+const matchesWaterfallRule = ({ rule, context, selectedMethod, ignoreSelectedMethod }) => {
+  if (!rule?.conditions) return false;
+  for (const key of WATERFALL_MATCH_KEYS) {
+    if (!matchWaterfallValue(rule.conditions[key], context[key])) {
+      return false;
     }
   }
+  if (ignoreSelectedMethod) return true;
+  return matchWaterfallValue(rule.conditions.selected_method, selectedMethod);
+};
 
-  if (profile.risk_tolerance === 'high' && profile.substrate_type === 'aquasoil' && recommendedMethod === 'F1') {
-    methodMotivation = `Because you indicated a High Risk Tolerance, we have enabled the lights on path for your aquasoil tank. Be prepared for extra maintenance. ${methodMotivation}`;
+const selectWaterfallRule = ({
+  rules,
+  context,
+  selectedMethod,
+  ignoreSelectedMethod = false,
+  skipAnySelectedMethod = false
+}) => {
+  for (const rule of rules) {
+    if (skipAnySelectedMethod && rule?.conditions?.selected_method === 'ANY') {
+      continue;
+    }
+    if (matchesWaterfallRule({ rule, context, selectedMethod, ignoreSelectedMethod })) {
+      return rule;
+    }
   }
+  return null;
+};
 
-  const { finalRisk, motivation: riskMotivation } = buildRiskMotivation(
-    baseRiskScore,
-    recommendedMethod,
-    profile.substrate_type
-  );
+const selectRecommendationRule = ({ rules, context }) => {
+  const allowedMethods = new Set([
+    'FISHLESS',
+    'DARK START',
+    'FISH-IN',
+    'SILENT CYCLE'
+  ]);
+  for (const rule of rules) {
+    const method = rule?.conditions?.selected_method;
+    if (!allowedMethods.has(method)) continue;
+    if (rule.status !== 'RECOMMENDED' && rule.status !== 'VALID') continue;
+    if (matchesWaterfallRule({ rule, context, ignoreSelectedMethod: true })) {
+      return rule;
+    }
+  }
+  return null;
+};
 
-  if (profile.lighting_intensity === 'high' && recommendedMethod !== 'DS1') {
-    modifiers.push('lighting:minimal');
-  }
-  if (profile.co2_system && recommendedMethod === 'DS1') {
-    modifiers.push('co2:off');
-  }
-  if (profile.co2_system && recommendedMethod === 'PA1') {
-    modifiers.push('co2:cautious');
-  }
-
+const formatWaterfallRule = (rule) => {
+  if (!rule) return null;
   return {
-    risk_score: finalRisk,
-    base_risk_score: roundTo(baseRiskScore, 1),
-    risk_motivation: riskMotivation,
-    spectrum_motivation: spectrumMotivation,
-    recommended_method_id: recommendedMethod,
-    method_motivation: methodMotivation,
-    modifiers: Array.from(new Set(modifiers))
+    status: rule.status,
+    message: rule.message,
+    rule_name: rule.rule_name
   };
 };
 
@@ -1454,72 +1430,26 @@ export const generatePlan = ({
   const tapKhStatus = tapKh === null || tapKh < 2 ? 'unknown_or_low' : 'ok';
   const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none'
     || enabledUserProducts.some((product) => product.role === 'ammonia_source');
-
-  const lightingIntensityMap = {
-    basic: 'low',
-    dedicated: 'medium',
-    high_performance: 'high'
-  };
-  const userProfile = {
-    substrate_type: normalizedSetup.tank_profile.substrate.type,
-    plant_density: normalizedSetup.biology_profile.plants.density,
-    lighting_intensity: lightingIntensityMap[normalizedSetup.tank_profile.lighting_system] || 'medium',
-    co2_system: normalizedSetup.tank_profile.co2.enabled,
-    stocking_sensitivity: (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0
-      || normalizedSetup.biology_profile.livestock_traits.is_sensitive
-      ? 'sensitive'
-      : 'hardy',
-    product_ammonia: normalizedSetup.product_stack.ammonia_source.type !== 'none'
-      || enabledUserProducts.some((product) => product.role === 'ammonia_source'),
-    user_priority: normalizedSetup.user_preferences.goal_profile === 'stability_first'
-      ? 'stability'
-      : normalizedSetup.user_preferences.goal_profile === 'growth_first'
-        ? 'growth'
-        : 'speed',
-    risk_tolerance: normalizedSetup.user_preferences.risk_tolerance
-  };
-  const cycleRecommendation = recommendCycleMethod(userProfile);
-  const recommendedCyclingMode = cycleRecommendation.recommended_method_id === 'I1'
-    ? 'fish_in'
-    : cycleRecommendation.recommended_method_id === 'PA1'
-      ? 'plant_assisted'
-      : cycleRecommendation.recommended_method_id === 'DS1'
-        ? 'dark_start'
-        : 'fishless_ammonia';
+  const waterfallRules = getWaterfallRules(enginePackage);
+  const waterfallContext = deriveWaterfallContext({ normalizedSetup, ammoniaAvailable });
+  const recommendationRule = selectRecommendationRule({
+    rules: waterfallRules,
+    context: waterfallContext
+  });
+  const recommendedCyclingMode = WATERFALL_METHOD_TO_CYCLING_MODE[recommendationRule?.conditions?.selected_method]
+    || 'fishless_ammonia';
   const userSelectedCyclingMode =
     normalizedSetup.user_preferences.cycling_mode_preference !== 'auto'
       ? normalizedSetup.user_preferences.cycling_mode_preference
       : recommendedCyclingMode;
-  const selectedMethodId =
-    userSelectedCyclingMode === 'fish_in'
-      ? 'I1'
-      : userSelectedCyclingMode === 'plant_assisted'
-        ? 'PA1'
-        : userSelectedCyclingMode === 'dark_start'
-          ? 'DS1'
-          : 'F1';
-  const selectedRisk = buildRiskMotivation(
-    cycleRecommendation.base_risk_score,
-    selectedMethodId,
-    normalizedSetup.tank_profile.substrate.type
-  );
-
-  const overrideContext = {
-    user_selected_cycling_mode: userSelectedCyclingMode,
-    recommended_cycling_mode: recommendedCyclingMode,
-    risk_score_1_to_5: selectedRisk.finalRisk
-  };
-  const requiresOverrideAcknowledgement = evaluateOverridePolicy(
-    enginePackage.decision_tables['override.policy.json'],
-    overrideContext
-  );
-
-  if (requiresOverrideAcknowledgement && !overrideAcknowledged) {
-    notes.push({
-      type: 'blocking',
-      message: enginePackage.decision_tables['override.policy.json'].acknowledgement_text
-    });
-  }
+  const selectedMethod = CYCLING_MODE_TO_WATERFALL_METHOD[userSelectedCyclingMode] || 'FISHLESS';
+  const consequenceRule = selectWaterfallRule({
+    rules: waterfallRules,
+    context: waterfallContext,
+    selectedMethod
+  });
+  const recommendationResult = formatWaterfallRule(recommendationRule);
+  const consequenceResult = formatWaterfallRule(consequenceRule);
 
   const mapUserTargets = (targets) => {
     if (!targets) return null;
@@ -1674,9 +1604,7 @@ export const generatePlan = ({
     derived: {
       net_water_volume_l: derivedNetVolume,
       weekly_water_change_percent_range: weeklyWcPercentRange,
-      weekly_water_change_volume_l_range: weeklyWcVolumeRange,
-      photoperiod_hours_initial: normalizedSetup.user_preferences.photoperiod_hours_initial,
-      photoperiod_hours_post_cycle: normalizedSetup.user_preferences.photoperiod_hours_post_cycle
+      weekly_water_change_volume_l_range: weeklyWcVolumeRange
     },
     dosingReference,
     targets,
@@ -1697,7 +1625,6 @@ export const generatePlan = ({
     shrimp_planned: shrimpPlanned,
     livestock_sensitive: normalizedSetup.biology_profile.livestock_traits.is_sensitive,
     livestock_diggers: normalizedSetup.biology_profile.livestock_traits.has_diggers,
-    risk_tolerance: normalizedSetup.user_preferences.risk_tolerance,
     tap_kh_status: tapKhStatus,
     tap_ammonia_ppm: normalizedSetup.water_source_profile.tap_ammonia_ppm,
     disinfectant: normalizedSetup.water_source_profile.disinfectant,
@@ -1752,24 +1679,13 @@ export const generatePlan = ({
     selection: {
       recommended_cycling_mode: recommendedCyclingMode,
       user_selected_cycling_mode: userSelectedCyclingMode,
-      risk_score_1_to_5: selectedRisk.finalRisk,
-      reason_codes: [],
-      spectrum_motivation: cycleRecommendation.spectrum_motivation,
-      risk_motivation: selectedRisk.motivation,
-      method_motivation: cycleRecommendation.method_motivation,
-      recommended_method_id: cycleRecommendation.recommended_method_id,
-      recommended_modifiers: cycleRecommendation.modifiers,
-      base_risk_score: cycleRecommendation.base_risk_score,
-      requires_override_acknowledgement: requiresOverrideAcknowledgement,
-      override_acknowledged: overrideAcknowledged,
-      blocked: requiresOverrideAcknowledgement && !overrideAcknowledged
+      recommendation: recommendationResult,
+      consequence: consequenceResult
     },
     derived: {
       net_water_volume_l: roundTo(derivedNetVolume, 2),
       weekly_water_change_percent_range: weeklyWcPercentRange,
-      weekly_water_change_volume_l_range: roundTo(averageRange(weeklyWcVolumeRange), 2),
-      photoperiod_hours_initial: normalizedSetup.user_preferences.photoperiod_hours_initial,
-      photoperiod_hours_post_cycle: normalizedSetup.user_preferences.photoperiod_hours_post_cycle
+      weekly_water_change_volume_l_range: roundTo(averageRange(weeklyWcVolumeRange), 2)
     },
     global_reference: {
       targets,
