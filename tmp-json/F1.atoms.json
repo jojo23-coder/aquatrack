@@ -1,0 +1,283 @@
+{
+  "atom_library": {
+    "i_intro_fishless_F1_setup": {
+      "type": "instruction",
+      "text_template": "You are performing a traditional Fishless Cycle. You will dose ammonia to build the filter, but with lights (and plants) running."
+    },
+    "i_intro_duration": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "1": "This phase is short and focused. Plan for about 1 day.",
+        "3": "This phase is short and focused. Plan for about 3 days.",
+        "7": "Plan for about 7 days for this phase.",
+        "14": "Plan for about 14 days for this phase.",
+        "28": "Plan for about 28 days for this phase.",
+        "indefinite": "This phase has no fixed end date. Continue until you choose to move on."
+      },
+      "args_schema": {
+        "days": [
+          "1",
+          "3",
+          "7",
+          "14",
+          "28",
+          "indefinite"
+        ]
+      }
+    },
+    "i_hard_prep": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "stone": "Rinse your stones to remove loose dust before placing them.",
+        "wood": "Soak your driftwood, glue it to rocks, or weigh it down. Dry wood floats!",
+        "mixed": "Rinse your stones to remove loose dust before placing them. Soak your driftwood, glue it to rocks, or weigh it down. Dry wood floats!"
+      },
+      "args_schema": {
+        "type": [
+          "stone",
+          "wood",
+          "mixed"
+        ]
+      }
+    },
+    "i_hard_composition_tips": {
+      "type": "instruction",
+      "text_template": "Hardscape tip: use odd numbers and a strong focal point (rule of thirds). Keep the front open for depth."
+    },
+    "i_plant_dense": {
+      "type": "instruction",
+      "text_template": "Plant as densely as possible. The more plant mass you have, the safer your tank will be."
+    },
+    "i_plants_prep": {
+      "type": "instruction",
+      "text_template": [
+        "Remove pots and rock wool from plants, then gently rinse the roots.",
+        "Keep a spray bottle handy and mist plants during setup so they don't dry out."
+      ]
+    },
+    "i_water_fill_prep_bag_or_plate": {
+      "type": "instruction",
+      "text_template": "Time to fill! Place a plastic bag or plate on the substrate and pour water onto **that** to prevent clouding."
+    },
+    "i_water_chlorine_treat_full_volume": {
+      "type": "instruction",
+      "text_template": "Since you have chlorine/chloramine, we must treat the full tank volume. If using a hose, add the conditioner to the tank *before* filling."
+    },
+    "i_equip_filter_on": {
+      "type": "instruction",
+      "text_template": "Run the filter 24/7. Oxygen is vital for the bacteria."
+    },
+    "i_cycle_algae_light_warning": {
+      "type": "instruction",
+      "text_template": "Warning: High Ammonia combined with strong light often triggers algae. If you don't have many plants yet, keep your lighting duration short (6 hours max).",
+      "conditions": []
+    },
+    "i_co2_target": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "dark_green": "Start CO2 (~{{doses.co2.bps_dark_green}} BPS). Check drop checker after 2-3 hours. Aim for **Dark Green** (Safe).",
+        "yellow_green": "Since there are no fish, you can run CO2 slightly higher than normal (~{{doses.co2.bps_lime_green}} BPS) target **Yellow-Green** color on the drop checker. This maximizes plant growth and suppresses algae during the ammonia spikes.",
+        "lime_green": "CO2 safety check before stocking: ensure the drop checker is **Lime Green**, not Yellow. If it is Yellow, dial it back and wait 2 hours before adding fish."
+      },
+      "args_schema": {
+        "target": [
+          "dark_green",
+          "yellow_green",
+          "lime_green"
+        ]
+      }
+    },
+    "i_cycle_ammonia_advice": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "inert:true": "You will begin manual ammonia dosing to start the cycle.",
+        "inert:false": "Inert substrate requires an ammonia source to begin the cycle. Since you have selected not to use a source of ammonia, your best bet is to ghost feed the tank, to make decaying food act as an ammonia source.",
+        "aquasoil:any": "Since you're using aquasoil that's designed to leach ammonia for the first few weeks when it's submerged, you have an automatic ammonia dispenser. If Ammonia rises above >5 ppm, do a 50% water change."
+      },
+      "args_schema": {
+        "substrate": [
+          "inert",
+          "aquasoil"
+        ],
+        "ammonia_selected": [
+          true,
+          false
+        ]
+      }
+    },
+    "e_water_cloudy_bloom": {
+      "type": "expected_behaviour",
+      "text_template": "Cloudy or milky water is normal early on. It can be substrate dust, microbubbles, or a bacterial bloom. Unless we say otherwise, don't chase it with big water changes.",
+      "conditions": []
+    },
+    "e_hardscape_expected": {
+      "type": "expected_behaviour",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "wood": "Tea-colored water from tannins and white fuzzy fungus on driftwood are both normal early on. They are harmless and fade over time.",
+        "mixed": [
+          "Tea-colored water from tannins and white fuzzy fungus on driftwood are both normal early on. They are harmless and fade over time.",
+          "Light dust from stone can cause some early cloudiness. It clears with time."
+        ],
+        "stone": "Light dust from stone can cause some early cloudiness. It clears with time."
+      },
+      "args_schema": {
+        "type": [
+          "wood",
+          "mixed",
+          "stone"
+        ]
+      }
+    },
+    "t_sub_prep": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "inert": "Rinse your sand/gravel in a bucket until the water runs clear. This prevents permanent cloudiness.",
+        "aquasoil": "Handle your Aquasoil gently. Do NOT rinse it. Rinsing active soil breaks down the nutrient pellets and turns your tank into a mud bath."
+      },
+      "args_schema": {
+        "substrate": [
+          "inert",
+          "aquasoil"
+        ]
+      }
+    },
+    "t_sub_place_slope": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Pour and slope the substrate (higher in the back, lower in the front) to create depth."
+    },
+    "t_hard_finalize_layout": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Finalize your hardscape layout. Make sure it is stable and won't shift during planting."
+    },
+    "t_plant_epiphytes": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Epiphytes on hardscape. Glue or tie them; never bury the rhizome."
+    },
+    "t_plant_stems": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Plant your Stems."
+    },
+    "t_plant_root_tabs": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Insert root tabs deep into the substrate beneath your heavy root feeders."
+    },
+    "t_water_fill_dose": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "conditioner": "Add {{doses.detoxifier_conditioner.fullfill_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}}.",
+        "conditioner_generic": "Add a water conditioner to treat the full tank volume.",
+        "gh": "Dissolve {{doses.gh_remineralizer.fullfill_dose_amount}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in bucket before filling.",
+        "ghkh": "Dissolve {{doses.gh_kh_remineralizer.fullfill_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} in bucket before filling.",
+        "kh": "Dissolve {{doses.kh_buffer.fullfill_dose_amount}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in bucket before filling."
+      },
+      "args_schema": {
+        "type": [
+          "conditioner",
+          "gh",
+          "ghkh",
+          "kh"
+        ]
+      }
+    },
+    "t_water_fill_tank": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Fill the tank with water.",
+      "conditions": []
+    },
+    "t_equip_filter_turn_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on the filter and confirm steady flow."
+    },
+    "t_equip_heater_set_target": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Set heater to {{targets.temperature_target_c}}°C."
+    },
+    "t_light_start": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "basic:any": "Start light at 6 hours.",
+        "dedicated:any": "Start light at 60% intensity for 6 hours.",
+        "high_performance:low": "Start light at 30% intensity for 6 hours.",
+        "high_performance:high": "Start light at 50% intensity for 6 hours."
+      },
+      "args_schema": {
+        "light_type": [
+          "basic",
+          "dedicated",
+          "high_performance"
+        ],
+        "plant_demand": [
+          "low",
+          "high",
+          "any"
+        ]
+      }
+    },
+    "t_co2_turn_on": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Turn on CO2 system."
+    },
+    "t_cycle_bacteria_dose_once": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{products.bacteria_starter.display_name}} (Check label for 'New Tank' dose)."
+    },
+    "t_cycle_ammonia_dose_initial": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}."
+    },
+    "t_chem_test": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "default": "Measure and log {{parameter_label}}.",
+        "after_24h": "Measure and log {{parameter_label}} after 24 hours."
+      },
+      "args_schema": {
+        "parameter": [
+          "ammonia",
+          "nitrite",
+          "nitrate",
+          "ph",
+          "gh",
+          "kh"
+        ],
+        "cadence": [
+          "one_time",
+          "daily",
+          "weekly",
+          "interval",
+          "per_event"
+        ],
+        "variant": [
+          "default",
+          "after_24h"
+        ],
+        "every_days": "number"
+      },
+      "conditions": []
+    }
+  }
+}

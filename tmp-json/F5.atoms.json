@@ -1,0 +1,154 @@
+{
+  "atom_library": {
+    "i_intro_fishless_F5_transition": {
+      "type": "instruction",
+      "text_template": "Your Fishless Cycle is complete! The bacteria can process ammonia and nitrite instantly. It is time to make the tank safe for fish."
+    },
+    "i_intro_duration": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "1": "This phase is short and focused. Plan for about 1 day.",
+        "3": "This phase is short and focused. Plan for about 3 days.",
+        "7": "Plan for about 7 days for this phase.",
+        "14": "Plan for about 14 days for this phase.",
+        "28": "Plan for about 28 days for this phase.",
+        "indefinite": "This phase has no fixed end date. Continue until you choose to move on."
+      },
+      "args_schema": {
+        "days": [
+          "1",
+          "3",
+          "7",
+          "14",
+          "28",
+          "indefinite"
+        ]
+      }
+    },
+    "i_maint_wc_reset": {
+      "type": "instruction",
+      "text_template": "Perform a massive **70–80% Water Change**. \n\n**Why?** Your Nitrate levels are likely very high from the cycling process. We need to 'reset' the water to safe levels (Nitrate < 30ppm) before the fish arrive."
+    },
+    "i_water_fill_prep_bag_or_plate": {
+      "type": "instruction",
+      "text_template": "Time to fill! Place a plastic bag or plate on the substrate and pour water onto **that** to prevent clouding."
+    },
+    "i_water_chlorine_treat_full_volume": {
+      "type": "instruction",
+      "text_template": "Since you have chlorine/chloramine, we must treat the full tank volume. If using a hose, add the conditioner to the tank *before* filling."
+    },
+    "i_co2_adjust_safe_before_stocking": {
+      "type": "instruction",
+      "text_template": "IMPORTANT: Dial back your CO2 injection. We need the drop checker to read a solid **Lime Green** (not yellow) before the fish arrive to ensure they have enough oxygen."
+    },
+    "i_stock_add_in_batches_weekly": {
+      "type": "instruction",
+      "text_template": "Add fish in small batches (e.g., 6–8 at a time) and wait one week between groups. Adding everyone at once creates a massive ammonia spike that your filter cannot process instantly. Gradual stocking keeps your water safe."
+    },
+    "i_stock_acclimation": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "fish": "To acclimate fish, turn off the light and float the sealed bag for 15 minutes to equalize temperature. Then, open the bag (or move fish to a bucket) and add a small cup of tank water every 5 minutes for 20 minutes. Finally, **net the fish out** into the tank. Never pour the store water into your aquarium.",
+        "shrimp": "Shrimp require **drip acclimation**. Place them in a container below the tank. Siphon tank water down using airline tubing, tying a knot in the tube to restrict flow to 1-2 drops per second. Let this run for 45-60 minutes (until the water volume triples) before netting them in."
+      },
+      "args_schema": {
+        "type": [
+          "fish",
+          "shrimp"
+        ]
+      }
+    },
+    "t_water_fill_dose": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "conditioner": "Add {{doses.detoxifier_conditioner.fullfill_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}}.",
+        "conditioner_generic": "Add a water conditioner to treat the full tank volume.",
+        "gh": "Dissolve {{doses.gh_remineralizer.fullfill_dose_amount}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in bucket before filling.",
+        "ghkh": "Dissolve {{doses.gh_kh_remineralizer.fullfill_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} in bucket before filling.",
+        "kh": "Dissolve {{doses.kh_buffer.fullfill_dose_amount}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in bucket before filling."
+      },
+      "args_schema": {
+        "type": [
+          "conditioner",
+          "gh",
+          "ghkh",
+          "kh"
+        ]
+      }
+    },
+    "t_maint_wc_reset": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Drain and refill 70–80% of the tank water."
+    },
+    "t_co2_adjust_safe": {
+      "type": "task",
+      "cadence": "one_time",
+      "text_template": "Dial back CO2 to a solid Lime Green on the drop checker."
+    },
+    "t_light_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "basic:any": "Add 30 minutes to your photoperiod.",
+        "dedicated:any": "Increase intensity by 10% per week first. After that, add 30 minutes of duration.",
+        "high_performance:low": "Increase intensity toward 60% first, then add 30 minutes of duration.",
+        "high_performance:high": "Increase intensity toward 100% first, then add 30 minutes of duration."
+      },
+      "args_schema": {
+        "light_type": [
+          "basic",
+          "dedicated",
+          "high_performance"
+        ],
+        "plant_demand": [
+          "low",
+          "high",
+          "any"
+        ]
+      }
+    },
+    "t_fert_dose": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "half": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
+        "full": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth)."
+      },
+      "args_schema": {
+        "cadence": [
+          "one_time",
+          "weekly"
+        ],
+        "dose": [
+          "half",
+          "full"
+        ]
+      }
+    },
+    "t_stock_acclimate": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "fish": "Acclimate fish before adding to tank.",
+        "shrimp": "Drip acclimate shrimp before adding them to tank."
+      },
+      "args_schema": {
+        "type": [
+          "fish",
+          "shrimp"
+        ],
+        "due_offset_days": [
+          3
+        ]
+      }
+    }
+  }
+}

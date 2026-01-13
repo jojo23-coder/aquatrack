@@ -9,9 +9,10 @@ import biologyCatalog from './data/biologyCatalog';
 import enginePackage from './data/aquatrack_engine.package.json';
 import productCatalog from './data/product.catalog.instance.json';
 import protocolRuleset from './data/protocol.ruleset.json';
-import atomLibrary from './data/atom-library.json';
-import phasePlaylists from './data/phase-playlists.lookup.json';
+import atomLibrary from './data/atom-library.source.json';
+import phasePlaylistsDsl from './data/phase-playlists.readable.txt?raw';
 import { generatePlan, generatePhasesFromPlaylists } from './engine/planEngine';
+import { buildPhasePlaylistsFromDsl } from './engine/playlistDslRuntime';
 import { formatDateKeyForDisplay, formatZonedTimestamp, getDateKeyFromTimestamp, getDefaultTimeZone, getTaskSchedule, getZonedDateKey, normalizeDateKey } from './services/cadence';
 
 type Tab = 'dashboard' | 'logs' | 'roadmap' | 'settings';
@@ -761,6 +762,15 @@ const App: React.FC = () => {
     }
   }, [aquarium.engineSetup, aquarium.targets]);
 
+  const phasePlaylists = useMemo(() => {
+    try {
+      return buildPhasePlaylistsFromDsl(phasePlaylistsDsl);
+    } catch (error) {
+      console.error('Failed to parse playlist DSL', error);
+      return [];
+    }
+  }, []);
+
   const playlistPlan = useMemo(() => {
     try {
       return generatePhasesFromPlaylists({
@@ -775,7 +785,7 @@ const App: React.FC = () => {
       console.error('Failed to generate playlist phases', error);
       return null;
     }
-  }, [aquarium.engineSetup, aquarium.targets]);
+  }, [aquarium.engineSetup, aquarium.targets, phasePlaylists]);
 
   const manualPhases = useMemo(() => {
     if (playlistPlan?.phases?.length) {

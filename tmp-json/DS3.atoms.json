@@ -1,0 +1,111 @@
+{
+  "atom_library": {
+    "i_intro_duration": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "1": "This phase is short and focused. Plan for about 1 day.",
+        "3": "This phase is short and focused. Plan for about 3 days.",
+        "7": "Plan for about 7 days for this phase.",
+        "14": "Plan for about 14 days for this phase.",
+        "28": "Plan for about 28 days for this phase.",
+        "indefinite": "This phase has no fixed end date. Continue until you choose to move on."
+      },
+      "args_schema": {
+        "days": [
+          "1",
+          "3",
+          "7",
+          "14",
+          "28",
+          "indefinite"
+        ]
+      }
+    },
+    "i_cycle_nitrite_spike_warning": {
+      "type": "instruction",
+      "text_template": "Nitrite is now spiking. This is the longest part of the cycle. Do NOT add livestock yet."
+    },
+    "i_maint_filter_do_not_clean_early": {
+      "type": "instruction",
+      "text_template": "Do NOT clean your filter yet. The brown sludge building up inside is the bacterial colony we are trying to grow."
+    },
+    "i_cycle_nitrite_clear_goal": {
+      "type": "instruction",
+      "text_template": "The Goal: We are waiting for the day when you test and see 0 ppm Ammonia AND 0 ppm Nitrite. When that happens, your bacteria are ready for the final 24-hour challenge."
+    },
+    "i_cycle_ph_crash_warning": {
+      "type": "instruction",
+      "text_template": "Cycle stall warning: The cycling process produces acid. If pH drops below 6.5, the bacteria will 'fall asleep' and the cycle will stall. If it's low, perform a 50% water change to restore minerals."
+    },
+    "i_chem_nitrate_progress_check": {
+      "type": "instruction",
+      "text_template": "Check Nitrates once a week. If Nitrates are rising, it confirms your bacteria are successfully converting the toxic Nitrite."
+    },
+    "i_light_dark_rule": {
+      "type": "instruction",
+      "text_template": "Verify that all light sources are disabled. Light is the enemy of the Dark Start."
+    },
+    "e_cycle_purple_nitrite": {
+      "type": "expected_behaviour",
+      "text_template": "Your Nitrite test will likely turn bright purple immediately and stay off the charts for weeks. This is not a stall; it is just a very high peak. Keep going."
+    },
+    "e_cycle_ammonia_hunger": {
+      "type": "expected_behaviour",
+      "text_template": "Your Ammonia will now drop to 0 ppm very quickly (often within 24 hours). This is great. The first half of your filter is complete. You must keep feeding it while waiting for the Nitrite to drop."
+    },
+    "e_bio_detritus_buildup": {
+      "type": "expected_behaviour",
+      "text_template": "You may see brown fluff or debris settling on the bottom. This is dead bacterial biomass and is a normal byproduct of a heavy cycle. We will vacuum it out later."
+    },
+    "e_cycle_lag_phase": {
+      "type": "expected_behaviour",
+      "text_template": "The 'Lag Phase': It is perfectly normal to see NO movement in Ammonia or Nitrite for the first 7-14 days. The bacteria are multiplying invisibly. Do not add more bacteria or change water; just wait."
+    },
+    "t_chem_test": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "default": "Measure and log {{parameter_label}}.",
+        "after_24h": "Measure and log {{parameter_label}} after 24 hours."
+      },
+      "args_schema": {
+        "parameter": [
+          "ammonia",
+          "nitrite",
+          "nitrate",
+          "ph",
+          "gh",
+          "kh"
+        ],
+        "cadence": [
+          "one_time",
+          "daily",
+          "weekly",
+          "interval",
+          "per_event"
+        ],
+        "variant": [
+          "default",
+          "after_24h"
+        ],
+        "every_days": "number"
+      },
+      "conditions": []
+    },
+    "t_cycle_ammonia_dose_when_zero": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Only if Ammonia is 0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}."
+    },
+    "t_water_top_off_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Top off evaporated water with freshwater.",
+      "conditions": []
+    }
+  }
+}

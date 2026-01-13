@@ -1,0 +1,215 @@
+{
+  "atom_library": {
+    "i_intro_silent_PA3_stocking": {
+      "type": "instruction",
+      "text_template": "If your tests show 0 ppm Ammonia and Nitrite, and your plants are showing new growth, the tank is ready for the first inhabitants."
+    },
+    "i_intro_duration": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "1": "This phase is short and focused. Plan for about 1 day.",
+        "3": "This phase is short and focused. Plan for about 3 days.",
+        "7": "Plan for about 7 days for this phase.",
+        "14": "Plan for about 14 days for this phase.",
+        "28": "Plan for about 28 days for this phase.",
+        "indefinite": "This phase has no fixed end date. Continue until you choose to move on."
+      },
+      "args_schema": {
+        "days": [
+          "1",
+          "3",
+          "7",
+          "14",
+          "28",
+          "indefinite"
+        ]
+      }
+    },
+    "i_stock_cleanup_crew_start_light": {
+      "type": "instruction",
+      "text_template": "We start with a 'Cleaning Crew' (Snails/Shrimp/Oto). Stock light!"
+    },
+    "i_stock_add_in_batches_weekly": {
+      "type": "instruction",
+      "text_template": "Add fish in small batches (e.g., 6–8 at a time) and wait one week between groups. Adding everyone at once creates a massive ammonia spike that your filter cannot process instantly. Gradual stocking keeps your water safe."
+    },
+    "i_co2_target": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "dark_green": "Start CO2 (~{{doses.co2.bps_dark_green}} BPS). Check drop checker after 2-3 hours. Aim for **Dark Green** (Safe).",
+        "yellow_green": "Since there are no fish, you can run CO2 slightly higher than normal (~{{doses.co2.bps_lime_green}} BPS) target **Yellow-Green** color on the drop checker. This maximizes plant growth and suppresses algae during the ammonia spikes.",
+        "lime_green": "CO2 safety check before stocking: ensure the drop checker is **Lime Green**, not Yellow. If it is Yellow, dial it back and wait 2 hours before adding fish."
+      },
+      "args_schema": {
+        "target": [
+          "dark_green",
+          "yellow_green",
+          "lime_green"
+        ]
+      }
+    },
+    "i_stock_feed_guidance": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "routine": "Feed lightly — **every other day**. New fish will beg whenever they see you; ignore them. One tiny pinch per fish. If food hits the bottom, you fed too much.",
+        "long_haul": "Feeding Rule: **Every Other Day.** \n\n**Is this permanent?** \nYes! Adult community fish thrive on this schedule. It prevents obesity and keeps your water crystal clear. \n\n**Exceptions:** \nIf you have **Baby Fish** or **Nano species** (like Pea Puffers), you must feed daily. For everyone else, skip the guilt and skip the day."
+      },
+      "args_schema": {
+        "phase": [
+          "routine",
+          "long_haul"
+        ]
+      }
+    },
+    "i_stock_acclimation": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "fish": "To acclimate fish, turn off the light and float the sealed bag for 15 minutes to equalize temperature. Then, open the bag (or move fish to a bucket) and add a small cup of tank water every 5 minutes for 20 minutes. Finally, **net the fish out** into the tank. Never pour the store water into your aquarium.",
+        "shrimp": "Shrimp require **drip acclimation**. Place them in a container below the tank. Siphon tank water down using airline tubing, tying a knot in the tube to restrict flow to 1-2 drops per second. Let this run for 45-60 minutes (until the water volume triples) before netting them in."
+      },
+      "args_schema": {
+        "type": [
+          "fish",
+          "shrimp"
+        ]
+      }
+    },
+    "e_stock_expected": {
+      "type": "expected_behaviour",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "fish": [
+          "New fish often hide, go pale, glass-surf, or huddle tightly for a day or two. That's normal settling-in behavior; give them time and keep the lights calm.",
+          "Corys/loaches may dash to the surface and back. That's normal behavior, not a sign of suffocation."
+        ],
+        "shrimp": [
+          "New shrimp may hide, look pale, or 'play dead' for a few minutes after release. That's normal shock; they usually perk up once settled.",
+          "Panic check: You might see a white, transparent ghost of a shrimp on the bottom. This is a molt (exoskeleton), not a dead shrimp. Leave it in the tank; they will eat it for calcium.",
+          "Shrimp may do quick 'zoomies.' That's usually normal. If all shrimp are racing near the surface, check your CO2."
+        ],
+        "both": [
+          "New fish often hide, go pale, glass-surf, or huddle tightly for a day or two. That's normal settling-in behavior; give them time and keep the lights calm.",
+          "Corys/loaches may dash to the surface and back. That's normal behavior, not a sign of suffocation.",
+          "New shrimp may hide, look pale, or 'play dead' for a few minutes after release. That's normal shock; they usually perk up once settled.",
+          "Panic check: You might see a white, transparent ghost of a shrimp on the bottom. This is a molt (exoskeleton), not a dead shrimp. Leave it in the tank; they will eat it for calcium.",
+          "Shrimp may do quick 'zoomies.' That's usually normal. If all shrimp are racing near the surface, check your CO2."
+        ]
+      },
+      "args_schema": {
+        "stock": [
+          "fish",
+          "shrimp",
+          "both"
+        ]
+      }
+    },
+    "t_stock_feed_every_other_day": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 2,
+      "text_template": "Feed a tiny pinch per fish (every other day)."
+    },
+    "t_stock_acclimate": {
+      "type": "task",
+      "cadence": "per_event",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "fish": "Acclimate fish before adding to tank.",
+        "shrimp": "Drip acclimate shrimp before adding them to tank."
+      },
+      "args_schema": {
+        "type": [
+          "fish",
+          "shrimp"
+        ],
+        "due_offset_days": [
+          3
+        ]
+      }
+    },
+    "t_maint_prep": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "conditioner": "Add {{doses.detoxifier_conditioner.wc_dose_amount}} {{products.detoxifier_conditioner.dose_unit}} of {{products.detoxifier_conditioner.display_name}} to the bucket.",
+        "conditioner_generic": "Add a water conditioner to treat the bucket volume.",
+        "gh": "Dissolve {{doses.gh_remineralizer.gh_remineralizer_g_wc_range}} {{products.gh_remineralizer.dose_unit}} of {{products.gh_remineralizer.display_name}} in the bucket.",
+        "ghkh": "Dissolve {{doses.gh_kh_remineralizer.wc_dose_amount}} {{products.gh_kh_remineralizer.dose_unit}} of {{products.gh_kh_remineralizer.display_name}} in the bucket.",
+        "kh": "Dissolve {{doses.kh_buffer.kh_buffer_g_wc_range}} {{products.kh_buffer.dose_unit}} of {{products.kh_buffer.display_name}} in the bucket."
+      },
+      "args_schema": {
+        "type": [
+          "conditioner",
+          "gh",
+          "ghkh",
+          "kh"
+        ]
+      }
+    },
+    "t_maint_wc_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "Perform a {{derived.weekly_water_change_percent_range}}% water change."
+    },
+    "t_fert_dose": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "half": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
+        "full": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth)."
+      },
+      "args_schema": {
+        "cadence": [
+          "one_time",
+          "weekly"
+        ],
+        "dose": [
+          "half",
+          "full"
+        ]
+      }
+    },
+    "t_water_top_off_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Top off evaporated water with freshwater.",
+      "conditions": []
+    },
+    "t_maint_trim_melting_plants": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Trim and remove any melting leaves/stems."
+    },
+    "t_light_ramp_weekly": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "basic:any": "Add 30 minutes to your photoperiod.",
+        "dedicated:any": "Increase intensity by 10% per week first. After that, add 30 minutes of duration.",
+        "high_performance:low": "Increase intensity toward 60% first, then add 30 minutes of duration.",
+        "high_performance:high": "Increase intensity toward 100% first, then add 30 minutes of duration."
+      },
+      "args_schema": {
+        "light_type": [
+          "basic",
+          "dedicated",
+          "high_performance"
+        ],
+        "plant_demand": [
+          "low",
+          "high",
+          "any"
+        ]
+      }
+    }
+  }
+}

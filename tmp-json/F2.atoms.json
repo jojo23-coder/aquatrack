@@ -1,0 +1,143 @@
+{
+  "atom_library": {
+    "i_intro_fishless_F2_ammonia": {
+      "type": "instruction",
+      "text_template": "We are now maintaining the ammonia levels while waiting for the bacteria to catch up. **Continue your daily lighting schedule.**"
+    },
+    "i_intro_duration": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "1": "This phase is short and focused. Plan for about 1 day.",
+        "3": "This phase is short and focused. Plan for about 3 days.",
+        "7": "Plan for about 7 days for this phase.",
+        "14": "Plan for about 14 days for this phase.",
+        "28": "Plan for about 28 days for this phase.",
+        "indefinite": "This phase has no fixed end date. Continue until you choose to move on."
+      },
+      "args_schema": {
+        "days": [
+          "1",
+          "3",
+          "7",
+          "14",
+          "28",
+          "indefinite"
+        ]
+      }
+    },
+    "i_fert_start_dose": {
+      "type": "instruction",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "half": "Begin dosing your liquid fertilizer, but only use a Half Dose for now. Your plants are waking up, and full dosing combined with the ammonia you are adding can trigger algae. We'll increase to full strength after the cycle.",
+        "full": "Begin dosing your liquid fertilizer at a Full Dose. Your plants are ready for it, and we'll monitor for algae as the tank settles."
+      },
+      "args_schema": {
+        "dose": [
+          "half",
+          "full"
+        ]
+      }
+    },
+    "i_chem_nitrite_watch": {
+      "type": "instruction",
+      "text_template": "Start checking Nitrite. It will likely be 0 ppm for a while, but as soon as it registers on the test (turns purple), we have officially entered the next phase."
+    },
+    "e_plant_melt_high_ammonia": {
+      "type": "expected_behaviour",
+      "text_template": "Note: High ammonia (>2ppm) can sometimes melt delicate plant tissues. Monitor them closely and do a small water change if melting is severe."
+    },
+    "e_water_cloudy_bloom": {
+      "type": "expected_behaviour",
+      "text_template": "Cloudy or milky water is normal early on. It can be substrate dust, microbubbles, or a bacterial bloom. Unless we say otherwise, don't chase it with big water changes.",
+      "conditions": []
+    },
+    "e_water_surface_scum": {
+      "type": "expected_behaviour",
+      "text_template": "You might see an oily film or foam on the water surface. This is protein biofilm. It is harmless and will be removed when we install the skimmer or do water changes later."
+    },
+    "e_cycle_ammonia_drop_speed": {
+      "type": "expected_behaviour",
+      "text_template": "Initially, ammonia will drop very slowly. As the colony grows, you will notice it dropping faster, requiring more frequent redosing. This acceleration is the goal."
+    },
+    "e_bio_slimy_walls": {
+      "type": "expected_behaviour",
+      "text_template": "The glass and heater might feel slimy to the touch. This is the bacteria colonizing surfaces. Do not scrub it off yet."
+    },
+    "e_plant_transition": {
+      "type": "expected_behaviour",
+      "text_template": "You may see some plants melting or losing leaves while others grow new roots. This transition is normal as they adapt to your water. Trim melting leaves so they don't rot."
+    },
+    "t_chem_test": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "default": "Measure and log {{parameter_label}}.",
+        "after_24h": "Measure and log {{parameter_label}} after 24 hours."
+      },
+      "args_schema": {
+        "parameter": [
+          "ammonia",
+          "nitrite",
+          "nitrate",
+          "ph",
+          "gh",
+          "kh"
+        ],
+        "cadence": [
+          "one_time",
+          "daily",
+          "weekly",
+          "interval",
+          "per_event"
+        ],
+        "variant": [
+          "default",
+          "after_24h"
+        ],
+        "every_days": "number"
+      },
+      "conditions": []
+    },
+    "t_cycle_ammonia_dose_when_zero": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Only if Ammonia is 0 ppm: Add {{doses.ammonia_source.ammonia_ml_range}} mL of {{products.ammonia_source.display_name}}."
+    },
+    "t_maint_trim_melting_plants": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Trim and remove any melting leaves/stems."
+    },
+    "t_water_top_off_interval": {
+      "type": "task",
+      "cadence": "interval",
+      "every_days": 3,
+      "text_template": "Top off evaporated water with freshwater.",
+      "conditions": []
+    },
+    "t_fert_dose": {
+      "type": "task",
+      "cadence": "weekly",
+      "text_template": "{{variant}}",
+      "text_variants": {
+        "half": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_half}} mL of {{products.fertilizer_micros.display_name}} (Half Dose).",
+        "full": "Dose {{doses.fertilizer_micros.fertilizer_micros_ml_week_full}} mL of {{products.fertilizer_micros.display_name}} (adjust based on plant growth)."
+      },
+      "args_schema": {
+        "cadence": [
+          "one_time",
+          "weekly"
+        ],
+        "dose": [
+          "half",
+          "full"
+        ]
+      }
+    }
+  }
+}

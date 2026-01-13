@@ -23,16 +23,20 @@ const TRIGGER_ONLY_KEYWORDS = [
   { role: 'water_quality_support', match: /water quality/i }
 ];
 
+const fishSpeciesIndex = new Map();
+const shrimpSpeciesIndex = new Map();
 const plantSpeciesIndex = new Map();
 
-const registerPlantGroup = (group) => {
-  plantSpeciesIndex.set(group.display_name, group);
+const registerGroup = (map, group) => {
+  map.set(group.display_name, group);
   group.common_examples.forEach(name => {
-    plantSpeciesIndex.set(name, group);
+    map.set(name, group);
   });
 };
 
-biologyCatalog.plant_groups.forEach(registerPlantGroup);
+biologyCatalog.fish_groups.forEach((group) => registerGroup(fishSpeciesIndex, group));
+biologyCatalog.shrimp_groups.forEach((group) => registerGroup(shrimpSpeciesIndex, group));
+biologyCatalog.plant_groups.forEach((group) => registerGroup(plantSpeciesIndex, group));
 
 const formatNumber = (value, decimals = 2) => {
   if (value === null || value === undefined || Number.isNaN(value)) {
@@ -305,6 +309,77 @@ const evaluateTemplateCondition = (expression, context) => {
   }
 };
 
+const evaluateTemplateExpression = (expression, context) => {
+  if (!expression || typeof expression !== 'string') return undefined;
+  const sanitized = expression.replace(/[^-()\w\s.'"<>=!&|]/g, '');
+  try {
+    // eslint-disable-next-line no-new-func
+    return Function('context', `with (context) { return (${sanitized}); }`)(context);
+  } catch (error) {
+    return undefined;
+  }
+};
+
+const resolveEntryArgs = (args, context) => {
+  if (!args) return {};
+  return Object.entries(args).reduce((acc, [key, value]) => {
+    if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, '$expr')) {
+      acc[key] = evaluateTemplateExpression(value.$expr, context);
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+};
+
+const joinTemplateParts = (value) => (Array.isArray(value) ? value.join('\n\n') : value);
+
+const resolveVariantValue = (textVariants, args) => {
+  if (!textVariants) return null;
+  if (args?.variant && Object.prototype.hasOwnProperty.call(textVariants, args.variant)) {
+    return joinTemplateParts(textVariants[args.variant]);
+  }
+  if (args?.light_type && args?.plant_demand) {
+    const compoundKey = `${args.light_type}:${args.plant_demand}`;
+    if (Object.prototype.hasOwnProperty.call(textVariants, compoundKey)) {
+      return joinTemplateParts(textVariants[compoundKey]);
+    }
+  }
+  if (args?.substrate && Object.prototype.hasOwnProperty.call(args, 'ammonia_selected')) {
+    const compoundKey = `${args.substrate}:${args.ammonia_selected}`;
+    if (Object.prototype.hasOwnProperty.call(textVariants, compoundKey)) {
+      return joinTemplateParts(textVariants[compoundKey]);
+    }
+    const fallbackKey = `${args.substrate}:any`;
+    if (Object.prototype.hasOwnProperty.call(textVariants, fallbackKey)) {
+      return joinTemplateParts(textVariants[fallbackKey]);
+    }
+  }
+  if (args) {
+    const variantKeys = new Set(Object.keys(textVariants));
+    for (const argValue of Object.values(args)) {
+      const key = typeof argValue === 'string' || typeof argValue === 'number'
+        ? String(argValue)
+        : null;
+      if (key && variantKeys.has(key)) {
+        return joinTemplateParts(textVariants[key]);
+      }
+    }
+  }
+  return null;
+};
+
+const formatParameterLabel = (value) => {
+  if (!value) return value;
+  const lower = String(value).toLowerCase();
+  if (lower === 'ph') return 'pH';
+  if (lower === 'gh') return 'GH';
+  if (lower === 'kh') return 'KH';
+  return lower
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const buildTemplateContext = ({
   normalizedSetup,
   derived,
@@ -315,7 +390,8 @@ const buildTemplateContext = ({
 }) => {
   const plantCategories = normalizedSetup.biology_profile.plants?.categories || [];
   const fishPlanned = normalizedSetup.biology_profile.livestock_plan.fish || [];
-  const shrimpPlanned = (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0;
+  const shrimpList = normalizedSetup.biology_profile.livestock_plan.shrimp || [];
+  const shrimpPlanned = shrimpList.length > 0;
   const fishNameList = fishPlanned.map((name) => String(name || '').toLowerCase());
   const hasSchooling = fishNameList.some((name) =>
     name.includes('tetra') || name.includes('rasbora') || name.includes('danio')
@@ -323,6 +399,15 @@ const buildTemplateContext = ({
   const hasBottomDwellers = fishNameList.some((name) =>
     name.includes('corydoras') || name.includes('loach') || name.includes('pleco') || name.includes('otocinclus')
   );
+  const cleanupFishGroups = new Set(['plecos_otocinclus', 'corydoras', 'loaches']);
+  const cleanupShrimpGroups = new Set(['amano']);
+  const hasCleanupCrew = fishPlanned.some((name) => {
+    const group = fishSpeciesIndex.get(name);
+    return cleanupFishGroups.has(group?.group_id);
+  }) || shrimpList.some((name) => {
+    const group = shrimpSpeciesIndex.get(name);
+    return cleanupShrimpGroups.has(group?.group_id);
+  });
   const lightingSystem = normalizedSetup.tank_profile.lighting_system;
   const lightType = ['basic', 'dedicated', 'high_performance'].includes(lightingSystem)
     ? lightingSystem
@@ -510,8 +595,24 @@ const buildTemplateContext = ({
     doses.gh_kh_remineralizer = {};
   }
 
+  // Template aliases keep DSL readable while preserving existing product role names.
+  const productsWithAliases = {
+    ...products,
+    fertilizer: products.fertilizer_micros
+  };
+  const dosesWithAliases = {
+    ...doses,
+    fertilizer: doses.fertilizer_micros
+  };
+
   return {
-    setup: setupContext,
+    setup: {
+      ...setupContext,
+      can_fertilize: !!(products?.fertilizer_micros?.selected && setupContext.plants_present_in_plan),
+      use_ghkh_remineralizer: !!products?.gh_kh_remineralizer?.selected,
+      use_gh_remineralizer: !!(products?.gh_remineralizer?.selected && !products?.gh_kh_remineralizer?.selected),
+      use_kh_buffer: !!(products?.kh_buffer?.selected && !products?.gh_kh_remineralizer?.selected)
+    },
     derived: {
       net_water_volume_l: formatNumber(derived.net_water_volume_l, 1),
       weekly_water_change_percent_range: formatNumber(averageRange(derived.weekly_water_change_percent_range), 0),
@@ -523,8 +624,8 @@ const buildTemplateContext = ({
       temperature_target_c: formatNumber(averageRange(targets.temperature_c?.target_range), 1),
       ...targets
     },
-    products,
-    doses,
+    products: productsWithAliases,
+    doses: dosesWithAliases,
     plants: {
       has_epiphytes: plantCategories.includes('epiphytes'),
       has_stems: plantCategories.includes('stems'),
@@ -535,6 +636,11 @@ const buildTemplateContext = ({
       has_schooling: hasSchooling,
       has_bottom_dwellers: hasBottomDwellers,
       has_shrimp: shrimpPlanned,
+      has_stock: fishPlanned.length > 0 || shrimpPlanned,
+      has_cleanup_crew: hasCleanupCrew,
+      type: fishPlanned.length > 0
+        ? (shrimpPlanned ? 'both' : 'fish')
+        : (shrimpPlanned ? 'shrimp' : 'none'),
       is_sensitive: normalizedSetup.biology_profile.livestock_traits.is_sensitive,
       has_diggers: normalizedSetup.biology_profile.livestock_traits.has_diggers
     },
@@ -849,7 +955,8 @@ const generatePhaseList = ({
   generatedAtIso = DEFAULT_GENERATED_AT_ISO
 }) => {
   const normalizedSetup = normalizeSetup(setup, []);
-  const shrimpPlanned = (normalizedSetup.biology_profile.livestock_plan.shrimp || []).length > 0;
+  const shrimpList = normalizedSetup.biology_profile.livestock_plan.shrimp || [];
+  const shrimpPlanned = shrimpList.length > 0;
   const enabledUserProducts = normalizedSetup.product_stack.user_products?.filter((product) => product.enabled) || [];
   const ammoniaAvailable = normalizedSetup.product_stack.ammonia_source.type !== 'none'
     || enabledUserProducts.some((product) => product.role === 'ammonia_source');
@@ -976,7 +1083,21 @@ const generatePhasesFromPlaylists = ({
     ?? 0;
 
   const userProducts = normalizedSetup.product_stack.user_products || [];
-  const enabledUserProducts = userProducts.filter((product) => product.enabled);
+  const hasUserProducts = userProducts.length > 0;
+  const hasDoseValues = (product) => {
+    if (!product) return false;
+    const amount = Number(product.dose_amount || 0);
+    if (product.role === 'gh_kh_remineralizer') {
+      const perGh = Number(product.per_volume_l_gh || product.per_volume_l || 0);
+      const perKh = Number(product.per_volume_l_kh || product.per_volume_l || 0);
+      return amount > 0 && (perGh > 0 || perKh > 0);
+    }
+    const perVolume = Number(product.per_volume_l || 0);
+    return amount > 0 && perVolume > 0;
+  };
+  const enabledUserProducts = hasUserProducts
+    ? userProducts.filter((product) => product.enabled && hasDoseValues(product))
+    : [];
   const userAmmonia = enabledUserProducts.find((product) => product.role === 'ammonia_source');
   const useAmmoniaEffect = userAmmonia && userAmmonia.pure_ammonia === false;
   const ammoniaSolutionPercent = userAmmonia?.ammonia_solution_percent
@@ -1065,10 +1186,10 @@ const generatePhasesFromPlaylists = ({
     });
     return ids;
   };
-  const effectiveCatalog = enabledUserProducts.length
-    ? buildCatalogFromUserProducts(enabledUserProducts)
+  const effectiveCatalog = hasUserProducts
+    ? buildCatalogFromUserProducts(userProducts)
     : (productCatalog?.products || []);
-  const selectedIds = enabledUserProducts.length
+  const selectedIds = hasUserProducts
     ? buildSelectedIds(enabledUserProducts)
     : (normalizedSetup.product_stack.selected_product_ids || []);
   const roleMap = selectProductsByRole(effectiveCatalog, selectedIds, []);
@@ -1103,19 +1224,54 @@ const generatePhasesFromPlaylists = ({
       ...templateContext,
       modifiers: phase.modifiers_applied || []
     };
-    const atoms = (playlist?.sequence || []).map((atomId) => atomMap?.[atomId]).filter(Boolean);
     const instruction_atoms = [];
     const expected_behavior_atoms = [];
     const task_atoms = [];
-    atoms.forEach((atom) => {
+    const playlistSequence = playlist?.sequence || [];
+    const sequenceEntries = playlistSequence
+      .map((item) => {
+        if (!item) return null;
+        if (typeof item === 'string') return { id: item, args: {} };
+        if (typeof item === 'object' && item.id) {
+          return {
+            id: item.id,
+            args: item.args || {},
+            when: item.when,
+            due_offset_days: item.due_offset_days ?? item.dueOffsetDays
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    sequenceEntries.forEach((entry) => {
+      const atom = atomMap?.[entry.id];
+      if (!atom) return;
+      if (entry.when && !evaluateTemplateCondition(entry.when, contextWithModifiers)) return;
+      const resolvedArgs = resolveEntryArgs(entry.args, contextWithModifiers);
+      const entryContext = { ...contextWithModifiers, ...resolvedArgs };
+      const argsForVariants = { ...resolvedArgs };
+      if (resolvedArgs.type === 'conditioner' && !entryContext?.products?.detoxifier_conditioner?.selected) {
+        if (entry.id === 't_water_fill_dose' || entry.id === 't_maint_prep') {
+          argsForVariants.variant = 'conditioner_generic';
+        }
+      }
+      if (resolvedArgs.parameter) {
+        entryContext.parameter_label = formatParameterLabel(resolvedArgs.parameter);
+      }
+      const variantValue = resolveVariantValue(atom.text_variants, argsForVariants);
+      if (variantValue !== null && variantValue !== undefined) {
+        entryContext.variant = renderMustacheLike(variantValue, entryContext);
+      }
       if (atom.conditions && atom.conditions.length) {
         const passes = atom.conditions.every((condition) =>
-          evaluateTemplateCondition(condition, contextWithModifiers)
+          evaluateTemplateCondition(condition, entryContext)
         );
         if (!passes) return;
       }
-      const template = atom.text_template || atom.text || '';
-      const text = template ? renderMustacheLike(template, contextWithModifiers) : '';
+      const baseTemplate = atom.text_template || atom.text || '';
+      const template = joinTemplateParts(baseTemplate) || '';
+      const text = template ? renderMustacheLike(template, entryContext) : '';
       if (!text) return;
       if (atom.type === 'instruction') {
         instruction_atoms.push({ text });
@@ -1124,10 +1280,14 @@ const generatePhasesFromPlaylists = ({
       } else if (atom.type === 'task') {
         task_atoms.push({
           text,
-          cadence: atom.cadence || 'one_time',
-          every_days: atom.every_days ?? atom.everyDays,
-          due_offset_days: atom.due_offset_days ?? atom.dueOffsetDays,
-          parameter: atom.parameter
+          cadence: resolvedArgs.cadence || atom.cadence || 'one_time',
+          every_days: resolvedArgs.every_days ?? resolvedArgs.everyDays ?? atom.every_days ?? atom.everyDays,
+          due_offset_days: entry.due_offset_days
+            ?? resolvedArgs.due_offset_days
+            ?? resolvedArgs.dueOffsetDays
+            ?? atom.due_offset_days
+            ?? atom.dueOffsetDays,
+          parameter: resolvedArgs.parameter ?? atom.parameter
         });
       }
     });
@@ -1422,7 +1582,21 @@ export const generatePlan = ({
   const notes = [];
   const normalizedSetup = normalizeSetup(setup, notes);
   const userProducts = normalizedSetup.product_stack.user_products || [];
-  const enabledUserProducts = userProducts.filter((product) => product.enabled);
+  const hasUserProducts = userProducts.length > 0;
+  const hasDoseValues = (product) => {
+    if (!product) return false;
+    const amount = Number(product.dose_amount || 0);
+    if (product.role === 'gh_kh_remineralizer') {
+      const perGh = Number(product.per_volume_l_gh || product.per_volume_l || 0);
+      const perKh = Number(product.per_volume_l_kh || product.per_volume_l || 0);
+      return amount > 0 && (perGh > 0 || perKh > 0);
+    }
+    const perVolume = Number(product.per_volume_l || 0);
+    return amount > 0 && perVolume > 0;
+  };
+  const enabledUserProducts = hasUserProducts
+    ? userProducts.filter((product) => product.enabled && hasDoseValues(product))
+    : [];
   const buildSelectedIds = (products) => {
     const ids = [];
     products.forEach((product) => {
@@ -1434,8 +1608,8 @@ export const generatePlan = ({
     });
     return ids;
   };
-  const effectiveCatalog = enabledUserProducts.length ? buildCatalogFromUserProducts(enabledUserProducts) : productCatalog;
-  const effectiveSelectedIds = enabledUserProducts.length
+  const effectiveCatalog = hasUserProducts ? buildCatalogFromUserProducts(userProducts) : productCatalog;
+  const effectiveSelectedIds = hasUserProducts
     ? buildSelectedIds(enabledUserProducts)
     : normalizedSetup.product_stack.selected_product_ids;
   const parameterLimits = enginePackage?.parameter_limits?.['parameter_limits.generic.json'] || {};
