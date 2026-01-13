@@ -358,7 +358,7 @@ const resolveVariantValue = (textVariants, args) => {
   if (args) {
     const variantKeys = new Set(Object.keys(textVariants));
     for (const argValue of Object.values(args)) {
-      const key = typeof argValue === 'string' || typeof argValue === 'number'
+      const key = typeof argValue === 'string' || typeof argValue === 'number' || typeof argValue === 'boolean'
         ? String(argValue)
         : null;
       if (key && variantKeys.has(key)) {
